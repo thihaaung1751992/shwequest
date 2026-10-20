@@ -114,7 +114,7 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-white font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50">
-      <LearnerStrip xp={xpEarned} />
+      <LearnerStrip xp={xpEarned} tone="paper" />
       <header className={SITE_HEADER_CLASS}>
         <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-3 gap-y-1">
           <h1 className="order-1 shrink-0">
@@ -123,8 +123,8 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
           <div className="order-3 min-w-0 basis-full sm:order-2 sm:flex-1 sm:basis-auto">
             <PathSubtitle lesson={current ? `Now: ${current.title}` : "Learning path"} />
           </div>
-          <div className="order-2 ml-auto sm:order-3 sm:ml-0">
-            <SiteNav />
+          <div className="order-2 w-full sm:order-3 sm:ml-0 sm:w-auto">
+            <SiteNav layout="cluster" />
           </div>
         </div>
         <div className="mx-auto mt-3 w-full max-w-page">

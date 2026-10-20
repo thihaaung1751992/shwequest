@@ -18,6 +18,28 @@
 @theme {
   /* Shared page column. Header, main, strip, and footer all use max-w-page. */
   --container-page: 1280px;
+  /* Home hero canvas. Matches the cream behind the banner, not the white teachers page. */
+  --color-cream: #f7f1ea;
+  --animate-hero-orbit: hero-orbit 22s linear infinite;
+  --animate-hero-orbit-reverse: hero-orbit 17s linear infinite reverse;
+  --animate-hero-orbit-inner: hero-orbit 13s linear infinite;
+  --animate-hero-bob: hero-bob 1.8s ease-in-out infinite;
+
+  @keyframes hero-orbit {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  @keyframes hero-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-0.5rem);
+    }
+  }
 }
 
 body {

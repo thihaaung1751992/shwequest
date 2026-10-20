@@ -1,21 +1,24 @@
 import AccountSummary from "@/components/account-summary";
 
-/** Account pill above the site header. Not part of the header bar. */
-export default function LearnerStrip({ xp }: { xp?: number }) {
+/** Account pill above the site header. Surface matches the header under it. */
+export default function LearnerStrip({
+  xp,
+  tone = "paper",
+}: {
+  xp?: number;
+  tone?: "cream" | "paper";
+}) {
+  const surface =
+    tone === "cream"
+      ? "bg-cream dark:bg-slate-950"
+      : "border-t-4 border-t-sky-700 bg-white dark:border-t-sky-400 dark:bg-slate-950";
+
   return (
     <section
       aria-label="Account"
-      className="relative overflow-hidden bg-linear-to-r from-sky-800 via-sky-700 to-amber-400 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 dark:from-sky-950 dark:via-sky-900 dark:to-amber-600"
+      className={`px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 ${surface}`}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-8 right-0 size-40 rounded-full bg-white/30 blur-2xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-0 left-1/4 size-24 rounded-full bg-amber-200/30 blur-2xl"
-      />
-      <div className="relative mx-auto flex w-full max-w-page justify-end">
+      <div className="mx-auto flex w-full max-w-page justify-end">
         <AccountSummary xp={xp} />
       </div>
     </section>
