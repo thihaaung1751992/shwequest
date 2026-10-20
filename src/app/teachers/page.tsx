@@ -6,7 +6,6 @@ import TeacherSearch from "@/components/teachers/teacher-search";
 import TeacherViewToggle, {
   teacherViewFromParam,
 } from "@/components/teachers/teacher-view-toggle";
-import { ROADMAP_NODES, VIDEO_TOTAL } from "@/components/roadmap/roadmap-data";
 import { TEACHERS } from "@/data/teachers";
 
 export const metadata: Metadata = {
@@ -14,8 +13,6 @@ export const metadata: Metadata = {
 };
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-const GAME_TOTAL = ROADMAP_NODES.filter((node) => node.kind === "boss").length;
 
 function firstParam(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -30,12 +27,7 @@ async function TeacherToggleFromUrl({ searchParams }: { searchParams: SearchPara
 async function TeacherResultsFromUrl({ searchParams }: { searchParams: SearchParams }) {
   const view = teacherViewFromParam(firstParam((await searchParams).view));
   return (
-    <TeacherResults
-      view={view}
-      teachers={TEACHERS}
-      videoCount={VIDEO_TOTAL}
-      gameCount={GAME_TOTAL}
-    />
+    <TeacherResults view={view} teachers={TEACHERS} />
   );
 }
 
@@ -58,12 +50,7 @@ export default function TeachersPage({ searchParams }: { searchParams: SearchPar
       <div id="teacher-results">
         <Suspense
           fallback={
-            <TeacherResults
-              view="card"
-              teachers={TEACHERS}
-              videoCount={VIDEO_TOTAL}
-              gameCount={GAME_TOTAL}
-            />
+            <TeacherResults view="card" teachers={TEACHERS} />
           }
         >
           <TeacherResultsFromUrl searchParams={searchParams} />

@@ -19,10 +19,20 @@ export type BossLesson = LessonBase & {
 
 export type RoadmapNode = VideoLesson | BossLesson;
 
-/** Full units are 3 videos plus 1 game. 50 is not divisible by 3, so the last unit has 2 videos and no game. */
-export const VIDEO_TOTAL = 50;
+export type PathUnit = {
+  title: string;
+};
+
+/**
+ * Drawing cluster on the path: three lesson slots and one wider slot.
+ * A teacher's video count and game count do not have to follow this shape.
+ */
 export const VIDEOS_PER_UNIT = 3;
 export const NODES_PER_UNIT = VIDEOS_PER_UNIT + 1;
+
+/** Teacher 1's stand-in only. Other teachers pass their own counts into `placeholderCatalog`. */
+const DEMO_VIDEOS = 50;
+const DEMO_GAMES = 16;
 
 const UNIT_TITLES = ["First Steps", "Market Talk", "The Long Trail", "Golden Peak"] as const;
 
@@ -54,17 +64,37 @@ const KEPT_BOSSES: Record<
   4: { title: "Crown of Shwe", status: "locked", xp: 150, gameStatus: "Locked" },
 };
 
-const fullUnits = Math.floor(VIDEO_TOTAL / VIDEOS_PER_UNIT);
-const trailingVideos = VIDEO_TOTAL % VIDEOS_PER_UNIT;
-const unitCount = fullUnits + (trailingVideos > 0 ? 1 : 0);
-
 function durationFor(videoNumber: number): string {
   const minutes = 4 + (videoNumber % 6);
   const seconds = (videoNumber * 13) % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-function buildRoadmap(): RoadmapNode[] {
+export function countLessons(nodes: readonly RoadmapNode[]): { videos: number; games: number } {
+  let videos = 0;
+  let games = 0;
+  for (const node of nodes) {
+    if (node.kind === "video") videos += 1;
+    else games += 1;
+  }
+  return { videos, games };
+}
+
+function assertCatalog(nodes: readonly RoadmapNode[], videos: number, games: number) {
+  const counts = countLessons(nodes);
+  const currentCount = nodes.filter((node) => node.status === "current").length;
+  if (counts.videos !== videos || counts.games !== games || currentCount !== 1) {
+    throw new Error(
+      `Catalog expected ${videos} videos, ${games} games, and 1 current lesson; got ${counts.videos} videos, ${counts.games} games, and ${currentCount} current.`,
+    );
+  }
+}
+
+/** Stand-in for Teacher 1: 3 videos then 1 game, with the last unit short two videos. */
+export function demoUnitCatalog(): { nodes: RoadmapNode[]; units: PathUnit[] } {
+  const fullUnits = Math.floor(DEMO_VIDEOS / VIDEOS_PER_UNIT);
+  const trailingVideos = DEMO_VIDEOS % VIDEOS_PER_UNIT;
+  const unitCount = fullUnits + (trailingVideos > 0 ? 1 : 0);
   const nodes: RoadmapNode[] = [];
   let videoNumber = 1;
 
@@ -96,35 +126,97 @@ function buildRoadmap(): RoadmapNode[] {
     }
   }
 
-  return nodes;
+  const units = Array.from({ length: unitCount }, (_, index) => ({
+    title: UNIT_TITLES[index] ?? `Trail ${index + 1}`,
+  }));
+  assertCatalog(nodes, DEMO_VIDEOS, DEMO_GAMES);
+  return { nodes, units };
 }
 
-export const ROADMAP_NODES: RoadmapNode[] = buildRoadmap();
+/**
+ * Place videos and games independently. The scarcer kind is spread through the other
+ * instead of forcing one game after every three videos.
+ */
+function mixOrder(videoCount: number, gameCount: number): Array<"video" | "boss"> {
+  const order: Array<"video" | "boss"> = [];
+  let videosPlaced = 0;
+  let gamesPlaced = 0;
+  while (videosPlaced < videoCount || gamesPlaced < gameCount) {
+    const videosRemain = videosPlaced < videoCount;
+    const gamesRemain = gamesPlaced < gameCount;
+    const videoShare = videosRemain ? videosPlaced / videoCount : 1;
+    const gameShare = gamesRemain ? gamesPlaced / gameCount : 1;
+    if (videosRemain && (!gamesRemain || videoShare <= gameShare)) {
+      order.push("video");
+      videosPlaced += 1;
+    } else {
+      order.push("boss");
+      gamesPlaced += 1;
+    }
+  }
+  return order;
+}
 
-/** XP from lessons already marked completed. */
-export function earnedXp(nodes: readonly RoadmapNode[] = ROADMAP_NODES): number {
+/** Stand-in path for a teacher whose video count and game count are not tied together. */
+export function placeholderCatalog(
+  videoCount: number,
+  gameCount: number,
+): { nodes: RoadmapNode[]; units: PathUnit[] } {
+  let videoNumber = 0;
+  let gameNumber = 0;
+  let markedCurrent = false;
+  const nodes: RoadmapNode[] = mixOrder(videoCount, gameCount).map((kind) => {
+    const current = !markedCurrent;
+    if (current) markedCurrent = true;
+    if (kind === "video") {
+      videoNumber += 1;
+      return {
+        id: `video-${videoNumber}`,
+        kind: "video" as const,
+        title: `Video ${videoNumber}`,
+        status: current ? ("current" as const) : ("locked" as const),
+        xp: 20,
+        duration: durationFor(videoNumber),
+      };
+    }
+    gameNumber += 1;
+    return {
+      id: `boss-${gameNumber}`,
+      kind: "boss" as const,
+      title: `Boss ${gameNumber}`,
+      status: current ? ("current" as const) : ("locked" as const),
+      xp: 80,
+      gameStatus: "Locked",
+    };
+  });
+  assertCatalog(nodes, videoCount, gameCount);
+  return { nodes, units: [{ title: "First Steps" }] };
+}
+
+/** XP from lessons already marked completed on this catalog. */
+export function earnedXp(nodes: readonly RoadmapNode[]): number {
   return nodes.reduce((sum, node) => (node.status === "completed" ? sum + node.xp : sum), 0);
 }
 
-export const UNITS = Array.from({ length: unitCount }, (_, index) => ({
-  title: UNIT_TITLES[index] ?? `Trail ${index + 1}`,
-}));
+export function videoNumberAt(nodes: readonly RoadmapNode[], index: number): number {
+  let count = 0;
+  for (let cursor = 0; cursor <= index && cursor < nodes.length; cursor += 1) {
+    if (nodes[cursor].kind === "video") count += 1;
+  }
+  return count;
+}
 
-const videoCount = ROADMAP_NODES.filter((node) => node.kind === "video").length;
-const currentCount = ROADMAP_NODES.filter((node) => node.status === "current").length;
-if (videoCount !== VIDEO_TOTAL || currentCount !== 1) {
-  throw new Error(
-    `Roadmap expected ${VIDEO_TOTAL} videos and 1 current lesson, got ${videoCount} videos and ${currentCount} current.`,
-  );
+export function unitAt(
+  index: number,
+  units: readonly PathUnit[],
+): { number: number; title: string } {
+  if (units.length === 0) return { number: 1, title: "Path" };
+  const slot = Math.min(unitIndexFor(index), units.length - 1);
+  return { number: slot + 1, title: units[slot].title };
 }
 
 export function unitIndexFor(index: number): number {
   return Math.floor(index / NODES_PER_UNIT);
-}
-
-/** 1-based video number along the path. Valid for video nodes only. */
-export function videoOrdinal(index: number): number {
-  return unitIndexFor(index) * VIDEOS_PER_UNIT + (index % NODES_PER_UNIT) + 1;
 }
 
 const PAD_TOP = 128;

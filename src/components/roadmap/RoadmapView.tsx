@@ -1,32 +1,30 @@
 "use client";
 
-import { Suspense, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
 import LearnerStrip from "@/components/learner-strip";
 import { SITE_HEADER_CLASS } from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import SiteLogo from "@/components/site-logo";
 import SiteNav from "@/components/site-nav";
-import { teacherById } from "@/data/teachers";
+import type { Teacher } from "@/data/teachers";
 import {
   AnimatePresence,
   motion,
   useAnimation,
   useReducedMotion,
 } from "framer-motion";
-import { Check, Clock, Crown, Lock, Play, Star, Swords, X } from "lucide-react";
+import { ArrowRight, Check, Clock, Crown, Lock, Play, Star, Swords, X } from "lucide-react";
 import {
-  NODES_PER_UNIT,
-  ROADMAP_NODES,
-  UNITS,
+  type PathUnit,
   type RoadmapNode,
   earnedXp,
   nodePoint,
   roadmapHeight,
   smoothPath,
+  unitAt,
   unitChipY,
-  unitIndexFor,
-  videoOrdinal,
+  videoNumberAt,
 } from "@/components/roadmap/roadmap-data";
 
 const CONFETTI_COLORS = ["#f6c445", "#22c55e", "#fb923c", "#fef9c3", "#4ade80"];
@@ -37,25 +35,13 @@ function LessonLine({ text }: { text: string }) {
   );
 }
 
-function TeacherQuery({ lesson }: { lesson: string }) {
-  const teacherId = useSearchParams().get("teacher");
-  const teacher = teacherId ? teacherById(teacherId) : undefined;
-  return <LessonLine text={teacher ? `${teacher.label} · ${lesson}` : lesson} />;
-}
-
-function PathSubtitle({ lesson }: { lesson: string }) {
-  return (
-    <Suspense fallback={<LessonLine text={lesson} />}>
-      <TeacherQuery lesson={lesson} />
-    </Suspense>
-  );
-}
-
 type RoadmapViewProps = {
-  nodes?: RoadmapNode[];
+  teacher?: Teacher;
 };
 
-export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps) {
+export default function RoadmapView({ teacher }: RoadmapViewProps) {
+  const nodes = teacher?.nodes ?? [];
+  const units = teacher?.units ?? [];
   const columnRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLLIElement>(null);
   const scrolledRef = useRef(false);
@@ -66,8 +52,10 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
   const reduce = useReducedMotion() === true;
 
   const completed = nodes.filter((node) => node.status === "completed");
-  const xpEarned = earnedXp(nodes);
+  const xpEarned = teacher ? earnedXp(nodes) : undefined;
   const current = nodes.find((node) => node.status === "current");
+  const lesson = current ? `Now: ${current.title}` : "Learning path";
+  const lessonLine = teacher ? `${teacher.label} · ${lesson}` : lesson;
   const progress = nodes.length === 0 ? 0 : Math.round((completed.length / nodes.length) * 100);
   const height = roadmapHeight(nodes.length);
   const points = nodes.map((_, index) => nodePoint(index, nodes.length, width));
@@ -113,41 +101,44 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
   }, [lockedTip]);
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-white font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50">
-      <LearnerStrip xp={xpEarned} tone="paper" />
+    <div className="relative flex min-h-dvh flex-col bg-linear-to-b from-cream to-white font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50">
+      <LearnerStrip xp={xpEarned} tone="cream" />
       <header className={SITE_HEADER_CLASS}>
         <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-3 gap-y-1">
           <h1 className="order-1 shrink-0">
             <SiteLogo />
           </h1>
           <div className="order-3 min-w-0 basis-full sm:order-2 sm:flex-1 sm:basis-auto">
-            <PathSubtitle lesson={current ? `Now: ${current.title}` : "Learning path"} />
+            <LessonLine text={lessonLine} />
           </div>
           <div className="order-2 w-full sm:order-3 sm:ml-0 sm:w-auto">
             <SiteNav layout="cluster" />
           </div>
         </div>
-        <div className="mx-auto mt-3 w-full max-w-page">
-          <div
-            className="h-2.5 overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200 dark:bg-white/10 dark:ring-white/10"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={nodes.length}
-            aria-valuenow={completed.length}
-            aria-label="Lessons completed"
-          >
+        {teacher ? (
+          <div className="mx-auto mt-3 w-full max-w-page">
             <div
-              className="h-full rounded-full bg-linear-to-r from-emerald-400 to-amber-400"
-              style={{ width: `${progress}%` }}
-            />
+              className="h-2.5 overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200 dark:bg-white/10 dark:ring-white/10"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={nodes.length}
+              aria-valuenow={completed.length}
+              aria-label="Lessons completed"
+            >
+              <div
+                className="h-full rounded-full bg-linear-to-r from-emerald-400 to-amber-400"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-1 text-right text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+              {completed.length}/{nodes.length} complete
+            </p>
           </div>
-          <p className="mt-1 text-right text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
-            {completed.length}/{nodes.length} complete
-          </p>
-        </div>
+        ) : null}
       </header>
 
       <main className="relative z-10 flex-1 px-4 pt-6 pb-10">
+        {teacher ? (
         <div ref={columnRef} className="relative mx-auto w-full max-w-page">
           <div className="relative" style={{ height }}>
             <svg
@@ -190,9 +181,9 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
             </svg>
 
             <ol className="absolute inset-0 list-none" aria-label="Learning roadmap">
-              {UNITS.slice(0, Math.ceil(nodes.length / NODES_PER_UNIT)).map((unit, unitIndex) => (
+              {units.map((unit, unitIndex) => (
                 <li
-                  key={unit.title}
+                  key={`${unit.title}-${unitIndex}`}
                   className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
                   style={{ top: unitChipY(unitIndex + 1, nodes.length) }}
                 >
@@ -217,6 +208,21 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
             </ol>
           </div>
         </div>
+        ) : (
+          <div className="mx-auto flex w-full max-w-page flex-col items-start gap-4 py-16">
+            <h2 className="text-2xl font-bold tracking-tight">Pick a teacher</h2>
+            <p className="max-w-md text-sm font-medium text-zinc-600 dark:text-zinc-300">
+              Each teacher has their own videos and games. Choose one to open that path.
+            </p>
+            <Link
+              href="/teachers"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+            >
+              See teachers
+              <ArrowRight aria-hidden className="size-4" />
+            </Link>
+          </div>
+        )}
       </main>
 
       <SiteFooter />
@@ -249,6 +255,8 @@ export default function RoadmapView({ nodes = ROADMAP_NODES }: RoadmapViewProps)
             key={selected.id}
             node={selected}
             index={selectedIndex}
+            nodes={nodes}
+            units={units}
             onClose={() => setSelectedId(null)}
           />
         ) : null}
@@ -374,22 +382,25 @@ function LessonNode({
 function LessonDialog({
   node,
   index,
+  nodes,
+  units,
   onClose,
 }: {
   node: RoadmapNode;
   index: number;
+  nodes: readonly RoadmapNode[];
+  units: readonly PathUnit[];
   onClose: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const detailId = useId();
   const [started, setStarted] = useState(false);
-  const unitNumber = unitIndexFor(index);
-  const unit = UNITS[unitNumber];
+  const unit = unitAt(index, units);
   const eyebrow =
     node.kind === "boss"
-      ? `Boss battle · Unit ${unitNumber + 1}`
-      : `Video ${videoOrdinal(index)} · Unit ${unitNumber + 1}`;
+      ? `Boss battle · Unit ${unit.number}`
+      : `Video ${videoNumberAt(nodes, index)} · Unit ${unit.number}`;
 
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -482,13 +493,14 @@ function LessonDialog({
         ) : null}
         <button
           type="button"
-          className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-linear-to-b from-emerald-300 to-emerald-600 text-base font-bold text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_5px_0_0_#166534] active:translate-y-1 active:shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_1px_0_0_#166534]"
+          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-linear-to-b from-emerald-300 to-emerald-600 text-base font-bold text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_5px_0_0_#166534] active:translate-y-1 active:shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_1px_0_0_#166534]"
           onClick={() => {
             if (started) onClose();
             else setStarted(true);
           }}
         >
           {started ? "Close" : "Start Lesson"}
+          <ArrowRight aria-hidden className="size-4" />
         </button>
       </motion.div>
     </motion.div>

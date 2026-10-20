@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe } from "lucide-react";
+import { ArrowRight, Globe } from "lucide-react";
 
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/teachers", label: "Teachers" },
+  { href: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
 const FOCUS =
@@ -63,9 +64,10 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
         </span>
         <Link
           href="/teachers"
-          className={`inline-flex min-h-11 items-center rounded-full bg-zinc-950 px-3.5 text-sm font-bold whitespace-nowrap text-white sm:px-4 dark:bg-white dark:text-zinc-950 ${FOCUS}`}
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full bg-zinc-950 px-3.5 text-sm font-bold whitespace-nowrap text-white sm:px-4 dark:bg-white dark:text-zinc-950 ${FOCUS}`}
         >
           See teachers
+          <ArrowRight aria-hidden className="size-4" />
         </Link>
       </div>
     </nav>

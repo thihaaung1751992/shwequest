@@ -24,6 +24,15 @@
   --animate-hero-orbit-reverse: hero-orbit 17s linear infinite reverse;
   --animate-hero-orbit-inner: hero-orbit 13s linear infinite;
   --animate-hero-bob: hero-bob 1.8s ease-in-out infinite;
+  /* One pillar rises and presses, then the next. Slow enough to read. */
+  --animate-podium-press: podium-press 6s ease-in-out infinite;
+  --animate-podium-star: podium-star 6s ease-in-out infinite;
+  /* Plans A–Z: duration/delay set per letter; land angle via --land-rotate.
+     both keeps the clipped start pose during the delay.
+     Spin is its own transform so the click pop does not reset the land angle. */
+  --animate-letter-fall: letter-fall 1.6s cubic-bezier(0.33, 0, 0.2, 1) both;
+  --animate-letter-spin: letter-spin 1.6s cubic-bezier(0.33, 0, 0.2, 1) both;
+  --animate-letter-hop: letter-hop 1.05s linear both;
 
   @keyframes hero-orbit {
     to {
@@ -38,6 +47,106 @@
     }
     50% {
       transform: translateY(-0.5rem);
+    }
+  }
+
+  /* Each pillar crouches, shoots up, then presses back. Stagger so one moves at a time. */
+  @keyframes podium-press {
+    0%,
+    100% {
+      transform: scaleY(0.42);
+    }
+    14% {
+      transform: scaleY(1.12);
+    }
+    24% {
+      transform: scaleY(0.78);
+    }
+    34%,
+    86% {
+      transform: scaleY(1);
+    }
+  }
+
+  /* Matches podium-press % so the cup rides the #1 bar top (h-36 ≈ 9rem). */
+  @keyframes podium-star {
+    0%,
+    100% {
+      transform: translateY(5.25rem) scale(0.96);
+    }
+    14% {
+      transform: translateY(-1.1rem) scale(1.06);
+    }
+    24% {
+      transform: translateY(2rem) scale(0.98);
+    }
+    34%,
+    86% {
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* --drop-y pins the glyph box to the section bottom. --land-rotate is set in JS.
+     Start pose is one glyph plus 8rem above the clip. */
+  @keyframes letter-fall {
+    0% {
+      transform: translate(-50%, calc(-100% - 8rem));
+      opacity: 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    82% {
+      transform: translate(-50%, var(--drop-y, 32rem));
+      opacity: 1;
+    }
+    90% {
+      transform: translate(-50%, calc(var(--drop-y, 32rem) - 0.6rem));
+    }
+    100% {
+      transform: translate(-50%, var(--drop-y, 32rem));
+      opacity: 1;
+    }
+  }
+
+  @keyframes letter-spin {
+    from {
+      transform: rotate(var(--spin-start, 0deg));
+    }
+    to {
+      transform: rotate(var(--land-rotate, 0deg));
+    }
+  }
+
+  /* Screen-space kick: X tracks time, Y rises once, then settles on the floor.
+     Duration matches HOP_MS in home-pricing.tsx. */
+  @keyframes letter-hop {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    12% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.12), -3.04rem, 0);
+    }
+    22% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.22), -5.27rem, 0);
+    }
+    34% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.34), -6.75rem, 0);
+    }
+    48% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.48), -5.54rem, 0);
+    }
+    64% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.64), -3.38rem, 0);
+    }
+    80% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.8), -1.49rem, 0);
+    }
+    92% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.92), -0.41rem, 0);
+    }
+    100% {
+      transform: translate3d(var(--hop-x, 0px), 0, 0);
     }
   }
 }

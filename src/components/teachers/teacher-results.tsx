@@ -7,13 +7,9 @@ import type { Teacher } from "@/data/teachers";
 export default function TeacherResults({
   view,
   teachers,
-  videoCount,
-  gameCount,
 }: {
   view: TeacherView;
   teachers: Teacher[];
-  videoCount: number;
-  gameCount: number;
 }) {
   if (view === "tile") {
     return (
@@ -32,7 +28,7 @@ export default function TeacherResults({
       <ul className="mt-4 grid gap-3">
         {teachers.map((teacher) => (
           <li key={teacher.id} data-teacher-name={teacher.label}>
-            <TeacherListRow teacher={teacher} videoCount={videoCount} gameCount={gameCount} />
+            <TeacherListRow teacher={teacher} />
           </li>
         ))}
       </ul>
@@ -43,7 +39,7 @@ export default function TeacherResults({
     <ul className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {teachers.map((teacher) => (
         <li key={teacher.id} data-teacher-name={teacher.label}>
-          <TeacherCard teacher={teacher} videoCount={videoCount} gameCount={gameCount} />
+          <TeacherCard teacher={teacher} />
         </li>
       ))}
     </ul>

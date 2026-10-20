@@ -1,19 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
+import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
 import type { Teacher } from "@/data/teachers";
 
-export default function TeacherListRow({
-  teacher,
-  videoCount,
-  gameCount,
-}: {
-  teacher: Teacher;
-  videoCount: number;
-  gameCount: number;
-}) {
+export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
   const accent = ACCENT_STYLES[teacher.accent];
+  const { videos, games } = countLessons(teacher.nodes);
 
   return (
     <Link
@@ -26,12 +20,12 @@ export default function TeacherListRow({
         <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-bold text-zinc-600 dark:text-zinc-300">
           <span className="inline-flex items-center gap-1">
             <CirclePlay aria-hidden className="size-3.5" />
-            {videoCount} videos
+            {videos} videos
           </span>
           <span className="sr-only">, </span>
           <span className="inline-flex items-center gap-1">
             <Gamepad2 aria-hidden className="size-3.5" />
-            {gameCount} games
+            {games} games
           </span>
         </span>
       </span>
