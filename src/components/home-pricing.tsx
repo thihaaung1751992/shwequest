@@ -221,10 +221,27 @@ type SpinStyle = CSSProperties & {
 /** Pointer movement below this (px) counts as a tap → match-fly if possible. */
 const DRAG_TAP_PX = 10;
 
+/** Safe release — ignore if already lost or the node is gone. */
+function releasePointerCaptureSafe(
+  el: HTMLElement | null | undefined,
+  pointerId: number,
+) {
+  if (!el) return;
+  try {
+    if (el.hasPointerCapture(pointerId)) {
+      el.releasePointerCapture(pointerId);
+    }
+  } catch {
+    /* already released / detached */
+  }
+}
+
 /** Live floor-letter drag (replaces the old hop-on-click). */
 type LetterDrag = {
   id: string;
   pointerId: number;
+  /** Element that holds setPointerCapture (ink-hit glyph, may differ from event target). */
+  captureEl: HTMLElement;
   originLeft: number;
   originLift: number;
   originStack: number;
@@ -709,10 +726,13 @@ export default function HomePricing({
   }, []);
 
   const clearDrag = useCallback(() => {
-    const id = dragRef.current?.id;
-    if (id) clearDragVisual(id);
+    const drag = dragRef.current;
     dragRef.current = null;
     setDraggingId(null);
+    if (drag) {
+      releasePointerCaptureSafe(drag.captureEl, drag.pointerId);
+      clearDragVisual(drag.id);
+    }
     setSettle(null);
     clearHopTimers();
     setHops({});
@@ -1104,6 +1124,11 @@ export default function HomePricing({
       const drag = dragRef.current;
       if (!drag) return;
 
+      // Claim immediately so lostpointercapture from release cannot re-enter.
+      dragRef.current = null;
+      setDraggingId(null);
+      releasePointerCaptureSafe(drag.captureEl, drag.pointerId);
+
       const section = sectionRef.current;
       const letter = dropsRef.current.find((item) => item.id === drag.id);
       const moved =
@@ -1119,8 +1144,6 @@ export default function HomePricing({
       const releaseY = drag.y;
 
       if (!letter || consumedRef.current.has(drag.id)) {
-        dragRef.current = null;
-        setDraggingId(null);
         clearDragVisual(drag.id);
         return;
       }
@@ -1142,16 +1165,11 @@ export default function HomePricing({
       const emptySlot = slotFromPoint ?? tapSlot ?? null;
 
       if (emptySlot && sourceRect && sourceRect.width >= 1) {
-        dragRef.current = null;
-        setDraggingId(null);
         setSettle(null);
         startFillFly(emptySlot.key, sourceRect, letter);
         clearDragVisual(drag.id);
         return;
       }
-
-      dragRef.current = null;
-      setDraggingId(null);
 
       // Tap a letter with no empty matching slot → original ball-kick hop.
       if (!moved) {
@@ -1207,6 +1225,7 @@ export default function HomePricing({
       const next: LetterDrag = {
         id: hit.drop.id,
         pointerId: event.pointerId,
+        captureEl: hit.el,
         originLeft: hit.drop.left,
         originLift: hit.drop.lift,
         originStack: hit.drop.stack,
@@ -1258,16 +1277,37 @@ export default function HomePricing({
     (event: ReactPointerEvent<HTMLSpanElement>) => {
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
-      const captureEl = letterElsRef.current.get(drag.id) ?? event.currentTarget;
-      try {
-        captureEl.releasePointerCapture(event.pointerId);
-      } catch {
-        /* already released */
-      }
       endFloorDrag(event.clientX, event.clientY);
     },
     [endFloorDrag],
   );
+
+  // If the glyph never gets pointerup (tab blur, scroll steal, capture lost),
+  // window listeners still clear draggingId so the floor does not freeze.
+  useEffect(() => {
+    if (!draggingId) return;
+
+    const onWindowEnd = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      endFloorDrag(event.clientX, event.clientY);
+    };
+
+    const onLostCapture = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      endFloorDrag(event.clientX, event.clientY);
+    };
+
+    window.addEventListener("pointerup", onWindowEnd);
+    window.addEventListener("pointercancel", onWindowEnd);
+    window.addEventListener("lostpointercapture", onLostCapture);
+    return () => {
+      window.removeEventListener("pointerup", onWindowEnd);
+      window.removeEventListener("pointercancel", onWindowEnd);
+      window.removeEventListener("lostpointercapture", onLostCapture);
+    };
+  }, [draggingId, endFloorDrag]);
 
   const readMetrics = useCallback(() => {
     const section = sectionRef.current;
