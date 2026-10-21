@@ -459,6 +459,8 @@ export default function HomePricing() {
   const [flippedPlan, setFlippedPlan] = useState<CalcPlanMonths | null>(null);
   /** slotKey → floor tint used for solid fill. */
   const [filled, setFilled] = useState<Readonly<Partial<Record<string, LetterTint>>>>({});
+  const filledRef = useRef(filled);
+  filledRef.current = filled;
   /** Floor glyph ids removed after a match fly starts. */
   const [consumed, setConsumed] = useState<ReadonlySet<string>>(() => new Set());
   const consumedRef = useRef(consumed);
@@ -485,12 +487,22 @@ export default function HomePricing() {
     flyTimersRef.current = [];
   }, []);
 
-  /** Clear fills / in-flight motion and drop a fresh floor bag (same as viewport re-enter). */
+  /** True once a puzzle letter is matched (fill, consume, or in-flight fly). Hop-only does not count. */
+  const hasPuzzleProgress = useCallback(
+    () =>
+      Object.keys(filledRef.current).length > 0 ||
+      consumedRef.current.size > 0 ||
+      Object.keys(pendingFlyRef.current).length > 0,
+    [],
+  );
+
+  /** Clear fills / in-flight motion and drop a fresh floor bag (same as viewport re-enter when idle). */
   const restartPuzzle = useCallback(() => {
     clearHopTimers();
     clearFlyTimers();
     setSettled(new Set());
     setHops({});
+    filledRef.current = {};
     setFilled({});
     const empty = new Set<string>();
     consumedRef.current = empty;
@@ -655,20 +667,26 @@ export default function HomePricing() {
         const entry = entries[0];
         if (!entry) return;
 
+        // rootMargin shrinks the hit box so a tall Plans (cards + floor) does not
+        // stay "in view" forever from a floor sliver. Idle leave/re-enter reseeds;
+        // after any puzzle letter match, keep state (enter from above or below).
         if (entry.isIntersecting) {
           if (!wasInView) {
             measure();
-            restartPuzzle();
+            if (!hasPuzzleProgress()) restartPuzzle();
           }
           wasInView = true;
           return;
         }
 
         wasInView = false;
+        if (hasPuzzleProgress()) return;
+
         clearHopTimers();
         clearFlyTimers();
         setSettled(new Set());
         setHops({});
+        filledRef.current = {};
         setFilled({});
         consumedRef.current = new Set();
         setConsumed(new Set());
@@ -677,9 +695,7 @@ export default function HomePricing() {
         fillTintRef.current = {};
         setDrops([]);
       },
-      // 0 = clear only when the Plans section has fully left the viewport.
-      // A higher threshold cleared A–Z while the floor band was still on screen.
-      { threshold: 0 },
+      { threshold: 0, rootMargin: "-18% 0px -18% 0px" },
     );
 
     io.observe(section);
@@ -689,7 +705,7 @@ export default function HomePricing() {
       clearHopTimers();
       clearFlyTimers();
     };
-  }, [clearFlyTimers, clearHopTimers, restartPuzzle]);
+  }, [clearFlyTimers, clearHopTimers, hasPuzzleProgress, restartPuzzle]);
 
   return (
     <section
