@@ -164,6 +164,96 @@ function randomLandRotate(): number {
   return (Math.random() < 0.5 ? 1 : -1) * (78 + Math.random() * 30);
 }
 
+/** Alpha above this counts as painted glyph ink (empty box padding passes through). */
+const GLYPH_INK_ALPHA = 20;
+
+let glyphHitCanvas: HTMLCanvasElement | null = null;
+
+function glyphHitContext(w: number, h: number): CanvasRenderingContext2D | null {
+  if (typeof document === "undefined") return null;
+  if (!glyphHitCanvas) glyphHitCanvas = document.createElement("canvas");
+  if (glyphHitCanvas.width !== w) glyphHitCanvas.width = w;
+  if (glyphHitCanvas.height !== h) glyphHitCanvas.height = h;
+  return glyphHitCanvas.getContext("2d", { willReadFrequently: true });
+}
+
+/**
+ * True when the point sits on the letter's painted ink — not the transparent
+ * rectangular padding that would otherwise steal clicks from letters underneath.
+ */
+function glyphInkHits(el: HTMLElement, clientX: number, clientY: number): boolean {
+  const rect = el.getBoundingClientRect();
+  const w = Math.max(1, Math.ceil(rect.width));
+  const h = Math.max(1, Math.ceil(rect.height));
+  const x = Math.floor(clientX - rect.left);
+  const y = Math.floor(clientY - rect.top);
+  if (x < 0 || y < 0 || x >= w || y >= h) return false;
+
+  const char = el.textContent?.trim() ?? "";
+  if (!char) return false;
+
+  const ctx = glyphHitContext(w, h);
+  if (!ctx) return true;
+
+  const cs = getComputedStyle(el);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#000";
+  ctx.font = cs.font;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  if (cs.letterSpacing) ctx.letterSpacing = cs.letterSpacing;
+
+  const matrix = new DOMMatrix(cs.transform === "none" ? undefined : cs.transform);
+  ctx.translate(w / 2, h / 2);
+  ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f);
+  ctx.fillText(char, 0, 0);
+
+  try {
+    return (ctx.getImageData(x, y, 1, 1).data[3] ?? 0) >= GLYPH_INK_ALPHA;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Topmost letter whose *ink* contains the point. Front glyphs with empty
+ * padding at the click yield to whatever peeks out underneath.
+ */
+function pickLetterAtPoint(
+  clientX: number,
+  clientY: number,
+  drops: readonly LetterDrop[],
+  settled: ReadonlySet<string>,
+  hops: Readonly<Record<string, LetterHop>>,
+  consumed: ReadonlySet<string>,
+  els: ReadonlyMap<string, HTMLElement>,
+): { drop: LetterDrop; el: HTMLElement } | null {
+  const candidates: { drop: LetterDrop; el: HTMLElement; stack: number }[] = [];
+  for (const drop of drops) {
+    if (consumed.has(drop.id) || !settled.has(drop.id) || hops[drop.id]) continue;
+    const el = els.get(drop.id);
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    if (
+      clientX < rect.left ||
+      clientX > rect.right ||
+      clientY < rect.top ||
+      clientY > rect.bottom
+    ) {
+      continue;
+    }
+    candidates.push({ drop, el, stack: drop.stack });
+  }
+  candidates.sort((a, b) => b.stack - a.stack);
+  for (const candidate of candidates) {
+    if (glyphInkHits(candidate.el, clientX, clientY)) {
+      return { drop: candidate.drop, el: candidate.el };
+    }
+  }
+  return null;
+}
+
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 /** Extra full alphabets mixed into the floor pile (unmatched → hop). */
 const DECOY_ALPHABET_SETS = 3;
@@ -181,10 +271,10 @@ const LETTER_WIDTH_PCT = 2.8;
 /** How much each landed letter raises the surface under its bins (px). */
 const STACK_STEP_PX = 26;
 /**
- * Cap so stacks stay inside the floor spacer (h-72/sm:h-96) and do not pin to
+ * Cap so stacks stay inside the floor spacer (h-44/sm:h-56) and do not pin to
  * `floorTop` via the dropY clamp (usable ≈ floorHeight − glyph + sink).
  */
-const PILE_LIFT_CAP = 200;
+const PILE_LIFT_CAP = 120;
 /** Occasional wild left so the pile stays irregular, not a flat fill. */
 const WILD_LEFT_CHANCE = 0.12;
 
@@ -467,6 +557,8 @@ export default function HomePricing() {
   consumedRef.current = consumed;
   const [flies, setFlies] = useState<LetterFly[]>([]);
   const slotRefs = useRef<Map<string, HTMLSpanElement>>(new Map());
+  /** Landed glyph nodes — used for ink hit-testing under overlaps. */
+  const letterElsRef = useRef<Map<string, HTMLElement>>(new Map());
   /** slotKeys with an in-flight fill (blocks picking the same slot twice). */
   const pendingFlyRef = useRef<Record<string, number>>({});
   const fillTintRef = useRef<Partial<Record<string, LetterTint>>>({});
@@ -624,6 +716,63 @@ export default function HomePricing() {
       return next;
     });
   }, []);
+
+  /** Match-fly or hop for the letter whose ink was actually clicked. */
+  const activateFloorLetter = useCallback(
+    (
+      drop: LetterDrop,
+      sourceEl: HTMLElement,
+      floorDrops: readonly LetterDrop[],
+      activeHops: Readonly<Record<string, LetterHop>>,
+    ) => {
+      if (consumedRef.current.has(drop.id) || activeHops[drop.id]) return;
+
+      const emptySlot = PUZZLE_SLOTS.find(
+        (slot) =>
+          slot.char === drop.char &&
+          !fillTintRef.current[slot.key] &&
+          !pendingFlyRef.current[slot.key],
+      );
+      if (emptySlot) {
+        startFillFly(emptySlot.key, sourceEl, drop);
+        return;
+      }
+
+      const section = sectionRef.current;
+      if (!section) return;
+      const skip = consumedRef.current;
+      const others = restackLifts(
+        floorDrops.filter((item) => item.id !== drop.id && !skip.has(item.id)),
+      );
+      const nextLeft = pickFloorHopLeft(drop.left, others, drop.char);
+      const hopX = ((nextLeft - drop.left) / 100) * section.clientWidth;
+      const nextLift = Math.min(
+        drop.lift,
+        collisionLift(nextLeft, others, drop.char),
+      );
+      const finished: LetterHop = {
+        id: (activeHops[drop.id]?.id ?? 0) + 1,
+        hopX,
+        nextLeft,
+        nextLift,
+        nextRotate: randomLandRotate(),
+      };
+      setDrops((prev) => {
+        const active = prev.filter(
+          (item) => item.id !== drop.id && !skip.has(item.id),
+        );
+        const hopping = new Set(skip);
+        hopping.add(drop.id);
+        return withRestacked(prev, active, hopping);
+      });
+      setHops((prev) => ({ ...prev, [drop.id]: finished }));
+      window.clearTimeout(hopTimersRef.current[drop.id]);
+      hopTimersRef.current[drop.id] = window.setTimeout(() => {
+        commitHop(drop.id, finished);
+      }, HOP_MS + 70);
+    },
+    [commitHop, startFillFly],
+  );
 
   const readMetrics = useCallback(() => {
     const section = sectionRef.current;
@@ -788,68 +937,28 @@ export default function HomePricing() {
                       }}
                     >
                       <span
+                        ref={(node) => {
+                          if (node) letterElsRef.current.set(drop.id, node);
+                          else letterElsRef.current.delete(drop.id);
+                        }}
+                        data-letter-id={drop.id}
                         className={`block ${landed ? "" : "motion-safe:animate-letter-spin"} ${landed && !hop ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
                         style={spinStyle}
                         onClick={(event) => {
-                          if (!landed || hops[drop.id] || consumed.has(drop.id)) return;
-
-                          const emptySlot = PUZZLE_SLOTS.find(
-                            (slot) =>
-                              slot.char === drop.char &&
-                              !fillTintRef.current[slot.key] &&
-                              !pendingFlyRef.current[slot.key],
+                          if (!landed) return;
+                          // Front letter boxes steal clicks on empty padding — resolve by ink
+                          // so a peeking letter underneath is the one that activates.
+                          const hit = pickLetterAtPoint(
+                            event.clientX,
+                            event.clientY,
+                            drops,
+                            settled,
+                            hops,
+                            consumed,
+                            letterElsRef.current,
                           );
-                          if (emptySlot) {
-                            startFillFly(emptySlot.key, event.currentTarget, drop);
-                            return;
-                          }
-
-                          // No empty matching slot (decoy, excess letter, or race) → hop.
-                          const section = sectionRef.current;
-                          if (!section) return;
-                          const skip = consumedRef.current;
-                          const others = restackLifts(
-                            drops.filter(
-                              (item) =>
-                                item.id !== drop.id && !skip.has(item.id),
-                            ),
-                          );
-                          const nextLeft = pickFloorHopLeft(
-                            drop.left,
-                            others,
-                            drop.char,
-                          );
-                          const hopX = ((nextLeft - drop.left) / 100) * section.clientWidth;
-                          // Cap at current lift so a floor land does not climb onto a pile after the hop.
-                          const nextLift = Math.min(
-                            drop.lift,
-                            collisionLift(nextLeft, others, drop.char),
-                          );
-                          const finished: LetterHop = {
-                            id: (hops[drop.id]?.id ?? 0) + 1,
-                            hopX,
-                            nextLeft,
-                            nextLift,
-                            nextRotate: randomLandRotate(),
-                          };
-                          // Hopper leaves its column: stack above settles into the gap.
-                          setDrops((prev) => {
-                            const active = prev.filter(
-                              (item) =>
-                                item.id !== drop.id && !skip.has(item.id),
-                            );
-                            const hopping = new Set(skip);
-                            hopping.add(drop.id);
-                            return withRestacked(prev, active, hopping);
-                          });
-                          setHops((prev) => ({
-                            ...prev,
-                            [drop.id]: finished,
-                          }));
-                          window.clearTimeout(hopTimersRef.current[drop.id]);
-                          hopTimersRef.current[drop.id] = window.setTimeout(() => {
-                            commitHop(drop.id, finished);
-                          }, HOP_MS + 70);
+                          if (!hit) return;
+                          activateFloorLetter(hit.drop, hit.el, drops, hops);
                         }}
                       >
                         {drop.char}
@@ -1034,7 +1143,7 @@ export default function HomePricing() {
         </ul>
 
         <div
-          className="pointer-events-none mx-auto mt-16 flex max-w-3xl flex-col items-center gap-4 sm:mt-24 sm:gap-5"
+          className="pointer-events-none mx-auto mt-12 flex max-w-3xl flex-col items-center gap-2 sm:mt-16 sm:gap-3"
           role="group"
           aria-label="Learn English fluently"
         >
@@ -1079,14 +1188,14 @@ export default function HomePricing() {
           <button
             type="button"
             onClick={restartPuzzle}
-            className={`pointer-events-auto mt-2 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-zinc-300 bg-white px-5 text-sm font-bold text-zinc-800 shadow-sm transition-[transform,background-color,border-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-50 hover:shadow-md active:translate-y-0 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-400 dark:hover:bg-zinc-800 ${FOCUS}`}
+            className={`pointer-events-auto inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-zinc-300 bg-white px-5 text-sm font-bold text-zinc-800 shadow-sm transition-[transform,background-color,border-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-50 hover:shadow-md active:translate-y-0 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-400 dark:hover:bg-zinc-800 ${FOCUS}`}
           >
             <RotateCcw aria-hidden className="size-4 shrink-0" />
             Restart puzzle
           </button>
         </div>
 
-        <div ref={floorRef} aria-hidden className="pointer-events-none h-72 sm:h-96" />
+        <div ref={floorRef} aria-hidden className="pointer-events-none h-44 sm:h-56" />
       </div>
     </section>
   );
