@@ -106,24 +106,58 @@ const FLY_MS = 560;
 /** Matches `letter-hop` (0.55s) in globals.css — wrong-tap ball kick. */
 const HOP_MS = 550;
 
-/** Same palette as map boss-click confetti (`RoadmapView`). */
-const CONFETTI_COLORS = ["#f6c445", "#22c55e", "#fb923c", "#fef9c3", "#4ade80"];
+/** Puzzle success papers — warmer + cooler mix so the burst reads colorful. */
+const CONFETTI_COLORS = [
+  "#f6c445",
+  "#22c55e",
+  "#fb923c",
+  "#fef9c3",
+  "#4ade80",
+  "#38bdf8",
+  "#f472b6",
+  "#a78bfa",
+  "#facc15",
+  "#34d399",
+];
 
-/** Map-style paper burst. Origin is viewport px (phrase center on puzzle complete). */
+/**
+ * Big success burst from the phrase center. Three overlapping salvos (center +
+ * left/right) so papers fill the screen — denser than the map boss click.
+ */
 async function burstAt(x: number, y: number) {
   const { default: confetti } = await import("canvas-confetti");
-  const origin = {
-    x: x / window.innerWidth,
-    y: y / window.innerHeight,
-  };
-  await confetti({
-    particleCount: 120,
-    spread: 74,
-    startVelocity: 46,
-    origin,
+  const ox = x / window.innerWidth;
+  const oy = y / window.innerHeight;
+  const base = {
     colors: CONFETTI_COLORS,
-    disableForReducedMotion: true,
-  });
+    disableForReducedMotion: true as const,
+  };
+
+  await Promise.all([
+    confetti({
+      ...base,
+      particleCount: 180,
+      spread: 100,
+      startVelocity: 52,
+      origin: { x: ox, y: oy },
+    }),
+    confetti({
+      ...base,
+      particleCount: 110,
+      angle: 60,
+      spread: 70,
+      startVelocity: 48,
+      origin: { x: Math.max(0.08, ox - 0.18), y: oy },
+    }),
+    confetti({
+      ...base,
+      particleCount: 110,
+      angle: 120,
+      spread: 70,
+      startVelocity: 48,
+      origin: { x: Math.min(0.92, ox + 0.18), y: oy },
+    }),
+  ]);
 }
 
 type LetterFly = {
