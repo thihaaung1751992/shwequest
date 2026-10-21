@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Calculator } from "lucide-react";
+import { ArrowRight, Calculator, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import FrostGlass from "@/components/frost-glass";
 import PlanCalculator, { type CalcPlanMonths } from "@/components/plan-calculator";
@@ -75,22 +75,22 @@ const PUZZLE_SLOTS = PUZZLE_WORDS.flatMap((word) =>
 );
 
 const LETTER_TINTS = [
-  "text-sky-600/45",
-  "text-amber-600/45",
-  "text-orange-600/45",
-  "text-emerald-600/45",
-  "text-zinc-600/45",
+  "text-sky-600/90",
+  "text-amber-600/90",
+  "text-orange-600/90",
+  "text-emerald-600/90",
+  "text-zinc-600/90",
 ] as const;
 
 type LetterTint = (typeof LETTER_TINTS)[number];
 
 /** Solid slot fill after fly-in — same hue as the floor glyph, full opacity. */
 const LETTER_FILL: Record<LetterTint, string> = {
-  "text-sky-600/45": "text-sky-600",
-  "text-amber-600/45": "text-amber-600",
-  "text-orange-600/45": "text-orange-600",
-  "text-emerald-600/45": "text-emerald-600",
-  "text-zinc-600/45": "text-zinc-600",
+  "text-sky-600/90": "text-sky-600",
+  "text-amber-600/90": "text-amber-600",
+  "text-orange-600/90": "text-orange-600",
+  "text-emerald-600/90": "text-emerald-600",
+  "text-zinc-600/90": "text-zinc-600",
 };
 
 /** Matches `letter-fly-in` in globals.css. */
@@ -584,10 +584,11 @@ export default function HomePricing() {
       const others = restackLifts(
         prev.filter((item) => item.id !== dropId && !skip.has(item.id)),
       );
-      const landLift = collisionLift(
-        finished.nextLeft,
-        others,
-        hopper?.char,
+      // Hop animation ends at the start height (Y=0). Never climb after that
+      // settle — only allow gravity down into a lower gap at the new column.
+      const landLift = Math.min(
+        hopper?.lift ?? finished.nextLift,
+        collisionLift(finished.nextLeft, others, hopper?.char),
       );
       const byId = new Map(others.map((d) => [d.id, d]));
       return prev.map((item) => {
@@ -746,7 +747,7 @@ export default function HomePricing() {
                 return (
                   <span
                     key={`${runId}-${drop.id}`}
-                    className={`pointer-events-none absolute top-0 text-7xl leading-none font-extrabold tracking-tight select-none sm:text-8xl ${drop.tint} ${landed ? "" : "motion-safe:animate-letter-fall"}`}
+                    className={`pointer-events-none absolute top-0 text-7xl leading-none font-extrabold tracking-tight drop-shadow-[0_2px_2px_rgb(0_0_0_/_0.45)] select-none sm:text-8xl ${drop.tint} ${landed ? "" : "motion-safe:animate-letter-fall"}`}
                     style={style}
                     onAnimationEnd={(event) => {
                       if (event.target !== event.currentTarget) return;
@@ -803,11 +804,16 @@ export default function HomePricing() {
                             drop.char,
                           );
                           const hopX = ((nextLeft - drop.left) / 100) * section.clientWidth;
+                          // Cap at current lift so a floor land does not climb onto a pile after the hop.
+                          const nextLift = Math.min(
+                            drop.lift,
+                            collisionLift(nextLeft, others, drop.char),
+                          );
                           const finished: LetterHop = {
                             id: (hops[drop.id]?.id ?? 0) + 1,
                             hopX,
                             nextLeft,
-                            nextLift: collisionLift(nextLeft, others, drop.char),
+                            nextLift,
                             nextRotate: randomLandRotate(),
                           };
                           // Hopper leaves its column: stack above settles into the gap.
@@ -1057,8 +1063,9 @@ export default function HomePricing() {
           <button
             type="button"
             onClick={restartPuzzle}
-            className={`pointer-events-auto mt-1 min-h-10 cursor-pointer rounded-full px-4 text-sm font-semibold text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100 ${FOCUS}`}
+            className={`pointer-events-auto mt-2 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-zinc-300 bg-white px-5 text-sm font-bold text-zinc-800 shadow-sm transition-[transform,background-color,border-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-50 hover:shadow-md active:translate-y-0 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-400 dark:hover:bg-zinc-800 ${FOCUS}`}
           >
+            <RotateCcw aria-hidden className="size-4 shrink-0" />
             Restart puzzle
           </button>
         </div>
