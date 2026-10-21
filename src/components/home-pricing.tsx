@@ -103,10 +103,32 @@ const LETTER_FILL: Record<LetterTint, string> = {
 
 /** Matches `letter-fly-in` in globals.css. */
 const FLY_MS = 560;
+/** Matches `letter-hop` (0.55s) in globals.css — wrong-tap ball kick. */
+const HOP_MS = 550;
+
+/** Same palette as map boss-click confetti (`RoadmapView`). */
+const CONFETTI_COLORS = ["#f6c445", "#22c55e", "#fb923c", "#fef9c3", "#4ade80"];
+
+/** Map-style paper burst. Origin is viewport px (phrase center on puzzle complete). */
+async function burstAt(x: number, y: number) {
+  const { default: confetti } = await import("canvas-confetti");
+  const origin = {
+    x: x / window.innerWidth,
+    y: y / window.innerHeight,
+  };
+  await confetti({
+    particleCount: 120,
+    spread: 74,
+    startVelocity: 46,
+    origin,
+    colors: CONFETTI_COLORS,
+    disableForReducedMotion: true,
+  });
+}
 
 type LetterFly = {
   id: number;
-  /** Puzzle slot this fly lands in (one floor glyph → one slot). */
+  /** Puzzle slot this fly lands in. */
   slotKey: string;
   char: string;
   left: number;
@@ -124,6 +146,18 @@ type FlyStyle = CSSProperties & {
   "--fly-y"?: string;
   "--fly-scale"?: number;
   "--fly-rotate"?: string;
+};
+
+type HopStyle = CSSProperties & {
+  "--hop-x"?: string;
+};
+
+type LetterHop = {
+  id: number;
+  hopX: number;
+  nextLeft: number;
+  nextLift: number;
+  nextRotate: number;
 };
 
 type LetterDrop = {
@@ -250,11 +284,17 @@ function pickLetterAtPoint(
   settled: ReadonlySet<string>,
   draggingId: string | null,
   consumed: ReadonlySet<string>,
+  hops: Readonly<Record<string, LetterHop>>,
   els: ReadonlyMap<string, HTMLElement>,
 ): { drop: LetterDrop; el: HTMLElement } | null {
   const candidates: { drop: LetterDrop; el: HTMLElement; stack: number }[] = [];
   for (const drop of drops) {
-    if (consumed.has(drop.id) || !settled.has(drop.id) || drop.id === draggingId) {
+    if (
+      consumed.has(drop.id) ||
+      hops[drop.id] ||
+      !settled.has(drop.id) ||
+      drop.id === draggingId
+    ) {
       continue;
     }
     const el = els.get(drop.id);
@@ -380,6 +420,43 @@ function pickLowestSurfaceLeft(surfaces: readonly number[]): number {
   }
   const bin = lowBins[Math.floor(Math.random() * lowBins.length)] ?? 0;
   return leftFromBin(bin);
+}
+
+/**
+ * Wrong-tap hop landing: prefer a low slot clearly away from the current left.
+ */
+function pickFloorHopLeft(
+  current: number,
+  others: readonly LetterDrop[],
+  char?: string,
+): number {
+  if (Math.random() < WILD_LEFT_CHANCE) {
+    let next = floorLeft();
+    if (Math.abs(next - current) < 10) {
+      const mid = (FLOOR_LEFT_MIN + FLOOR_LEFT_MAX) / 2;
+      const kick = (current <= mid ? 1 : -1) * (14 + Math.random() * 22);
+      next = clampFloorLeft(current + kick);
+    }
+    return next;
+  }
+
+  let bestLeft = floorLeft();
+  let bestLift = Infinity;
+  for (let attempt = 0; attempt < 18; attempt += 1) {
+    const candidate = leftFromBin(Math.floor(Math.random() * FLOOR_BIN_COUNT));
+    if (Math.abs(candidate - current) < 10) continue;
+    const lift = collisionLift(candidate, others, char);
+    if (lift < bestLift) {
+      bestLift = lift;
+      bestLeft = candidate;
+    }
+  }
+  if (Math.abs(bestLeft - current) < 10) {
+    const mid = (FLOOR_LEFT_MIN + FLOOR_LEFT_MAX) / 2;
+    const kick = (current <= mid ? 1 : -1) * (14 + Math.random() * 22);
+    return clampFloorLeft(current + kick);
+  }
+  return bestLeft;
 }
 
 /** Map a letter's horizontal hitbox onto floor bin indices. */
@@ -521,10 +598,21 @@ function isCalcPlan(months: PlanMonths): months is CalcPlanMonths {
   return months === 3 || months === 6 || months === 12;
 }
 
-export default function HomePricing() {
+export default function HomePricing({
+  forceComplete = false,
+}: {
+  /** When true (`?result=true`), paint every slot filled and fire success papers once. */
+  forceComplete?: boolean;
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const floorRef = useRef<HTMLDivElement>(null);
   const glyphRef = useRef<HTMLSpanElement>(null);
+  /** Phrase block — confetti origin when every slot is filled. */
+  const puzzlePhraseRef = useRef<HTMLDivElement>(null);
+  /** One celebration per completed run (cleared on Restart). */
+  const celebratedRef = useRef(false);
+  /** URL force-complete applies once per mount (Restart does not re-fire while param stays). */
+  const forceCompleteAppliedRef = useRef(false);
   const [drops, setDrops] = useState<LetterDrop[]>([]);
   const dropsRef = useRef(drops);
   dropsRef.current = drops;
@@ -538,6 +626,9 @@ export default function HomePricing() {
   const dragRef = useRef<LetterDrag | null>(null);
   /** Release → floor gravity settle (from drop height, not section top). */
   const [settle, setSettle] = useState<LetterSettle | null>(null);
+  /** Wrong-tap ball-kick hops (original letter-hop on the glyph). */
+  const [hops, setHops] = useState<Record<string, LetterHop>>({});
+  const hopTimersRef = useRef<Record<string, number>>({});
   /** Outer position nodes — updated directly while dragging to avoid 98-letter re-renders. */
   const letterOuterRefs = useRef<Map<string, HTMLElement>>(new Map());
   const [flippedPlan, setFlippedPlan] = useState<CalcPlanMonths | null>(null);
@@ -576,13 +667,22 @@ export default function HomePricing() {
     outer.style.transition = "";
   }, []);
 
+  const clearHopTimers = useCallback(() => {
+    for (const timer of Object.values(hopTimersRef.current)) {
+      window.clearTimeout(timer);
+    }
+    hopTimersRef.current = {};
+  }, []);
+
   const clearDrag = useCallback(() => {
     const id = dragRef.current?.id;
     if (id) clearDragVisual(id);
     dragRef.current = null;
     setDraggingId(null);
     setSettle(null);
-  }, [clearDragVisual]);
+    clearHopTimers();
+    setHops({});
+  }, [clearDragVisual, clearHopTimers]);
 
   /** True once a puzzle letter is matched (fill, consume, or in-flight fly). Drag-only does not count. */
   const hasPuzzleProgress = useCallback(
@@ -598,6 +698,7 @@ export default function HomePricing() {
     clearFlyTimers();
     clearDrag();
     setSettled(new Set());
+    celebratedRef.current = false;
     filledRef.current = {};
     setFilled({});
     const empty = new Set<string>();
@@ -612,12 +713,106 @@ export default function HomePricing() {
 
   const commitFill = useCallback((slotKey: string) => {
     const tint = fillTintRef.current[slotKey] ?? LETTER_TINTS[0]!;
+    let justCompleted = false;
     setFilled((prev) => {
       if (prev[slotKey]) return prev;
-      return { ...prev, [slotKey]: tint };
+      const next = { ...prev, [slotKey]: tint };
+      if (Object.keys(next).length === PUZZLE_SLOTS.length) {
+        justCompleted = true;
+      }
+      return next;
     });
     setFlies((prev) => prev.filter((fly) => fly.slotKey !== slotKey));
     delete pendingFlyRef.current[slotKey];
+
+    if (!justCompleted || celebratedRef.current) return;
+    celebratedRef.current = true;
+    const box = puzzlePhraseRef.current?.getBoundingClientRect();
+    const x = box ? box.left + box.width / 2 : window.innerWidth / 2;
+    const y = box ? box.top + box.height / 2 : window.innerHeight / 2;
+    void burstAt(x, y);
+  }, []);
+
+  /**
+   * Demo / share URL: `?result=true` → treat the phrase as solved and burst papers.
+   * Seeds the floor if IO has not yet, consumes puzzle-slot glyphs, applies once per mount.
+   * Cleanup resets the apply guard so React Strict Mode can re-run; Restart does not
+   * re-trigger because this effect’s deps stay put while `forceCompleteAppliedRef` is true.
+   */
+  useEffect(() => {
+    if (!forceComplete || forceCompleteAppliedRef.current) return;
+    forceCompleteAppliedRef.current = true;
+
+    clearFlyTimers();
+    clearDrag();
+    setFlies([]);
+    pendingFlyRef.current = {};
+
+    let bag = dropsRef.current;
+    if (bag.length === 0) {
+      bag = seedLetters();
+      setRunId((n) => n + 1);
+    }
+
+    const byId = new Map(bag.map((drop) => [drop.id, drop]));
+    const nextFilled: Partial<Record<string, LetterTint>> = {};
+    PUZZLE_SLOTS.forEach((slot, index) => {
+      const tint =
+        byId.get(slot.key)?.tint ?? LETTER_TINTS[index % LETTER_TINTS.length]!;
+      nextFilled[slot.key] = tint;
+      fillTintRef.current[slot.key] = tint;
+    });
+
+    const skip = new Set<string>([
+      ...consumedRef.current,
+      ...PUZZLE_SLOTS.map((slot) => slot.key),
+    ]);
+    const active = bag.filter((drop) => !skip.has(drop.id));
+    const nextDrops = withRestacked(bag, active, skip);
+
+    filledRef.current = nextFilled;
+    setFilled(nextFilled);
+    consumedRef.current = skip;
+    setConsumed(skip);
+    setDrops(nextDrops);
+    setSettled(new Set(nextDrops.map((drop) => drop.id)));
+    celebratedRef.current = true;
+
+    let cancelled = false;
+    let rafOuter = 0;
+    let rafInner = 0;
+    rafOuter = requestAnimationFrame(() => {
+      rafInner = requestAnimationFrame(() => {
+        if (cancelled) return;
+        const box = puzzlePhraseRef.current?.getBoundingClientRect();
+        const x = box ? box.left + box.width / 2 : window.innerWidth / 2;
+        const y = box ? box.top + box.height / 2 : window.innerHeight / 2;
+        void burstAt(x, y);
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafOuter);
+      cancelAnimationFrame(rafInner);
+      // Strict Mode: allow the remounted effect to apply + burst once.
+      forceCompleteAppliedRef.current = false;
+    };
+  }, [forceComplete, clearDrag, clearFlyTimers]);
+
+  /** Remove a floor glyph and restack the pile (match fill only). */
+  const consumeFloorGlyph = useCallback((dropId: string) => {
+    setConsumed((prev) => {
+      const next = new Set(prev);
+      next.add(dropId);
+      consumedRef.current = next;
+      setDrops((prevDrops) => {
+        const skip = next;
+        const active = prevDrops.filter((d) => !skip.has(d.id));
+        return withRestacked(prevDrops, active, skip);
+      });
+      return next;
+    });
   }, []);
 
   /**
@@ -630,19 +825,7 @@ export default function HomePricing() {
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       fillTintRef.current[slotKey] = drop.tint;
-
-      setConsumed((prev) => {
-        const next = new Set(prev);
-        next.add(drop.id);
-        consumedRef.current = next;
-        // Gap left by this glyph: letters above settle into free surface.
-        setDrops((prevDrops) => {
-          const skip = next;
-          const active = prevDrops.filter((d) => !skip.has(d.id));
-          return withRestacked(prevDrops, active, skip);
-        });
-        return next;
-      });
+      consumeFloorGlyph(drop.id);
 
       if (!section || reduceMotion) {
         commitFill(slotKey);
@@ -682,7 +865,89 @@ export default function HomePricing() {
       }, FLY_MS + 80);
       flyTimersRef.current.push(timer);
     },
-    [commitFill],
+    [commitFill, consumeFloorGlyph],
+  );
+
+  const commitHop = useCallback((dropId: string, finished: LetterHop) => {
+    window.clearTimeout(hopTimersRef.current[dropId]);
+    delete hopTimersRef.current[dropId];
+    setDrops((prev) => {
+      const skip = consumedRef.current;
+      const hopper = prev.find((item) => item.id === dropId);
+      const others = restackLifts(
+        prev.filter((item) => item.id !== dropId && !skip.has(item.id)),
+      );
+      // Hop ends at start height (Y=0). Never climb after settle — gravity only.
+      const landLift = Math.min(
+        hopper?.lift ?? finished.nextLift,
+        collisionLift(finished.nextLeft, others, hopper?.char),
+      );
+      const byId = new Map(others.map((d) => [d.id, d]));
+      return prev.map((item) => {
+        if (item.id === dropId) {
+          return {
+            ...item,
+            left: finished.nextLeft,
+            lift: landLift,
+            landRotate: finished.nextRotate,
+            spinStart: finished.nextRotate,
+          };
+        }
+        if (skip.has(item.id)) return item;
+        return byId.get(item.id) ?? item;
+      });
+    });
+    setHops((prev) => {
+      if (prev[dropId]?.id !== finished.id) return prev;
+      const next = { ...prev };
+      delete next[dropId];
+      return next;
+    });
+  }, []);
+
+  /**
+   * Wrong tap: original ball-kick hop on the floor glyph itself
+   * (`letter-hop`), then land somewhere else — not a vanish / clone fly.
+   */
+  const startWrongHop = useCallback(
+    (drop: LetterDrop, floorDrops: readonly LetterDrop[]) => {
+      const section = sectionRef.current;
+      if (!section) return;
+      if (consumedRef.current.has(drop.id)) return;
+
+      const skip = consumedRef.current;
+      const others = restackLifts(
+        floorDrops.filter((item) => item.id !== drop.id && !skip.has(item.id)),
+      );
+      const nextLeft = pickFloorHopLeft(drop.left, others, drop.char);
+      const hopX = ((nextLeft - drop.left) / 100) * section.clientWidth;
+      const nextLift = Math.min(
+        drop.lift,
+        collisionLift(nextLeft, others, drop.char),
+      );
+      const finished: LetterHop = {
+        id: Date.now(),
+        hopX,
+        nextLeft,
+        nextLift,
+        // Keep pose — a mid-hop rotate snap reads as stutter on land.
+        nextRotate: drop.landRotate,
+      };
+      setDrops((prev) => {
+        const active = prev.filter(
+          (item) => item.id !== drop.id && !skip.has(item.id),
+        );
+        const hopping = new Set(skip);
+        hopping.add(drop.id);
+        return withRestacked(prev, active, hopping);
+      });
+      setHops((prev) => ({ ...prev, [drop.id]: finished }));
+      window.clearTimeout(hopTimersRef.current[drop.id]);
+      hopTimersRef.current[drop.id] = window.setTimeout(() => {
+        commitHop(drop.id, finished);
+      }, HOP_MS + 40);
+    },
+    [commitHop],
   );
 
   const applyDragVisual = useCallback((drag: LetterDrag) => {
@@ -854,9 +1119,11 @@ export default function HomePricing() {
       dragRef.current = null;
       setDraggingId(null);
 
+      // Tap a letter with no empty matching slot → original ball-kick hop.
       if (!moved) {
         clearDragVisual(drag.id);
-        if (drag.lifted) restoreDragOrigin(drag);
+        setSettle(null);
+        startWrongHop(letter, dropsRef.current);
         return;
       }
 
@@ -874,6 +1141,7 @@ export default function HomePricing() {
       commitDragLand,
       findMatchingSlotAtPoint,
       restoreDragOrigin,
+      startWrongHop,
       startFillFly,
     ],
   );
@@ -890,6 +1158,7 @@ export default function HomePricing() {
         settled,
         draggingId ?? settle?.id ?? null,
         consumedRef.current,
+        hops,
         letterElsRef.current,
       );
       if (!hit) return;
@@ -920,7 +1189,7 @@ export default function HomePricing() {
       hit.el.setPointerCapture(event.pointerId);
       event.preventDefault();
     },
-    [applyDragVisual, draggingId, settle?.id, settled],
+    [applyDragVisual, draggingId, hops, settle?.id, settled],
   );
 
   const onFloorPointerMove = useCallback(
@@ -1038,6 +1307,7 @@ export default function HomePricing() {
         clearFlyTimers();
         clearDrag();
         setSettled(new Set());
+        celebratedRef.current = false;
         filledRef.current = {};
         setFilled({});
         consumedRef.current = new Set();
@@ -1083,6 +1353,7 @@ export default function HomePricing() {
                   sectionHeight - glyphHeight + sink - drop.lift,
                 );
                 const landed = settled.has(drop.id);
+                const hop = hops[drop.id];
                 const isDragging = draggingId === drop.id;
                 const liveDrag = isDragging ? dragRef.current : null;
                 const isSettling = settle?.id === drop.id;
@@ -1112,8 +1383,9 @@ export default function HomePricing() {
                         transform: `translate(-50%, ${dropY}px)`,
                         zIndex: drop.stack,
                         // Gravity settle when lift drops after a support is removed.
-                        transition:
-                          "transform 0.55s cubic-bezier(0.33, 0, 0.2, 1)",
+                        transition: hop
+                          ? undefined
+                          : "transform 0.55s cubic-bezier(0.33, 0, 0.2, 1)",
                       }
                     : {
                         left: `${drop.left}%`,
@@ -1159,33 +1431,56 @@ export default function HomePricing() {
                     }}
                   >
                     <span
-                      ref={(node) => {
-                        if (node) letterElsRef.current.set(drop.id, node);
-                        else letterElsRef.current.delete(drop.id);
+                      className={`block ${hop ? "motion-safe:animate-letter-hop" : ""}`}
+                      style={
+                        hop
+                          ? ({ "--hop-x": `${hop.hopX}px` } as HopStyle)
+                          : undefined
+                      }
+                      onAnimationEnd={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (!event.animationName.includes("letter-hop")) return;
+                        if (!hop) return;
+                        commitHop(drop.id, hop);
                       }}
-                      data-letter-id={drop.id}
-                      className={`block touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
-                        landed && !isSettling
-                          ? isDragging
-                            ? "pointer-events-auto cursor-grabbing"
-                            : "pointer-events-auto cursor-grab"
-                          : "pointer-events-none"
-                      }`}
-                      style={spinStyle}
-                      onPointerDown={
-                        landed && !isSettling ? onFloorPointerDown : undefined
-                      }
-                      onPointerMove={
-                        landed && !isSettling ? onFloorPointerMove : undefined
-                      }
-                      onPointerUp={
-                        landed && !isSettling ? onFloorPointerUp : undefined
-                      }
-                      onPointerCancel={
-                        landed && !isSettling ? onFloorPointerUp : undefined
-                      }
                     >
-                      {drop.char}
+                      <span
+                        ref={(node) => {
+                          if (node) letterElsRef.current.set(drop.id, node);
+                          else letterElsRef.current.delete(drop.id);
+                        }}
+                        data-letter-id={drop.id}
+                        className={`block touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
+                          landed && !isSettling && !hop
+                            ? isDragging
+                              ? "pointer-events-auto cursor-grabbing"
+                              : "pointer-events-auto cursor-grab"
+                            : "pointer-events-none"
+                        }`}
+                        style={spinStyle}
+                        onPointerDown={
+                          landed && !isSettling && !hop
+                            ? onFloorPointerDown
+                            : undefined
+                        }
+                        onPointerMove={
+                          landed && !isSettling && !hop
+                            ? onFloorPointerMove
+                            : undefined
+                        }
+                        onPointerUp={
+                          landed && !isSettling && !hop
+                            ? onFloorPointerUp
+                            : undefined
+                        }
+                        onPointerCancel={
+                          landed && !isSettling && !hop
+                            ? onFloorPointerUp
+                            : undefined
+                        }
+                      >
+                        {drop.char}
+                      </span>
                     </span>
                   </span>
                 );
@@ -1373,7 +1668,10 @@ export default function HomePricing() {
           <p className="sr-only">
             Click matching letters on the floor to fill LEARN ENGLISH FLUENTLY.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 sm:gap-x-8 sm:gap-y-4">
+          <div
+            ref={puzzlePhraseRef}
+            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 sm:gap-x-8 sm:gap-y-4"
+          >
             {PUZZLE_WORDS.map((word) => (
               <div key={word} className="flex items-center gap-0.5 sm:gap-1" aria-hidden>
                 {word.split("").map((char, index) => {

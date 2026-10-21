@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import HomeAbout from "@/components/home-about";
 import HomeHero from "@/components/home-hero";
 import HomeLeaderboardCta from "@/components/home-leaderboard-cta";
@@ -9,12 +10,26 @@ export const metadata: Metadata = {
   title: "Home · Shwequest",
 };
 
-export default function HomePage() {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+function firstParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+async function HomePricingFromUrl({ searchParams }: { searchParams: SearchParams }) {
+  const result = firstParam((await searchParams).result);
+  return <HomePricing forceComplete={result === "true"} />;
+}
+
+export default function HomePage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <PageShell title="Shwequest">
       <HomeHero />
       <HomeLeaderboardCta />
-      <HomePricing />
+      <Suspense fallback={<HomePricing />}>
+        <HomePricingFromUrl searchParams={searchParams} />
+      </Suspense>
       <HomeAbout />
     </PageShell>
   );

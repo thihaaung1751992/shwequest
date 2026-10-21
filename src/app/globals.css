@@ -32,7 +32,9 @@
      Spin is its own transform so the click pop does not reset the land angle. */
   --animate-letter-fall: letter-fall 1.6s cubic-bezier(0.33, 0, 0.2, 1) both;
   --animate-letter-spin: letter-spin 1.6s cubic-bezier(0.33, 0, 0.2, 1) both;
-  --animate-letter-hop: letter-hop 1.05s linear both;
+  /* Wrong-tap kick: linear clock so the arc does not stutter between keys.
+     Duration matches HOP_MS in home-pricing. */
+  --animate-letter-hop: letter-hop 0.55s linear both;
   --animate-letter-slot-in: letter-slot-in 0.35s ease-out both;
   --animate-letter-fly-in: letter-fly-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) both;
 
@@ -145,32 +147,33 @@
     }
   }
 
-  /* Screen-space kick: X tracks time, Y rises once, then settles on the floor.
-     Duration matches HOP_MS in home-pricing.tsx. */
+  /* Wrong-tap ball kick on the floor glyph itself.
+     Linear timing + evenly spaced samples → continuous arc (no ease resets).
+     X ∝ t; Y peaks early (~30%) then falls — kicked-ball path. */
   @keyframes letter-hop {
     0% {
       transform: translate3d(0, 0, 0);
     }
-    12% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.12), -3.04rem, 0);
+    10% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.1), -3rem, 0);
     }
-    22% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.22), -5.27rem, 0);
+    20% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.2), -5.25rem, 0);
     }
-    34% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.34), -6.75rem, 0);
+    30% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.3), -6.5rem, 0);
     }
-    48% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.48), -5.54rem, 0);
+    42% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.42), -5.4rem, 0);
     }
-    64% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.64), -3.38rem, 0);
+    55% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.55), -3.6rem, 0);
     }
-    80% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.8), -1.49rem, 0);
+    70% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.7), -1.8rem, 0);
     }
-    92% {
-      transform: translate3d(calc(var(--hop-x, 0px) * 0.92), -0.41rem, 0);
+    85% {
+      transform: translate3d(calc(var(--hop-x, 0px) * 0.85), -0.5rem, 0);
     }
     100% {
       transform: translate3d(var(--hop-x, 0px), 0, 0);
