@@ -33,6 +33,8 @@
   --animate-letter-fall: letter-fall 1.6s cubic-bezier(0.33, 0, 0.2, 1) both;
   --animate-letter-spin: letter-spin 1.6s cubic-bezier(0.33, 0, 0.2, 1) both;
   --animate-letter-hop: letter-hop 1.05s linear both;
+  --animate-letter-slot-in: letter-slot-in 0.35s ease-out both;
+  --animate-letter-fly-in: letter-fly-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) both;
 
   @keyframes hero-orbit {
     to {
@@ -118,6 +120,31 @@
     }
   }
 
+  /* Solid letter pops in after fly clones land (or reduced-motion instant fill). */
+  @keyframes letter-slot-in {
+    from {
+      opacity: 0;
+      transform: scale(0.65);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Floor glyph → outline slot. --fly-x/y/scale/rotate set in JS. */
+  @keyframes letter-fly-in {
+    from {
+      transform: translate3d(0, 0, 0) scale(1) rotate(var(--fly-rotate, 0deg));
+      opacity: 1;
+    }
+    to {
+      transform: translate3d(var(--fly-x, 0px), var(--fly-y, 0px), 0)
+        scale(var(--fly-scale, 0.35)) rotate(0deg);
+      opacity: 1;
+    }
+  }
+
   /* Screen-space kick: X tracks time, Y rises once, then settles on the floor.
      Duration matches HOP_MS in home-pricing.tsx. */
   @keyframes letter-hop {
@@ -155,4 +182,49 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/*
+ * Hollow puzzle blanks: absolute stroke under + solid white fill over.
+ * (Grid stacking failed in-browser and drew stroke/fill as two rows.)
+ * Fill covers internal contour cuts; only the outer silhouette stroke shows.
+ */
+.puzzle-letter-outline {
+  position: relative;
+  isolation: isolate;
+}
+
+.puzzle-letter-outline__stroke {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* ~2px so ~1px stays outside after the fill covers the inner half. */
+  -webkit-text-stroke: 2px rgb(161 161 170 / 0.45);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.puzzle-letter-outline__fill {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+.dark .puzzle-letter-outline__stroke {
+  -webkit-text-stroke: 2px rgb(255 255 255 / 0.35);
+}
+
+@supports not (-webkit-text-stroke: 2px rgb(161 161 170 / 0.45)) {
+  .puzzle-letter-outline__stroke {
+    display: none;
+  }
+
+  .puzzle-letter-outline__fill {
+    color: rgb(228 228 231 / 0.55);
+    -webkit-text-fill-color: currentColor;
+  }
 }
