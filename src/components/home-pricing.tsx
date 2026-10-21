@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { ArrowRight, Calculator, RotateCcw } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import FrostGlass from "@/components/frost-glass";
 import PlanCalculator, { type CalcPlanMonths } from "@/components/plan-calculator";
 
@@ -142,19 +150,34 @@ type SpinStyle = CSSProperties & {
   "--spin-start"?: string;
 };
 
-type HopStyle = CSSProperties & {
-  "--hop-x"?: string;
+/** Pointer movement below this (px) counts as a tap → match-fly if possible. */
+const DRAG_TAP_PX = 10;
+
+/** Live floor-letter drag (replaces the old hop-on-click). */
+type LetterDrag = {
+  id: string;
+  pointerId: number;
+  originLeft: number;
+  originLift: number;
+  originStack: number;
+  startClientX: number;
+  startClientY: number;
+  /** Section-local glyph center while dragging. */
+  x: number;
+  y: number;
+  /** True once movement exceeds DRAG_TAP_PX — pile gap opens. */
+  lifted: boolean;
 };
 
-/** Matches `letter-hop` (1.05s) in globals.css. */
-const HOP_MS = 1050;
-
-type LetterHop = {
-  id: number;
-  hopX: number;
-  nextLeft: number;
-  nextLift: number;
-  nextRotate: number;
+/**
+ * After pointer-up: fall from the release height to the pile surface
+ * (not from the section top — that looked like a re-seed fall).
+ */
+type LetterSettle = {
+  id: string;
+  fromY: number;
+  toY: number;
+  phase: "start" | "anim";
 };
 
 function randomLandRotate(): number {
@@ -225,13 +248,15 @@ function pickLetterAtPoint(
   clientY: number,
   drops: readonly LetterDrop[],
   settled: ReadonlySet<string>,
-  hops: Readonly<Record<string, LetterHop>>,
+  draggingId: string | null,
   consumed: ReadonlySet<string>,
   els: ReadonlyMap<string, HTMLElement>,
 ): { drop: LetterDrop; el: HTMLElement } | null {
   const candidates: { drop: LetterDrop; el: HTMLElement; stack: number }[] = [];
   for (const drop of drops) {
-    if (consumed.has(drop.id) || !settled.has(drop.id) || hops[drop.id]) continue;
+    if (consumed.has(drop.id) || !settled.has(drop.id) || drop.id === draggingId) {
+      continue;
+    }
     const el = els.get(drop.id);
     if (!el) continue;
     const rect = el.getBoundingClientRect();
@@ -255,7 +280,7 @@ function pickLetterAtPoint(
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-/** Extra full alphabets mixed into the floor pile (unmatched → hop). */
+/** Extra full alphabets mixed into the floor pile (drag to move; tap matches puzzle). */
 const DECOY_ALPHABET_SETS = 3;
 
 /** Floor span across the full Plans section (percent). Pad so glyphs do not clip. */
@@ -357,44 +382,6 @@ function pickLowestSurfaceLeft(surfaces: readonly number[]): number {
   return leftFromBin(bin);
 }
 
-/**
- * Hop landing: prefer a low collision slot away from the current left.
- * Falls back to a kicked random left if every sample stays too close.
- */
-function pickFloorHopLeft(
-  current: number,
-  others: readonly LetterDrop[],
-  char?: string,
-): number {
-  if (Math.random() < WILD_LEFT_CHANCE) {
-    let next = floorLeft();
-    if (Math.abs(next - current) < 8) {
-      const mid = (FLOOR_LEFT_MIN + FLOOR_LEFT_MAX) / 2;
-      const kick = (current <= mid ? 1 : -1) * (12 + Math.random() * 18);
-      next = clampFloorLeft(current + kick);
-    }
-    return next;
-  }
-
-  let bestLeft = floorLeft();
-  let bestLift = Infinity;
-  for (let attempt = 0; attempt < 16; attempt += 1) {
-    const candidate = leftFromBin(Math.floor(Math.random() * FLOOR_BIN_COUNT));
-    if (Math.abs(candidate - current) < 8) continue;
-    const lift = collisionLift(candidate, others, char);
-    if (lift < bestLift) {
-      bestLift = lift;
-      bestLeft = candidate;
-    }
-  }
-  if (Math.abs(bestLeft - current) < 8) {
-    const mid = (FLOOR_LEFT_MIN + FLOOR_LEFT_MAX) / 2;
-    const kick = (current <= mid ? 1 : -1) * (12 + Math.random() * 18);
-    return clampFloorLeft(current + kick);
-  }
-  return bestLeft;
-}
-
 /** Map a letter's horizontal hitbox onto floor bin indices. */
 function leftToBins(left: number, char?: string): { start: number; end: number } {
   const span = FLOOR_LEFT_MAX - FLOOR_LEFT_MIN;
@@ -424,7 +411,7 @@ function placeOnSurface(left: number, surfaces: number[], char?: string): number
   return lift;
 }
 
-/** Lift for a hop landing: top of any overlapping settled letter + one step. */
+/** Lift for a drag landing: top of any overlapping settled letter + one step. */
 function collisionLift(
   left: number,
   others: readonly LetterDrop[],
@@ -441,7 +428,7 @@ function collisionLift(
 }
 
 /**
- * After a support leaves (match fly or hop away), drop remaining letters into
+ * After a support leaves (match fly or drag lift), drop remaining letters into
  * the gap: keep each `left`, re-place bottom-up on column surfaces.
  */
 function restackLifts(letters: readonly LetterDrop[]): LetterDrop[] {
@@ -539,13 +526,20 @@ export default function HomePricing() {
   const floorRef = useRef<HTMLDivElement>(null);
   const glyphRef = useRef<HTMLSpanElement>(null);
   const [drops, setDrops] = useState<LetterDrop[]>([]);
+  const dropsRef = useRef(drops);
+  dropsRef.current = drops;
   const [runId, setRunId] = useState(0);
   const [sectionHeight, setSectionHeight] = useState(0);
   const [glyphHeight, setGlyphHeight] = useState(0);
   const [floorTop, setFloorTop] = useState(0);
   const [settled, setSettled] = useState<ReadonlySet<string>>(() => new Set());
-  const [hops, setHops] = useState<Record<string, LetterHop>>({});
-  const hopTimersRef = useRef<Record<string, number>>({});
+  /** Which floor glyph is mid-drag (null = none). Live x/y live in dragRef. */
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const dragRef = useRef<LetterDrag | null>(null);
+  /** Release → floor gravity settle (from drop height, not section top). */
+  const [settle, setSettle] = useState<LetterSettle | null>(null);
+  /** Outer position nodes — updated directly while dragging to avoid 98-letter re-renders. */
+  const letterOuterRefs = useRef<Map<string, HTMLElement>>(new Map());
   const [flippedPlan, setFlippedPlan] = useState<CalcPlanMonths | null>(null);
   /** slotKey → floor tint used for solid fill. */
   const [filled, setFilled] = useState<Readonly<Partial<Record<string, LetterTint>>>>({});
@@ -565,13 +559,6 @@ export default function HomePricing() {
   const flyIdRef = useRef(0);
   const flyTimersRef = useRef<number[]>([]);
 
-  const clearHopTimers = useCallback(() => {
-    for (const timer of Object.values(hopTimersRef.current)) {
-      window.clearTimeout(timer);
-    }
-    hopTimersRef.current = {};
-  }, []);
-
   const clearFlyTimers = useCallback(() => {
     for (const timer of flyTimersRef.current) {
       window.clearTimeout(timer);
@@ -579,7 +566,25 @@ export default function HomePricing() {
     flyTimersRef.current = [];
   }, []);
 
-  /** True once a puzzle letter is matched (fill, consume, or in-flight fly). Hop-only does not count. */
+  const clearDragVisual = useCallback((dropId: string) => {
+    const outer = letterOuterRefs.current.get(dropId);
+    if (!outer) return;
+    outer.style.left = "";
+    outer.style.top = "";
+    outer.style.transform = "";
+    outer.style.zIndex = "";
+    outer.style.transition = "";
+  }, []);
+
+  const clearDrag = useCallback(() => {
+    const id = dragRef.current?.id;
+    if (id) clearDragVisual(id);
+    dragRef.current = null;
+    setDraggingId(null);
+    setSettle(null);
+  }, [clearDragVisual]);
+
+  /** True once a puzzle letter is matched (fill, consume, or in-flight fly). Drag-only does not count. */
   const hasPuzzleProgress = useCallback(
     () =>
       Object.keys(filledRef.current).length > 0 ||
@@ -590,10 +595,9 @@ export default function HomePricing() {
 
   /** Clear fills / in-flight motion and drop a fresh floor bag (same as viewport re-enter when idle). */
   const restartPuzzle = useCallback(() => {
-    clearHopTimers();
     clearFlyTimers();
+    clearDrag();
     setSettled(new Set());
-    setHops({});
     filledRef.current = {};
     setFilled({});
     const empty = new Set<string>();
@@ -604,7 +608,7 @@ export default function HomePricing() {
     fillTintRef.current = {};
     setRunId((n) => n + 1);
     setDrops(seedLetters());
-  }, [clearFlyTimers, clearHopTimers]);
+  }, [clearDrag, clearFlyTimers]);
 
   const commitFill = useCallback((slotKey: string) => {
     const tint = fillTintRef.current[slotKey] ?? LETTER_TINTS[0]!;
@@ -616,9 +620,12 @@ export default function HomePricing() {
     delete pendingFlyRef.current[slotKey];
   }, []);
 
-  /** One floor glyph → one empty puzzle slot of the same letter. */
+  /**
+   * Floor glyph → puzzle outline. `source` must be measured *before* clearing
+   * drag visuals so the clone starts at the letter’s on-screen place.
+   */
   const startFillFly = useCallback(
-    (slotKey: string, sourceEl: HTMLElement, drop: LetterDrop) => {
+    (slotKey: string, source: DOMRect, drop: LetterDrop) => {
       const section = sectionRef.current;
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -642,7 +649,6 @@ export default function HomePricing() {
         return;
       }
 
-      const source = sourceEl.getBoundingClientRect();
       const sectionBox = section.getBoundingClientRect();
       const target = slotRefs.current.get(slotKey);
 
@@ -679,99 +685,285 @@ export default function HomePricing() {
     [commitFill],
   );
 
-  const commitHop = useCallback((dropId: string, finished: LetterHop) => {
-    window.clearTimeout(hopTimersRef.current[dropId]);
-    delete hopTimersRef.current[dropId];
-    setDrops((prev) => {
-      const skip = consumedRef.current;
-      const hopper = prev.find((item) => item.id === dropId);
-      const others = restackLifts(
-        prev.filter((item) => item.id !== dropId && !skip.has(item.id)),
-      );
-      // Hop animation ends at the start height (Y=0). Never climb after that
-      // settle — only allow gravity down into a lower gap at the new column.
-      const landLift = Math.min(
-        hopper?.lift ?? finished.nextLift,
-        collisionLift(finished.nextLeft, others, hopper?.char),
-      );
-      const byId = new Map(others.map((d) => [d.id, d]));
-      return prev.map((item) => {
-        if (item.id === dropId) {
-          return {
-            ...item,
-            left: finished.nextLeft,
-            lift: landLift,
-            landRotate: finished.nextRotate,
-            spinStart: finished.nextRotate,
-          };
+  const applyDragVisual = useCallback((drag: LetterDrag) => {
+    const outer = letterOuterRefs.current.get(drag.id);
+    if (!outer) return;
+    outer.style.left = "0px";
+    outer.style.top = "0px";
+    outer.style.transform = `translate3d(${drag.x}px, ${drag.y}px, 0) translate(-50%, -50%)`;
+    outer.style.zIndex = "9999";
+    outer.style.transition = "none";
+  }, []);
+
+  /** Empty puzzle outline under the pointer that matches this char. */
+  const findMatchingSlotAtPoint = useCallback(
+    (clientX: number, clientY: number, char: string) => {
+      for (const slot of PUZZLE_SLOTS) {
+        if (slot.char !== char) continue;
+        if (fillTintRef.current[slot.key] || pendingFlyRef.current[slot.key]) {
+          continue;
         }
-        if (skip.has(item.id)) return item;
-        return byId.get(item.id) ?? item;
-      });
-    });
-    setHops((prev) => {
-      if (prev[dropId]?.id !== finished.id) return prev;
-      const next = { ...prev };
-      delete next[dropId];
-      return next;
+        const el = slotRefs.current.get(slot.key);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (
+          clientX >= rect.left &&
+          clientX <= rect.right &&
+          clientY >= rect.top &&
+          clientY <= rect.bottom
+        ) {
+          return slot;
+        }
+      }
+      return null;
+    },
+    [],
+  );
+
+  const liftDragFromPile = useCallback((dropId: string) => {
+    setDrops((prev) => {
+      const skip = new Set(consumedRef.current);
+      skip.add(dropId);
+      const active = prev.filter((item) => !skip.has(item.id));
+      const maxStack = prev.reduce((m, d) => Math.max(m, d.stack), 0);
+      return withRestacked(prev, active, skip).map((item) =>
+        item.id === dropId ? { ...item, stack: maxStack + 1 } : item,
+      );
     });
   }, []);
 
-  /** Match-fly or hop for the letter whose ink was actually clicked. */
-  const activateFloorLetter = useCallback(
-    (
-      drop: LetterDrop,
-      sourceEl: HTMLElement,
-      floorDrops: readonly LetterDrop[],
-      activeHops: Readonly<Record<string, LetterHop>>,
-    ) => {
-      if (consumedRef.current.has(drop.id) || activeHops[drop.id]) return;
-
-      const emptySlot = PUZZLE_SLOTS.find(
-        (slot) =>
-          slot.char === drop.char &&
-          !fillTintRef.current[slot.key] &&
-          !pendingFlyRef.current[slot.key],
+  /**
+   * Place the glyph at `nextLeft` on the pile, then gravity-settle from the
+   * pointer release height down (or up) to that surface — never from y=0.
+   */
+  const commitDragLand = useCallback(
+    (dropId: string, nextLeft: number, releaseCenterY: number) => {
+      const skip = consumedRef.current;
+      const prev = dropsRef.current;
+      const moving = prev.find((item) => item.id === dropId);
+      const others = restackLifts(
+        prev.filter((item) => item.id !== dropId && !skip.has(item.id)),
       );
-      if (emptySlot) {
-        startFillFly(emptySlot.key, sourceEl, drop);
+      const landLift = collisionLift(nextLeft, others, moving?.char);
+      const maxStack = others.reduce((m, d) => Math.max(m, d.stack), 0);
+      const byId = new Map(others.map((d) => [d.id, d]));
+
+      setDrops(
+        prev.map((item) => {
+          if (item.id === dropId) {
+            return {
+              ...item,
+              left: nextLeft,
+              lift: landLift,
+              stack: maxStack + 1,
+            };
+          }
+          if (skip.has(item.id)) return item;
+          return byId.get(item.id) ?? item;
+        }),
+      );
+
+      const sink = Math.round(glyphHeight * 0.18);
+      const toY = Math.max(
+        floorTop,
+        sectionHeight - glyphHeight + sink - landLift,
+      );
+      // Drag uses center coords; landed transform pins the glyph *top*.
+      const fromY =
+        glyphHeight > 0 ? releaseCenterY - glyphHeight / 2 : releaseCenterY;
+
+      clearDragVisual(dropId);
+      if (Math.abs(fromY - toY) < 1) {
+        setSettle(null);
+        return;
+      }
+      setSettle({ id: dropId, fromY, toY, phase: "start" });
+    },
+    [clearDragVisual, floorTop, glyphHeight, sectionHeight],
+  );
+
+  const restoreDragOrigin = useCallback((drag: LetterDrag) => {
+    setDrops((prev) => {
+      const skip = consumedRef.current;
+      const withOrigin = prev.map((item) =>
+        item.id === drag.id
+          ? {
+              ...item,
+              left: drag.originLeft,
+              lift: drag.originLift,
+              stack: drag.originStack,
+            }
+          : item,
+      );
+      const active = withOrigin.filter((item) => !skip.has(item.id));
+      return withRestacked(withOrigin, active, skip);
+    });
+  }, []);
+
+  const endFloorDrag = useCallback(
+    (clientX: number, clientY: number) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+
+      const section = sectionRef.current;
+      const letter = dropsRef.current.find((item) => item.id === drag.id);
+      const moved =
+        Math.hypot(clientX - drag.startClientX, clientY - drag.startClientY) >=
+        DRAG_TAP_PX;
+
+      // Capture on-screen box while drag/landed pose is still applied — clearing
+      // first made match flies restart from the section top.
+      const outer = letterOuterRefs.current.get(drag.id);
+      const inner = letterElsRef.current.get(drag.id);
+      const sourceRect = (outer ?? inner)?.getBoundingClientRect() ?? null;
+
+      const releaseY = drag.y;
+
+      if (!letter || consumedRef.current.has(drag.id)) {
+        dragRef.current = null;
+        setDraggingId(null);
+        clearDragVisual(drag.id);
         return;
       }
 
+      const slotFromPoint = findMatchingSlotAtPoint(
+        clientX,
+        clientY,
+        letter.char,
+      );
+      const tapSlot =
+        !moved
+          ? PUZZLE_SLOTS.find(
+              (slot) =>
+                slot.char === letter.char &&
+                !fillTintRef.current[slot.key] &&
+                !pendingFlyRef.current[slot.key],
+            )
+          : null;
+      const emptySlot = slotFromPoint ?? tapSlot ?? null;
+
+      if (emptySlot && sourceRect && sourceRect.width >= 1) {
+        dragRef.current = null;
+        setDraggingId(null);
+        setSettle(null);
+        startFillFly(emptySlot.key, sourceRect, letter);
+        clearDragVisual(drag.id);
+        return;
+      }
+
+      dragRef.current = null;
+      setDraggingId(null);
+
+      if (!moved) {
+        clearDragVisual(drag.id);
+        if (drag.lifted) restoreDragOrigin(drag);
+        return;
+      }
+
+      if (!section || section.clientWidth < 1) {
+        clearDragVisual(drag.id);
+        restoreDragOrigin(drag);
+        return;
+      }
+
+      const nextLeft = clampFloorLeft((drag.x / section.clientWidth) * 100);
+      commitDragLand(drag.id, nextLeft, releaseY);
+    },
+    [
+      clearDragVisual,
+      commitDragLand,
+      findMatchingSlotAtPoint,
+      restoreDragOrigin,
+      startFillFly,
+    ],
+  );
+
+  const onFloorPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLSpanElement>) => {
+      if (event.button !== 0) return;
+      if (draggingId || dragRef.current) return;
+
+      const hit = pickLetterAtPoint(
+        event.clientX,
+        event.clientY,
+        dropsRef.current,
+        settled,
+        draggingId ?? settle?.id ?? null,
+        consumedRef.current,
+        letterElsRef.current,
+      );
+      if (!hit) return;
+
       const section = sectionRef.current;
       if (!section) return;
-      const skip = consumedRef.current;
-      const others = restackLifts(
-        floorDrops.filter((item) => item.id !== drop.id && !skip.has(item.id)),
-      );
-      const nextLeft = pickFloorHopLeft(drop.left, others, drop.char);
-      const hopX = ((nextLeft - drop.left) / 100) * section.clientWidth;
-      const nextLift = Math.min(
-        drop.lift,
-        collisionLift(nextLeft, others, drop.char),
-      );
-      const finished: LetterHop = {
-        id: (activeHops[drop.id]?.id ?? 0) + 1,
-        hopX,
-        nextLeft,
-        nextLift,
-        nextRotate: randomLandRotate(),
+      const sectionBox = section.getBoundingClientRect();
+      const rect = hit.el.getBoundingClientRect();
+      const x = rect.left + rect.width / 2 - sectionBox.left;
+      const y = rect.top + rect.height / 2 - sectionBox.top;
+
+      const next: LetterDrag = {
+        id: hit.drop.id,
+        pointerId: event.pointerId,
+        originLeft: hit.drop.left,
+        originLift: hit.drop.lift,
+        originStack: hit.drop.stack,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        x,
+        y,
+        lifted: false,
       };
-      setDrops((prev) => {
-        const active = prev.filter(
-          (item) => item.id !== drop.id && !skip.has(item.id),
-        );
-        const hopping = new Set(skip);
-        hopping.add(drop.id);
-        return withRestacked(prev, active, hopping);
-      });
-      setHops((prev) => ({ ...prev, [drop.id]: finished }));
-      window.clearTimeout(hopTimersRef.current[drop.id]);
-      hopTimersRef.current[drop.id] = window.setTimeout(() => {
-        commitHop(drop.id, finished);
-      }, HOP_MS + 70);
+      dragRef.current = next;
+      setDraggingId(hit.drop.id);
+      applyDragVisual(next);
+      // Capture on the ink-hit glyph (may be under the front box that received the event).
+      hit.el.setPointerCapture(event.pointerId);
+      event.preventDefault();
     },
-    [commitHop, startFillFly],
+    [applyDragVisual, draggingId, settle?.id, settled],
+  );
+
+  const onFloorPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLSpanElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const section = sectionRef.current;
+      if (!section) return;
+
+      const sectionBox = section.getBoundingClientRect();
+      drag.x = event.clientX - sectionBox.left;
+      drag.y = event.clientY - sectionBox.top;
+
+      if (
+        !drag.lifted &&
+        Math.hypot(
+          event.clientX - drag.startClientX,
+          event.clientY - drag.startClientY,
+        ) >= DRAG_TAP_PX
+      ) {
+        drag.lifted = true;
+        liftDragFromPile(drag.id);
+      }
+
+      applyDragVisual(drag);
+      event.preventDefault();
+    },
+    [applyDragVisual, liftDragFromPile],
+  );
+
+  const onFloorPointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLSpanElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      const captureEl = letterElsRef.current.get(drag.id) ?? event.currentTarget;
+      try {
+        captureEl.releasePointerCapture(event.pointerId);
+      } catch {
+        /* already released */
+      }
+      endFloorDrag(event.clientX, event.clientY);
+    },
+    [endFloorDrag],
   );
 
   const readMetrics = useCallback(() => {
@@ -789,6 +981,18 @@ export default function HomePricing() {
   useLayoutEffect(() => {
     readMetrics();
   }, [drops, runId, readMetrics]);
+
+  // FLIP: paint at release height, then animate to pile surface next frame.
+  useLayoutEffect(() => {
+    if (!settle || settle.phase !== "start") return;
+    const outer = letterOuterRefs.current.get(settle.id);
+    outer?.getBoundingClientRect();
+    setSettle((prev) =>
+      prev && prev.id === settle.id && prev.phase === "start"
+        ? { ...prev, phase: "anim" }
+        : prev,
+    );
+  }, [settle]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -831,10 +1035,9 @@ export default function HomePricing() {
         wasInView = false;
         if (hasPuzzleProgress()) return;
 
-        clearHopTimers();
         clearFlyTimers();
+        clearDrag();
         setSettled(new Set());
-        setHops({});
         filledRef.current = {};
         setFilled({});
         consumedRef.current = new Set();
@@ -851,10 +1054,10 @@ export default function HomePricing() {
     return () => {
       io.disconnect();
       ro.disconnect();
-      clearHopTimers();
       clearFlyTimers();
+      clearDrag();
     };
-  }, [clearFlyTimers, clearHopTimers, hasPuzzleProgress, restartPuzzle]);
+  }, [clearDrag, clearFlyTimers, hasPuzzleProgress, restartPuzzle]);
 
   return (
     <section
@@ -880,24 +1083,45 @@ export default function HomePricing() {
                   sectionHeight - glyphHeight + sink - drop.lift,
                 );
                 const landed = settled.has(drop.id);
-                const hop = hops[drop.id];
-                const style: LetterStyle = landed
+                const isDragging = draggingId === drop.id;
+                const liveDrag = isDragging ? dragRef.current : null;
+                const isSettling = settle?.id === drop.id;
+                const style: LetterStyle = isDragging && liveDrag
                   ? {
-                      left: `${drop.left}%`,
-                      transform: `translate(-50%, ${dropY}px)`,
-                      zIndex: drop.stack,
-                      // Gravity settle when lift drops after a support is removed.
-                      transition: hop
-                        ? undefined
-                        : "transform 0.55s cubic-bezier(0.33, 0, 0.2, 1)",
+                      left: 0,
+                      top: 0,
+                      transform: `translate3d(${liveDrag.x}px, ${liveDrag.y}px, 0) translate(-50%, -50%)`,
+                      zIndex: 9999,
+                      transition: "none",
                     }
-                  : {
-                      left: `${drop.left}%`,
-                      animationDelay: `${drop.delay}s`,
-                      animationDuration: `${drop.duration}s`,
-                      "--drop-y": `${dropY}px`,
-                      zIndex: drop.stack,
-                    };
+                  : isSettling && settle
+                    ? {
+                        left: `${drop.left}%`,
+                        transform: `translate(-50%, ${
+                          settle.phase === "anim" ? settle.toY : settle.fromY
+                        }px)`,
+                        zIndex: drop.stack,
+                        transition:
+                          settle.phase === "anim"
+                            ? "transform 0.45s cubic-bezier(0.33, 0, 0.2, 1)"
+                            : "none",
+                      }
+                  : landed
+                    ? {
+                        left: `${drop.left}%`,
+                        transform: `translate(-50%, ${dropY}px)`,
+                        zIndex: drop.stack,
+                        // Gravity settle when lift drops after a support is removed.
+                        transition:
+                          "transform 0.55s cubic-bezier(0.33, 0, 0.2, 1)",
+                      }
+                    : {
+                        left: `${drop.left}%`,
+                        animationDelay: `${drop.delay}s`,
+                        animationDuration: `${drop.duration}s`,
+                        "--drop-y": `${dropY}px`,
+                        zIndex: drop.stack,
+                      };
                 const spinStyle: SpinStyle = landed
                   ? { transform: `rotate(${drop.landRotate}deg)` }
                   : {
@@ -906,13 +1130,14 @@ export default function HomePricing() {
                       "--land-rotate": `${drop.landRotate}deg`,
                       "--spin-start": `${drop.spinStart}deg`,
                     };
-                const hopStyle: HopStyle | undefined = hop
-                  ? { "--hop-x": `${hop.hopX}px` }
-                  : undefined;
                 return (
                   <span
                     key={`${runId}-${drop.id}`}
-                    className={`pointer-events-none absolute top-0 text-7xl leading-none font-extrabold tracking-tight drop-shadow-[0_2px_2px_rgb(0_0_0_/_0.45)] select-none sm:text-8xl ${drop.tint} ${landed ? "" : "motion-safe:animate-letter-fall"}`}
+                    ref={(node) => {
+                      if (node) letterOuterRefs.current.set(drop.id, node);
+                      else letterOuterRefs.current.delete(drop.id);
+                    }}
+                    className={`pointer-events-none absolute top-0 text-7xl leading-none font-extrabold tracking-tight select-none sm:text-8xl ${drop.tint} ${landed ? "drop-shadow-[0_2px_2px_rgb(0_0_0_/_0.45)]" : "motion-safe:animate-letter-fall"}`}
                     style={style}
                     onAnimationEnd={(event) => {
                       if (event.target !== event.currentTarget) return;
@@ -924,45 +1149,43 @@ export default function HomePricing() {
                         return next;
                       });
                     }}
+                    onTransitionEnd={(event) => {
+                      if (event.target !== event.currentTarget) return;
+                      if (event.propertyName !== "transform") return;
+                      if (settle?.id !== drop.id || settle.phase !== "anim") {
+                        return;
+                      }
+                      setSettle(null);
+                    }}
                   >
                     <span
-                      key={hop?.id ?? 0}
-                      className={`block ${hop ? "motion-safe:animate-letter-hop" : ""}`}
-                      style={hopStyle}
-                      onAnimationEnd={(event) => {
-                        if (event.target !== event.currentTarget) return;
-                        if (!event.animationName.includes("letter-hop")) return;
-                        if (!hop) return;
-                        commitHop(drop.id, hop);
+                      ref={(node) => {
+                        if (node) letterElsRef.current.set(drop.id, node);
+                        else letterElsRef.current.delete(drop.id);
                       }}
+                      data-letter-id={drop.id}
+                      className={`block touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
+                        landed && !isSettling
+                          ? isDragging
+                            ? "pointer-events-auto cursor-grabbing"
+                            : "pointer-events-auto cursor-grab"
+                          : "pointer-events-none"
+                      }`}
+                      style={spinStyle}
+                      onPointerDown={
+                        landed && !isSettling ? onFloorPointerDown : undefined
+                      }
+                      onPointerMove={
+                        landed && !isSettling ? onFloorPointerMove : undefined
+                      }
+                      onPointerUp={
+                        landed && !isSettling ? onFloorPointerUp : undefined
+                      }
+                      onPointerCancel={
+                        landed && !isSettling ? onFloorPointerUp : undefined
+                      }
                     >
-                      <span
-                        ref={(node) => {
-                          if (node) letterElsRef.current.set(drop.id, node);
-                          else letterElsRef.current.delete(drop.id);
-                        }}
-                        data-letter-id={drop.id}
-                        className={`block ${landed ? "" : "motion-safe:animate-letter-spin"} ${landed && !hop ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
-                        style={spinStyle}
-                        onClick={(event) => {
-                          if (!landed) return;
-                          // Front letter boxes steal clicks on empty padding — resolve by ink
-                          // so a peeking letter underneath is the one that activates.
-                          const hit = pickLetterAtPoint(
-                            event.clientX,
-                            event.clientY,
-                            drops,
-                            settled,
-                            hops,
-                            consumed,
-                            letterElsRef.current,
-                          );
-                          if (!hit) return;
-                          activateFloorLetter(hit.drop, hit.el, drops, hops);
-                        }}
-                      >
-                        {drop.char}
-                      </span>
+                      {drop.char}
                     </span>
                   </span>
                 );
