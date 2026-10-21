@@ -13,9 +13,9 @@ export default function HomePage() {
   return (
     <PageShell title="Shwequest">
       <HomeHero />
-      <HomeAbout />
-      <HomePricing />
       <HomeLeaderboardCta />
+      <HomePricing />
+      <HomeAbout />
     </PageShell>
   );
 }

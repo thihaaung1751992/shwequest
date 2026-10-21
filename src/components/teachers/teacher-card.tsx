@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
 import type { Teacher } from "@/data/teachers";
+import FrostGlass from "@/components/frost-glass";
 import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
@@ -43,12 +44,13 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
       </ul>
 
       <span
-        className={`relative mt-6 inline-flex min-h-11 items-center justify-center gap-2 self-stretch rounded-2xl border-b-4 px-4 py-2 font-extrabold text-white transition-colors ${accent.cta}`}
+        className={`relative mt-6 inline-flex min-h-11 items-center justify-center gap-2 self-stretch overflow-hidden rounded-2xl border-b-4 px-4 py-2 font-extrabold text-white transition-[colors,overflow] motion-safe:group-hover:overflow-visible ${accent.cta}`}
       >
-        Open path
+        <FrostGlass />
+        <span className="relative z-10">Open path</span>
         <ArrowRight
           aria-hidden
-          className="size-4 transition-transform motion-safe:group-hover:translate-x-1"
+          className="relative z-10 size-4 transition-transform motion-safe:group-hover:translate-x-1"
         />
       </span>
     </Link>

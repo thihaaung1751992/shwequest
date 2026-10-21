@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play, Swords, Users } from "lucide-react";
+import FrostGlass from "@/components/frost-glass";
 import { TEACHERS, catalogTotals } from "@/data/teachers";
 
 const TOTALS = catalogTotals();
@@ -139,10 +140,11 @@ export default function SiteFooter() {
           <p className="max-w-xs text-sm leading-6">Open the teacher list and follow the lessons already on the path.</p>
           <Link
             href="/teachers"
-            className={`inline-flex min-h-11 w-fit items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600 ${FOCUS}`}
+            className={`group relative inline-flex min-h-11 w-fit items-center gap-2 overflow-hidden rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition-[background-color,overflow] hover:bg-orange-600 motion-safe:hover:overflow-visible ${FOCUS}`}
           >
-            See teachers
-            <ArrowRight aria-hidden className="size-4" />
+            <FrostGlass />
+            <span className="relative z-10">See teachers</span>
+            <ArrowRight aria-hidden className="relative z-10 size-4" />
           </Link>
         </section>
       </div>

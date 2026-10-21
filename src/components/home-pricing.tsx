@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import FrostGlass from "@/components/frost-glass";
 
 const MONTHLY_KYAT = 15_000;
 
@@ -394,10 +395,11 @@ export default function HomePricing() {
                   </span>
                   <Link
                     href="/teachers"
-                    className={`mt-auto inline-flex min-h-12 w-fit items-center gap-2 rounded-full px-6 text-sm font-bold transition-transform motion-safe:hover:-translate-y-0.5 ${tone.cta} ${FOCUS}`}
+                    className={`group relative mt-auto inline-flex min-h-12 w-fit items-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold transition-[transform,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${tone.cta} ${FOCUS}`}
                   >
-                    See teachers
-                    <ArrowRight aria-hidden className="size-4" />
+                    <FrostGlass />
+                    <span className="relative z-10">See teachers</span>
+                    <ArrowRight aria-hidden className="relative z-10 size-4" />
                   </Link>
                 </article>
               </li>

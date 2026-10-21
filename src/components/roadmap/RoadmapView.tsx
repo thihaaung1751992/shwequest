@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
+import FrostGlass from "@/components/frost-glass";
 import LearnerStrip from "@/components/learner-strip";
 import { SITE_HEADER_CLASS } from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
@@ -216,10 +217,11 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
             </p>
             <Link
               href="/teachers"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+              className="group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition-[background-color,overflow] hover:bg-orange-600 motion-safe:hover:overflow-visible focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
             >
-              See teachers
-              <ArrowRight aria-hidden className="size-4" />
+              <FrostGlass />
+              <span className="relative z-10">See teachers</span>
+              <ArrowRight aria-hidden className="relative z-10 size-4" />
             </Link>
           </div>
         )}
@@ -493,14 +495,15 @@ function LessonDialog({
         ) : null}
         <button
           type="button"
-          className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-linear-to-b from-emerald-300 to-emerald-600 text-base font-bold text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_5px_0_0_#166534] active:translate-y-1 active:shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_1px_0_0_#166534]"
+          className="group relative mt-4 flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-b from-emerald-300 to-emerald-600 text-base font-bold text-white shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_5px_0_0_#166534] transition-[overflow] motion-safe:hover:overflow-visible active:translate-y-1 active:shadow-[inset_0_2px_0_rgba(255,255,255,0.5),0_1px_0_0_#166534]"
           onClick={() => {
             if (started) onClose();
             else setStarted(true);
           }}
         >
-          {started ? "Close" : "Start Lesson"}
-          <ArrowRight aria-hidden className="size-4" />
+          <FrostGlass />
+          <span className="relative z-10">{started ? "Close" : "Start Lesson"}</span>
+          <ArrowRight aria-hidden className="relative z-10 size-4" />
         </button>
       </motion.div>
     </motion.div>

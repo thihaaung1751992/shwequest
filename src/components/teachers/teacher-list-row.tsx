@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
+import FrostGlass from "@/components/frost-glass";
 import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
@@ -30,10 +31,11 @@ export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
         </span>
       </span>
       <span
-        className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border-b-4 px-3 text-sm font-extrabold text-white ${accent.cta}`}
+        className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl border-b-4 px-3 text-sm font-extrabold text-white transition-[overflow] motion-safe:group-hover:overflow-visible ${accent.cta}`}
       >
-        <span className="hidden sm:inline">Open path</span>
-        <ArrowRight aria-hidden className="size-4" />
+        <FrostGlass />
+        <span className="relative z-10 hidden sm:inline">Open path</span>
+        <ArrowRight aria-hidden className="relative z-10 size-4" />
       </span>
     </Link>
   );

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import FrostGlass from "@/components/frost-glass";
 import { catalogTotals } from "@/data/teachers";
 
 const HERO_FIGURE = "/home/hero-figure.svg";
@@ -355,17 +356,19 @@ export default function HomeHero() {
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link
               href="/teachers"
-              className={`inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-5 text-sm font-bold text-white transition-transform motion-safe:hover:-translate-y-0.5 ${FOCUS}`}
+              className={`group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full bg-emerald-500/90 px-5 text-sm font-bold text-white transition-[transform,background-color,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible hover:bg-emerald-500 ${FOCUS}`}
             >
-              See teachers
-              <ArrowRight aria-hidden className="size-4" />
+              <FrostGlass />
+              <span className="relative z-10">See teachers</span>
+              <ArrowRight aria-hidden className="relative z-10 size-4" />
             </Link>
             <Link
               href="/teachers"
-              className={`inline-flex min-h-11 items-center gap-3 rounded-full pr-2 text-sm font-bold text-zinc-950 dark:text-white ${FOCUS}`}
+              className={`group inline-flex min-h-11 items-center gap-3 rounded-full pr-2 text-sm font-bold text-zinc-950 dark:text-white ${FOCUS}`}
             >
-              <span className="grid size-12 place-items-center rounded-full bg-orange-500 text-white">
-                <Play aria-hidden className="size-5 fill-current" />
+              <span className="relative grid size-12 place-items-center overflow-hidden rounded-full bg-orange-500/90 text-white transition-[background-color,overflow] motion-safe:group-hover:overflow-visible group-hover:bg-orange-500">
+                <FrostGlass />
+                <Play aria-hidden className="relative z-10 size-5 fill-current" />
               </span>
               How it works
               <ArrowRight aria-hidden className="size-4" />

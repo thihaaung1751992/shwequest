@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import FrostGlass from "@/components/frost-glass";
 
 const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
@@ -27,7 +28,7 @@ const STEPS = [
 
 export default function HomeLeaderboardCta() {
   return (
-    <section aria-labelledby="home-leaderboard-title" className="bg-cream dark:bg-slate-950">
+    <section aria-labelledby="home-leaderboard-title" className="bg-white dark:bg-slate-950">
       <div className="mx-auto grid w-full max-w-page items-center gap-10 px-4 pt-16 pb-10 sm:gap-12 sm:pt-20 sm:pb-12 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col items-center" aria-hidden>
           <div className="relative flex w-full max-w-xs flex-col items-center sm:max-w-sm">
@@ -133,10 +134,11 @@ export default function HomeLeaderboardCta() {
           </p>
           <Link
             href="/leaderboard"
-            className={`mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-sky-700 px-6 text-sm font-bold text-white transition-transform motion-safe:hover:-translate-y-0.5 ${FOCUS}`}
+            className={`group relative mt-8 inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full bg-sky-700 px-6 text-sm font-bold text-white transition-[transform,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${FOCUS}`}
           >
-            Open leaderboard
-            <ArrowRight aria-hidden className="size-4" />
+            <FrostGlass />
+            <span className="relative z-10">Open leaderboard</span>
+            <ArrowRight aria-hidden className="relative z-10 size-4" />
           </Link>
         </div>
       </div>

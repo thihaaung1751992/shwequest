@@ -11,8 +11,8 @@ const STATS = [
 
 export default function HomeAbout() {
   return (
-    <section aria-labelledby="home-about-title" className="bg-white dark:bg-slate-950">
-      <div className="mx-auto flex w-full max-w-page flex-col items-center px-4 pt-8 pb-14 sm:pt-12 sm:pb-20">
+    <section aria-labelledby="home-about-title" className="bg-cream dark:bg-slate-950">
+      <div className="mx-auto flex w-full max-w-page flex-col items-center px-4 pt-8 pb-4 sm:pt-12 sm:pb-6">
         <h2
           id="home-about-title"
           className="inline-flex -rotate-2 rounded-full bg-emerald-500 px-3 py-1 text-sm font-semibold text-white motion-reduce:rotate-none"
