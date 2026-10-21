@@ -485,6 +485,23 @@ export default function HomePricing() {
     flyTimersRef.current = [];
   }, []);
 
+  /** Clear fills / in-flight motion and drop a fresh floor bag (same as viewport re-enter). */
+  const restartPuzzle = useCallback(() => {
+    clearHopTimers();
+    clearFlyTimers();
+    setSettled(new Set());
+    setHops({});
+    setFilled({});
+    const empty = new Set<string>();
+    consumedRef.current = empty;
+    setConsumed(empty);
+    setFlies([]);
+    pendingFlyRef.current = {};
+    fillTintRef.current = {};
+    setRunId((n) => n + 1);
+    setDrops(seedLetters());
+  }, [clearFlyTimers, clearHopTimers]);
+
   const commitFill = useCallback((slotKey: string) => {
     const tint = fillTintRef.current[slotKey] ?? LETTER_TINTS[0]!;
     setFilled((prev) => {
@@ -640,17 +657,7 @@ export default function HomePricing() {
         if (entry.isIntersecting) {
           if (!wasInView) {
             measure();
-            clearHopTimers();
-            clearFlyTimers();
-            setSettled(new Set());
-            setHops({});
-            setFilled({});
-            setConsumed(new Set());
-            setFlies([]);
-            pendingFlyRef.current = {};
-            fillTintRef.current = {};
-            setRunId((n) => n + 1);
-            setDrops(seedLetters());
+            restartPuzzle();
           }
           wasInView = true;
           return;
@@ -662,6 +669,7 @@ export default function HomePricing() {
         setSettled(new Set());
         setHops({});
         setFilled({});
+        consumedRef.current = new Set();
         setConsumed(new Set());
         setFlies([]);
         pendingFlyRef.current = {};
@@ -680,7 +688,7 @@ export default function HomePricing() {
       clearHopTimers();
       clearFlyTimers();
     };
-  }, [clearFlyTimers, clearHopTimers]);
+  }, [clearFlyTimers, clearHopTimers, restartPuzzle]);
 
   return (
     <section
@@ -1046,6 +1054,13 @@ export default function HomePricing() {
               </div>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={restartPuzzle}
+            className={`pointer-events-auto mt-1 min-h-10 cursor-pointer rounded-full px-4 text-sm font-semibold text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100 ${FOCUS}`}
+          >
+            Restart puzzle
+          </button>
         </div>
 
         <div ref={floorRef} aria-hidden className="pointer-events-none h-72 sm:h-96" />
