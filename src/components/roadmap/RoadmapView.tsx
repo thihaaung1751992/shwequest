@@ -109,11 +109,11 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
           <h1 className="order-1 shrink-0">
             <SiteLogo />
           </h1>
-          <div className="order-3 min-w-0 basis-full sm:order-2 sm:flex-1 sm:basis-auto">
-            <LessonLine text={lessonLine} />
-          </div>
-          <div className="order-2 w-full sm:order-3 sm:ml-0 sm:w-auto">
+          <div className="order-2 ml-auto shrink-0 md:order-3 md:ml-0">
             <SiteNav layout="cluster" />
+          </div>
+          <div className="order-3 min-w-0 basis-full md:order-2 md:flex-1 md:basis-auto">
+            <LessonLine text={lessonLine} />
           </div>
         </div>
         {teacher ? (

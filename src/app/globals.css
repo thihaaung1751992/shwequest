@@ -37,6 +37,16 @@
   --animate-letter-hop: letter-hop 0.55s linear both;
   --animate-letter-slot-in: letter-slot-in 0.35s ease-out both;
   --animate-letter-fly-in: letter-fly-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-nav-sheet-in: nav-sheet-in 0.28s cubic-bezier(0.34, 1.15, 0.64, 1) both;
+
+  @keyframes nav-sheet-in {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
 
   @keyframes hero-orbit {
     to {
