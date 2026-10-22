@@ -1626,15 +1626,23 @@ export default function HomePricing({
                     {lengthLabel}
                   </span>
                   {canFlip ? (
-                    <button
-                      type="button"
-                      className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-full border-2 border-white shadow-md ring-1 ring-black/5 transition-transform motion-safe:hover:-translate-y-0.5 ${tone.cta} ${FOCUS}`}
-                      aria-label={copy.pricing.flip(lengthLabel)}
-                      aria-pressed={flipped}
-                      onClick={() => setFlippedPlan(months)}
-                    >
-                      <Calculator aria-hidden className="size-3.5" />
-                    </button>
+                    <span className="relative inline-grid size-9 shrink-0 place-items-center">
+                      {!flipped ? (
+                        <span
+                          aria-hidden
+                          className={`pointer-events-none absolute inset-0 rounded-full opacity-55 motion-safe:animate-ping motion-reduce:hidden ${tone.cta}`}
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        className={`relative z-10 grid size-9 cursor-pointer place-items-center rounded-full border-2 border-white shadow-md ring-1 ring-black/5 transition-transform motion-safe:hover:-translate-y-0.5 ${tone.cta} ${FOCUS}`}
+                        aria-label={copy.pricing.flip(lengthLabel)}
+                        aria-pressed={flipped}
+                        onClick={() => setFlippedPlan(months)}
+                      >
+                        <Calculator aria-hidden className="size-3.5" />
+                      </button>
+                    </span>
                   ) : null}
                 </div>
                 <p className={`mt-3 text-sm font-semibold ${tone.meta}`}>

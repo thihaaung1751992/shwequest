@@ -18,9 +18,12 @@ const FOCUS =
 /** Orbit awhile, then slip off one by one into the banner. */
 const ORBIT_MS = 2600;
 const SLIP_STAGGER_MS = 380;
-/** Grow from orbit size while free; fade as soon as the letter slips off. */
-const TARGET_SCALE = 14;
-const GROW_PER_SEC = 2.6;
+  /** Grow from orbit size while free; fade as soon as the letter slips off. */
+  const TARGET_SCALE_MOBILE = 5.5;
+  const TARGET_SCALE_DESKTOP = 14;
+  /** Tailwind `sm` — keep bounce glyphs smaller below this width. */
+  const TARGET_SCALE_BREAKPOINT = 640;
+  const GROW_PER_SEC = 2.6;
 const FADE_PER_SEC = 0.55;
 const FADE_FLOOR = 0.18;
 /** Release / bounce speed (px/s). */
@@ -268,10 +271,12 @@ export default function HomeHero() {
       if (section && bodiesRef.current.length > 0) {
         const w = section.clientWidth;
         const h = section.clientHeight;
+        const targetScale =
+          w < TARGET_SCALE_BREAKPOINT ? TARGET_SCALE_MOBILE : TARGET_SCALE_DESKTOP;
 
         bodiesRef.current = bodiesRef.current.map((body) => {
           let { x, y, vx, vy, scale, opacity } = body;
-          scale = Math.min(TARGET_SCALE, scale + GROW_PER_SEC * dt);
+          scale = Math.min(targetScale, scale + GROW_PER_SEC * dt);
           opacity = Math.max(FADE_FLOOR, opacity - FADE_PER_SEC * dt);
           const half = Math.max(14, 11 * scale);
 
