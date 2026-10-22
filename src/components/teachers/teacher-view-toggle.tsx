@@ -1,27 +1,30 @@
+"use client";
+
 import Link from "next/link";
 import { LayoutGrid, LayoutList, PanelsTopLeft } from "lucide-react";
+import { useMessages } from "@/i18n/locale-context";
+import type { TeacherView } from "@/components/teachers/teacher-view";
 
-export type TeacherView = "card" | "tile" | "list";
-
-export const TEACHER_VIEWS: TeacherView[] = ["card", "tile", "list"];
-
-export function teacherViewFromParam(value: string | null): TeacherView {
-  return TEACHER_VIEWS.find((view) => view === value) ?? "card";
-}
-
-const OPTIONS: { view: TeacherView; label: string; Icon: typeof LayoutGrid }[] = [
-  { view: "card", label: "Card", Icon: PanelsTopLeft },
-  { view: "tile", label: "Tile", Icon: LayoutGrid },
-  { view: "list", label: "List", Icon: LayoutList },
+const OPTIONS: { view: TeacherView; Icon: typeof LayoutGrid }[] = [
+  { view: "card", Icon: PanelsTopLeft },
+  { view: "tile", Icon: LayoutGrid },
+  { view: "list", Icon: LayoutList },
 ];
 
 export default function TeacherViewToggle({ current }: { current: TeacherView }) {
+  const copy = useMessages();
+  const label = {
+    card: copy.teachers.card,
+    tile: copy.teachers.tile,
+    list: copy.teachers.list,
+  } as const;
+
   return (
     <nav
-      aria-label="Teacher layout"
-      className="inline-flex rounded-2xl border-2 border-amber-200 bg-white/80 p-1 shadow-xs dark:border-white/10 dark:bg-slate-950/70"
+      aria-label={copy.teachers.layout}
+      className="inline-flex rounded-full bg-white p-1 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.22)] ring-1 ring-zinc-200/80 dark:bg-slate-950 dark:ring-white/10"
     >
-      {OPTIONS.map(({ view, label, Icon }) => {
+      {OPTIONS.map(({ view, Icon }) => {
         const active = view === current;
         return (
           <Link
@@ -29,14 +32,14 @@ export default function TeacherViewToggle({ current }: { current: TeacherView })
             href={view === "card" ? "/teachers" : `/teachers?view=${view}`}
             scroll={false}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${
+            className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${
               active
-                ? "bg-amber-400 text-amber-950 shadow-xs"
-                : "text-zinc-600 hover:bg-amber-50 dark:text-zinc-300 dark:hover:bg-white/5"
+                ? "bg-orange-500 text-white shadow-xs"
+                : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-300 dark:hover:bg-white/10"
             }`}
           >
             <Icon aria-hidden className="size-4" />
-            {label}
+            {label[view]}
           </Link>
         );
       })}

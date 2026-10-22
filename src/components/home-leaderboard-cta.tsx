@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import FrostGlass from "@/components/frost-glass";
+import { useMessages } from "@/i18n/locale-context";
 
 const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
@@ -27,6 +30,8 @@ const STEPS = [
 ] as const;
 
 export default function HomeLeaderboardCta() {
+  const copy = useMessages();
+
   return (
     <section aria-labelledby="home-leaderboard-title" className="bg-white dark:bg-slate-950">
       <div className="mx-auto grid w-full max-w-page items-center gap-10 px-4 pt-16 pb-10 sm:gap-12 sm:pt-20 sm:pb-12 lg:grid-cols-2 lg:gap-16">
@@ -114,30 +119,30 @@ export default function HomeLeaderboardCta() {
             <div className="h-3 w-full max-w-[14.5rem] rounded-md bg-slate-800 sm:h-3.5 sm:max-w-[17rem]" />
 
             <p className="mt-5 text-center text-xl font-extrabold tracking-tight text-zinc-900 sm:text-2xl dark:text-white">
-              Leaderboard
+              {copy.ranks.board}
             </p>
           </div>
         </div>
 
         <div className="max-w-md lg:justify-self-start">
           <p className="inline-flex -rotate-2 rounded-full bg-amber-400 px-3 py-1 text-sm font-semibold text-amber-950 motion-reduce:rotate-none">
-            Ranks
+            {copy.ranks.kicker}
           </p>
           <h2
             id="home-leaderboard-title"
             className="mt-5 text-3xl leading-tight font-extrabold tracking-tight text-zinc-950 sm:text-4xl dark:text-white"
           >
-            See who is climbing
+            {copy.ranks.title}
           </h2>
           <p className="mt-4 text-base leading-relaxed font-medium text-zinc-600 sm:text-lg dark:text-zinc-300">
-            Check the board, compare XP, and keep pace with other learners on the path.
+            {copy.ranks.body}
           </p>
           <Link
             href="/leaderboard"
             className={`group relative mt-8 inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full bg-sky-700 px-6 text-sm font-bold text-white transition-[transform,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${FOCUS}`}
           >
             <FrostGlass />
-            <span className="relative z-10">Open leaderboard</span>
+            <span className="relative z-10">{copy.ranks.cta}</span>
             <ArrowRight aria-hidden className="relative z-10 size-4" />
           </Link>
         </div>

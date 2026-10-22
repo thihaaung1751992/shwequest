@@ -1,7 +1,7 @@
 import TeacherCard from "@/components/teachers/teacher-card";
 import TeacherListRow from "@/components/teachers/teacher-list-row";
 import TeacherTile from "@/components/teachers/teacher-tile";
-import type { TeacherView } from "@/components/teachers/teacher-view-toggle";
+import type { TeacherView } from "@/components/teachers/teacher-view";
 import type { Teacher } from "@/data/teachers";
 
 export default function TeacherResults({

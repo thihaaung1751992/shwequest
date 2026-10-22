@@ -1,8 +1,11 @@
+"use client";
+
 import LearnerStrip from "@/components/learner-strip";
 import { SITE_HEADER_CLASS } from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import SiteLogo from "@/components/site-logo";
 import SiteNav from "@/components/site-nav";
+import { useMessages } from "@/i18n/locale-context";
 import { earnedXpTotal } from "@/data/teachers";
 
 export default function PageShell({
@@ -15,7 +18,14 @@ export default function PageShell({
   /** Full-width main (no max-w-page padding). Home is always bleed. */
   bleed?: boolean;
 }) {
+  const copy = useMessages();
   const isHome = title === "Shwequest";
+  const heading =
+    title === "Teachers"
+      ? copy.nav.teachers
+      : title === "Leaderboard"
+        ? copy.nav.leaderboard
+        : title;
   const fullMain = isHome || bleed;
 
   return (
@@ -31,7 +41,7 @@ export default function PageShell({
             ) : (
               <>
                 <SiteLogo />
-                <h1 className="sr-only">{title}</h1>
+                <h1 className="sr-only">{heading}</h1>
               </>
             )}
           </div>

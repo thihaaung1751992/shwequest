@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMessages } from "@/i18n/locale-context";
+import type { Messages } from "@/i18n/messages";
 import { planDaysRemaining } from "@/data/learner";
 
-function daysLeftLabel(days: number): { short: string; full: string } {
-  if (days === 0) return { short: "Today", full: "Ends today" };
-  if (days === 1) return { short: "1d left", full: "1 day left" };
-  return { short: `${days}d left`, full: `${days} days left` };
+function daysLeftLabel(days: number, copy: Messages): { short: string; full: string } {
+  return { short: copy.daysShort(days), full: copy.daysFull(days) };
 }
 
 /** Days left on a purchased plan. Counted in the browser so prerender stays stable. */
 export default function PlanDaysLeft({ endsOn }: { endsOn: string | null }) {
+  const copy = useMessages();
   const [labels, setLabels] = useState<{ short: string; full: string } | null>(
     null,
   );
@@ -21,8 +22,8 @@ export default function PlanDaysLeft({ endsOn }: { endsOn: string | null }) {
       return;
     }
     const days = planDaysRemaining(endsOn);
-    setLabels(days >= 0 ? daysLeftLabel(days) : null);
-  }, [endsOn]);
+    setLabels(days >= 0 ? daysLeftLabel(days, copy) : null);
+  }, [endsOn, copy]);
 
   if (labels === null) return null;
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import FrostGlass from "@/components/frost-glass";
+import { useMessages } from "@/i18n/locale-context";
 import { catalogTotals } from "@/data/teachers";
 
 const HERO_FIGURE = "/home/hero-figure.svg";
@@ -330,6 +331,8 @@ export default function HomeHero() {
     );
   };
 
+  const copy = useMessages();
+
   return (
     <section
       ref={sectionRef}
@@ -339,19 +342,18 @@ export default function HomeHero() {
       <div className="relative z-20 mx-auto grid w-full max-w-page items-center gap-6 px-4 pt-6 pb-4 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pt-14">
         <div className="relative z-20 max-w-xl">
           <p className="inline-flex -rotate-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-600 motion-reduce:rotate-none dark:bg-orange-500/15 dark:text-orange-300">
-            Learning path
+            {copy.hero.kicker}
           </p>
           <h2
             id="home-hero-title"
             className="mt-5 text-4xl leading-[1.05] font-extrabold tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl dark:text-white"
           >
-            Smart learning
-            <span className="mt-1 block">Deeper with a teacher</span>
-            <span className="mt-1 block text-orange-500">—Start here</span>
+            {copy.hero.title}
+            <span className="mt-1 block">{copy.hero.deeper}</span>
+            <span className="mt-1 block text-orange-500">{copy.hero.start}</span>
           </h2>
           <p className="mt-5 max-w-md text-sm leading-relaxed font-medium text-zinc-600 sm:text-base dark:text-zinc-300">
-            Choose a teacher and follow their path. {TOTALS.videos} videos and {TOTALS.games} games
-            across the teachers.
+            {copy.hero.body(TOTALS.videos, TOTALS.games)}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link
@@ -359,7 +361,7 @@ export default function HomeHero() {
               className={`group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full bg-emerald-500/90 px-5 text-sm font-bold text-white transition-[transform,background-color,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible hover:bg-emerald-500 ${FOCUS}`}
             >
               <FrostGlass />
-              <span className="relative z-10">See teachers</span>
+              <span className="relative z-10">{copy.seeTeachers}</span>
               <ArrowRight aria-hidden className="relative z-10 size-4" />
             </Link>
             <Link
@@ -370,7 +372,7 @@ export default function HomeHero() {
                 <FrostGlass />
                 <Play aria-hidden className="relative z-10 size-5 fill-current" />
               </span>
-              How it works
+              {copy.hero.how}
               <ArrowRight aria-hidden className="size-4" />
             </Link>
           </div>

@@ -1,4 +1,7 @@
+"use client";
+
 import { Trophy } from "lucide-react";
+import { useMessages } from "@/i18n/locale-context";
 import DiamondAvatar from "@/components/leaderboard/diamond-avatar";
 import {
   formatRank,
@@ -48,6 +51,7 @@ function PodiumSlot({
 }
 
 export default function LeaderboardBoard() {
+  const copy = useMessages();
   const podium = PODIUM_ORDER.map((place) => {
     const entry = byRank(place);
     return entry ? { place, entry } : null;
@@ -60,11 +64,11 @@ export default function LeaderboardBoard() {
     >
       <div className="mx-auto flex w-full max-w-lg flex-col px-4 pt-8 pb-12 sm:max-w-xl sm:pt-10 sm:pb-16">
         <h2 id="leaderboard-heading" className="sr-only">
-          Top learners
+          {copy.ranks.topLearners}
         </h2>
 
         <ol
-          aria-label="Top three"
+          aria-label={copy.ranks.topThree}
           className="grid grid-cols-3 items-end gap-2 sm:gap-4"
         >
           {podium.map(({ place, entry }) => (
@@ -72,7 +76,7 @@ export default function LeaderboardBoard() {
           ))}
         </ol>
 
-        <ol aria-label="Full ranking" className="mt-10 flex flex-col gap-3 sm:mt-12 sm:gap-3.5">
+        <ol aria-label={copy.ranks.fullRanking} className="mt-10 flex flex-col gap-3 sm:mt-12 sm:gap-3.5">
           {LEADERBOARD.map((entry) => (
             <li key={entry.id} className="flex items-center gap-2.5 sm:gap-3">
               <span className="w-8 shrink-0 text-right text-sm font-extrabold text-orange-700 tabular-nums sm:w-9 sm:text-base">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Calculator, Delete, X } from "lucide-react";
+import { useMessages } from "@/i18n/locale-context";
 
 export type CalcPlanMonths = 3 | 6 | 12;
 
@@ -84,11 +85,12 @@ export default function PlanCalculator({
   active,
   onClose,
 }: PlanCalculatorProps) {
+  const copy = useMessages();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const hintId = useId();
   const accent = ACCENT[months];
-  const lengthLabel = `${months} months`;
+  const lengthLabel = copy.pricing.months(months);
 
   const [display, setDisplay] = useState("0");
   const [stored, setStored] = useState<number | null>(null);
@@ -301,7 +303,7 @@ export default function PlanCalculator({
             >
               <Calculator className="size-3.5" />
             </span>
-            Calculator
+            {copy.calc.title}
           </p>
           <h2
             id={titleId}
@@ -313,7 +315,7 @@ export default function PlanCalculator({
         <button
           type="button"
           className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-zinc-600 shadow-md ring-1 ring-black/5 ${FOCUS}`}
-          aria-label="Flip card back"
+          aria-label={copy.calc.flipBack}
           onClick={onClose}
         >
           <X className="size-4" aria-hidden />
@@ -323,7 +325,7 @@ export default function PlanCalculator({
       <div className="mt-3 grid flex-1 content-start gap-2.5">
         <div className={`rounded-2xl px-3 py-3 ${accent.row}`}>
           <p className="min-h-4 text-[10px] font-bold tracking-[0.12em] text-zinc-400 uppercase">
-            {op && stored !== null ? `${formatPad(String(stored))} ${op}` : "Ready"}
+            {op && stored !== null ? `${formatPad(String(stored))} ${op}` : copy.calc.ready}
           </p>
           <p
             className="mt-1 truncate text-right text-2xl leading-none font-extrabold tracking-tight text-zinc-950 tabular-nums dark:text-zinc-50"
@@ -343,7 +345,7 @@ export default function PlanCalculator({
           <button
             type="button"
             className={`${KEY} bg-zinc-200 text-zinc-800 hover:bg-zinc-300`}
-            aria-label="Backspace"
+            aria-label={copy.calc.backspace}
             onClick={backspace}
           >
             <Delete className="size-3.5" aria-hidden />

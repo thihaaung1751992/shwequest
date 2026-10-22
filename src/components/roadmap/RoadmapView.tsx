@@ -8,6 +8,7 @@ import { SITE_HEADER_CLASS } from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import SiteLogo from "@/components/site-logo";
 import SiteNav from "@/components/site-nav";
+import { useMessages } from "@/i18n/locale-context";
 import type { Teacher } from "@/data/teachers";
 import {
   AnimatePresence,
@@ -41,6 +42,7 @@ type RoadmapViewProps = {
 };
 
 export default function RoadmapView({ teacher }: RoadmapViewProps) {
+  const copy = useMessages();
   const nodes = teacher?.nodes ?? [];
   const units = teacher?.units ?? [];
   const columnRef = useRef<HTMLDivElement>(null);
@@ -55,7 +57,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   const completed = nodes.filter((node) => node.status === "completed");
   const xpEarned = teacher ? earnedXp(nodes) : undefined;
   const current = nodes.find((node) => node.status === "current");
-  const lesson = current ? `Now: ${current.title}` : "Learning path";
+  const lesson = current ? copy.path.now(current.title) : copy.path.learning;
   const lessonLine = teacher ? `${teacher.label} · ${lesson}` : lesson;
   const progress = nodes.length === 0 ? 0 : Math.round((completed.length / nodes.length) * 100);
   const height = roadmapHeight(nodes.length);
@@ -124,7 +126,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
               aria-valuemin={0}
               aria-valuemax={nodes.length}
               aria-valuenow={completed.length}
-              aria-label="Lessons completed"
+              aria-label={copy.path.lessonsCompleted}
             >
               <div
                 className="h-full rounded-full bg-linear-to-r from-emerald-400 to-amber-400"
@@ -132,7 +134,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
               />
             </div>
             <p className="mt-1 text-right text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
-              {completed.length}/{nodes.length} complete
+              {copy.path.complete(completed.length, nodes.length)}
             </p>
           </div>
         ) : null}
@@ -181,7 +183,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
               />
             </svg>
 
-            <ol className="absolute inset-0 list-none" aria-label="Learning roadmap">
+            <ol className="absolute inset-0 list-none" aria-label={copy.path.roadmap}>
               {units.map((unit, unitIndex) => (
                 <li
                   key={`${unit.title}-${unitIndex}`}
@@ -189,7 +191,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
                   style={{ top: unitChipY(unitIndex + 1, nodes.length) }}
                 >
                   <p className="rounded-full border border-amber-200 bg-white/90 px-3 py-1 text-center text-xs font-bold tracking-wide text-amber-800 shadow-md dark:border-white/10 dark:bg-slate-900/90 dark:text-amber-200">
-                    Unit {unitIndex + 1} · {unit.title}
+                    {copy.path.unit(unitIndex + 1, unit.title)}
                   </p>
                 </li>
               ))}
@@ -211,16 +213,16 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
         </div>
         ) : (
           <div className="mx-auto flex w-full max-w-page flex-col items-start gap-4 py-16">
-            <h2 className="text-2xl font-bold tracking-tight">Pick a teacher</h2>
+            <h2 className="text-2xl font-bold tracking-tight">{copy.path.pick}</h2>
             <p className="max-w-md text-sm font-medium text-zinc-600 dark:text-zinc-300">
-              Each teacher has their own videos and games. Choose one to open that path.
+              {copy.path.pickBody}
             </p>
             <Link
               href="/teachers"
               className="group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition-[background-color,overflow] hover:bg-orange-600 motion-safe:hover:overflow-visible focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
             >
               <FrostGlass />
-              <span className="relative z-10">See teachers</span>
+              <span className="relative z-10">{copy.seeTeachers}</span>
               <ArrowRight aria-hidden className="relative z-10 size-4" />
             </Link>
           </div>
@@ -240,7 +242,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
             transform: lockedTip.above ? "translate(-50%, -100%)" : "translate(-50%, 0)",
           }}
         >
-          Complete previous lessons to unlock!
+          {copy.path.lockedTip}
           <span
             className={
               lockedTip.above
@@ -286,8 +288,15 @@ function LessonNode({
   onLocked: (id: string, rect: DOMRect) => void;
   onOpen: (node: RoadmapNode) => void;
 }) {
+  const copy = useMessages();
   const controls = useAnimation();
   const unlocked = node.status !== "locked";
+  const statusLabel =
+    node.status === "completed"
+      ? copy.path.completed
+      : node.status === "current"
+        ? copy.path.current
+        : copy.path.locked;
   const isBoss = node.kind === "boss";
 
   useEffect(() => {
@@ -339,7 +348,7 @@ function LessonNode({
           <motion.button
             type="button"
             className={faceClass(node)}
-            aria-label={accessibleName(node)}
+            aria-label={copy.path.nodeName(node.title, statusLabel, node.xp)}
             aria-current={node.status === "current" ? "step" : undefined}
             aria-disabled={!unlocked}
             aria-describedby={tipOpen ? tipId : undefined}
@@ -394,6 +403,7 @@ function LessonDialog({
   units: readonly PathUnit[];
   onClose: () => void;
 }) {
+  const copy = useMessages();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const detailId = useId();
@@ -401,8 +411,8 @@ function LessonDialog({
   const unit = unitAt(index, units);
   const eyebrow =
     node.kind === "boss"
-      ? `Boss battle · Unit ${unit.number}`
-      : `Video ${videoNumberAt(nodes, index)} · Unit ${unit.number}`;
+      ? copy.path.bossUnit(unit.number)
+      : copy.path.videoUnit(videoNumberAt(nodes, index), unit.number);
 
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -464,7 +474,7 @@ function LessonDialog({
           <button
             type="button"
             className="grid size-11 shrink-0 place-items-center rounded-full bg-zinc-100 text-zinc-700 dark:bg-white/10 dark:text-zinc-100"
-            aria-label="Close"
+            aria-label={copy.path.close}
             onClick={onClose}
           >
             <X className="size-5" aria-hidden />
@@ -485,12 +495,12 @@ function LessonDialog({
           </p>
           <p className="flex items-center gap-2 rounded-2xl bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-950 dark:bg-amber-400/10 dark:text-amber-100">
             <Star className="size-4 shrink-0" aria-hidden />
-            {node.xp} XP reward
+            {copy.path.xpReward(node.xp)}
           </p>
         </div>
         {started ? (
           <p className="mt-4 rounded-2xl bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-200">
-            Lesson started. Your place on the path is saved.
+            {copy.path.started}
           </p>
         ) : null}
         <button
@@ -502,7 +512,7 @@ function LessonDialog({
           }}
         >
           <FrostGlass />
-          <span className="relative z-10">{started ? "Close" : "Start Lesson"}</span>
+          <span className="relative z-10">{started ? copy.path.close : copy.path.startLesson}</span>
           <ArrowRight aria-hidden className="relative z-10 size-4" />
         </button>
       </motion.div>
@@ -511,6 +521,8 @@ function LessonDialog({
 }
 
 function HereBadge({ reduce }: { reduce: boolean }) {
+  const copy = useMessages();
+
   return (
     <motion.div
       className="pointer-events-none absolute bottom-[calc(100%+0.4rem)] left-1/2 z-30 flex w-max -translate-x-1/2 flex-col items-center"
@@ -532,7 +544,7 @@ function HereBadge({ reduce }: { reduce: boolean }) {
         <path d="M14 15.5 23 8l9 7.5" fill="#34d399" stroke="#047857" strokeWidth="1.2" strokeLinejoin="round" />
       </svg>
       <span className="relative -mt-1 rounded-full bg-amber-950 px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap text-amber-50 shadow-md">
-        You are here!
+        {copy.path.youAreHere}
         <span className="absolute top-full left-1/2 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-amber-950" />
       </span>
     </motion.div>
@@ -557,12 +569,6 @@ function faceClass(node: RoadmapNode): string {
     return `${base} cursor-pointer bg-linear-to-b from-amber-200 to-amber-500 text-amber-950 shadow-[inset_0_3px_0_rgba(255,255,255,0.75),0_7px_0_0_#b45309,0_0_0_4px_#fbbf24,0_0_22px_4px_rgba(251,191,36,0.55)]`;
   }
   return `${base} cursor-not-allowed bg-linear-to-b from-white/75 to-zinc-400/90 text-zinc-500 grayscale shadow-[inset_0_3px_0_rgba(255,255,255,0.9),0_6px_0_0_#9ca3af] backdrop-blur-sm`;
-}
-
-function accessibleName(node: RoadmapNode): string {
-  const status =
-    node.status === "completed" ? "Completed" : node.status === "current" ? "Current lesson" : "Locked";
-  return `${node.title}. ${status}. ${node.xp} XP.`;
 }
 
 type LockTip = {

@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play, Swords, Users } from "lucide-react";
 import FrostGlass from "@/components/frost-glass";
+import { useMessages } from "@/i18n/locale-context";
 import { TEACHERS, catalogTotals } from "@/data/teachers";
 
 const TOTALS = catalogTotals();
@@ -13,9 +16,9 @@ const LINKS = [
 ] as const;
 
 const STATS = [
-  { value: TOTALS.videos, label: "videos", Icon: Play },
-  { value: TOTALS.games, label: "games", Icon: Swords },
-  { value: TEACHERS.length, label: "teachers", Icon: Users },
+  { value: TOTALS.videos, id: "videos", Icon: Play },
+  { value: TOTALS.games, id: "games", Icon: Swords },
+  { value: TEACHERS.length, id: "teachers", Icon: Users },
 ] as const;
 
 const TIKTOK_NOTE =
@@ -65,6 +68,13 @@ const SOCIAL = [
 ] as const;
 
 export default function SiteFooter() {
+  const copy = useMessages();
+  const linkLabel = {
+    "/": copy.nav.home,
+    "/teachers": copy.nav.teachers,
+    "/leaderboard": copy.nav.leaderboard,
+  } as const;
+
   return (
     <footer className="mt-auto border-t border-orange-100 bg-cream text-zinc-600 dark:border-white/10 dark:bg-slate-950 dark:text-zinc-300">
       <div className="mx-auto grid w-full max-w-page gap-10 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -82,9 +92,9 @@ export default function SiteFooter() {
               <span aria-hidden className="ml-1.5 inline-block size-2 rounded-full bg-orange-500 align-middle" />
             </span>
           </Link>
-          <p className="max-w-xs text-sm leading-6">Choose a teacher and follow the learning path.</p>
+          <p className="max-w-xs text-sm leading-6">{copy.footer.blurb}</p>
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Social</p>
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{copy.footer.social}</p>
             <ul className="flex items-center gap-2.5">
               {SOCIAL.map(({ name, href, className, Mark }) => (
                 <li key={name}>
@@ -103,8 +113,8 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <nav aria-label="Explore" className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Explore</h2>
+        <nav aria-label={copy.footer.explore} className="flex flex-col gap-3">
+          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{copy.footer.explore}</h2>
           <ul className="flex flex-col">
             {LINKS.map((link) => (
               <li key={link.href}>
@@ -112,38 +122,38 @@ export default function SiteFooter() {
                   href={link.href}
                   className={`inline-flex min-h-11 items-center text-sm font-medium hover:text-orange-600 dark:hover:text-orange-300 ${FOCUS}`}
                 >
-                  {link.label}
+                  {linkLabel[link.href]}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
 
-        <section aria-label="On the path" className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">On the path</h2>
+        <section aria-label={copy.footer.onPath} className="flex flex-col gap-3">
+          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{copy.footer.onPath}</h2>
           <ul className="flex flex-col gap-3">
-            {STATS.map(({ value, label, Icon }) => (
-              <li key={label} className="flex items-center gap-3 text-sm font-semibold text-zinc-800 dark:text-zinc-100">
+            {STATS.map(({ value, id, Icon }) => (
+              <li key={id} className="flex items-center gap-3 text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300">
                   <Icon aria-hidden className="size-4" />
                 </span>
                 <span>
-                  {value} {label}
+                  {value} {copy.footer[id]}
                 </span>
               </li>
             ))}
           </ul>
         </section>
 
-        <section aria-label="Start" className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Start</h2>
-          <p className="max-w-xs text-sm leading-6">Open the teacher list and follow the lessons already on the path.</p>
+        <section aria-label={copy.footer.start} className="flex flex-col gap-3">
+          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{copy.footer.start}</h2>
+          <p className="max-w-xs text-sm leading-6">{copy.footer.startBody}</p>
           <Link
             href="/teachers"
             className={`group relative inline-flex min-h-11 w-fit items-center gap-2 overflow-hidden rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition-[background-color,overflow] hover:bg-orange-600 motion-safe:hover:overflow-visible ${FOCUS}`}
           >
             <FrostGlass />
-            <span className="relative z-10">See teachers</span>
+            <span className="relative z-10">{copy.seeTeachers}</span>
             <ArrowRight aria-hidden className="relative z-10 size-4" />
           </Link>
         </section>

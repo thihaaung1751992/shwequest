@@ -3,10 +3,10 @@ import { Suspense } from "react";
 import PageShell from "@/components/page-shell";
 import TeacherResults from "@/components/teachers/teacher-results";
 import TeacherSearch from "@/components/teachers/teacher-search";
-import TeacherViewToggle, {
-  teacherViewFromParam,
-} from "@/components/teachers/teacher-view-toggle";
+import TeacherViewToggle from "@/components/teachers/teacher-view-toggle";
+import { teacherViewFromParam } from "@/components/teachers/teacher-view";
 import { TEACHERS } from "@/data/teachers";
+import TeachersIntro from "@/components/teachers/teachers-intro";
 
 export const metadata: Metadata = {
   title: "Teachers · Shwequest",
@@ -34,10 +34,7 @@ async function TeacherResultsFromUrl({ searchParams }: { searchParams: SearchPar
 export default function TeachersPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <PageShell title="Teachers">
-      <h2 className="text-2xl font-bold tracking-tight">Choose a teacher</h2>
-      <p className="mt-2 text-sm font-medium text-zinc-600 dark:text-zinc-300">
-        Open one teacher to see the learning path.
-      </p>
+      <TeachersIntro />
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <TeacherSearch />
         <div className="flex shrink-0 justify-end">
@@ -60,9 +57,9 @@ export default function TeachersPage({ searchParams }: { searchParams: SearchPar
           hidden
           className="mt-4 rounded-2xl border-2 border-dashed border-amber-200 bg-white/80 px-4 py-10 text-center text-sm font-bold text-zinc-600 dark:border-white/10 dark:bg-slate-950/70 dark:text-zinc-300"
         >
-          No teachers match &ldquo;
+          <span data-empty-lead>No teachers match &ldquo;</span>
           <span data-query="" />
-          &rdquo;.
+          <span data-empty-tail>&rdquo;.</span>
         </p>
       </div>
     </PageShell>

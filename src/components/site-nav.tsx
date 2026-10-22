@@ -12,6 +12,7 @@ import {
 } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import FrostGlass from "@/components/frost-glass";
+import { useMessages } from "@/i18n/locale-context";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -27,31 +28,37 @@ const FOCUS =
 type PillBox = { x: number; y: number; w: number; h: number };
 
 export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster" }) {
+  const copy = useMessages();
   const pathname = usePathname();
+  const linkLabel: Record<LinkHref, string> = {
+    "/": copy.nav.home,
+    "/teachers": copy.nav.teachers,
+    "/leaderboard": copy.nav.leaderboard,
+  };
   const spread = layout === "bar";
   const panelId = useId();
   const listRef = useRef<HTMLUListElement>(null);
   const linkRefs = useRef<Partial<Record<LinkHref, HTMLAnchorElement | null>>>({});
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [hoverHref, setHoverHref] = useState<LinkHref | null>(null);
   const [pill, setPill] = useState<PillBox | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Pill follows the current route only — hover must not move it (avoids a second
+  // slide-in after click when SiteNav remounts on the destination page).
   const activeHref =
     LINKS.find((link) => link.href === pathname)?.href ?? null;
-  const targetHref = hoverHref ?? activeHref;
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   const placePill = useCallback(() => {
     const list = listRef.current;
-    if (!list || !targetHref) {
+    if (!list || !activeHref) {
       setPill(null);
       return;
     }
-    const el = linkRefs.current[targetHref];
+    const el = linkRefs.current[activeHref];
     if (!el) {
       setPill(null);
       return;
@@ -65,7 +72,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
       w: linkBox.width,
       h: linkBox.height,
     });
-  }, [targetHref]);
+  }, [activeHref]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -102,8 +109,12 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
     if (!list) return;
     const ro = new ResizeObserver(() => placePill());
     ro.observe(list);
+    for (const link of LINKS) {
+      const el = linkRefs.current[link.href];
+      if (el) ro.observe(el);
+    }
     return () => ro.disconnect();
-  }, [placePill]);
+  }, [placePill, pathname]);
 
   function onPanelKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
@@ -133,7 +144,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
 
   return (
     <nav
-      aria-label="Main"
+      aria-label={copy.nav.main}
       className={
         spread
           ? "flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-3"
@@ -147,7 +158,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
         className={`grid size-11 shrink-0 place-items-center rounded-full border border-amber-200 bg-white text-amber-950 shadow-[0_6px_14px_-10px_rgba(180,83,9,0.55)] md:hidden dark:border-white/15 dark:bg-slate-900 dark:text-amber-100 ${FOCUS}`}
         aria-expanded={menuOpen}
         aria-controls={panelId}
-        aria-label={menuOpen ? "Close main menu" : "Open main menu"}
+        aria-label={menuOpen ? copy.nav.closeMenu : copy.nav.openMenu}
         onClick={() => setMenuOpen((open) => !open)}
       >
         {menuOpen ? (
@@ -157,21 +168,16 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
         )}
       </button>
 
-      {/* Desktop: sliding pill + CTA */}
+      {/* Desktop: active pill (snap) + CTA — hover is text-only, does not move the pill */}
       <div className="hidden min-w-0 items-center gap-x-3 md:flex">
         <ul
           ref={listRef}
-          onPointerLeave={() => setHoverHref(null)}
           className="relative flex items-center gap-0.5 rounded-full bg-amber-100/70 p-1 ring-1 ring-amber-200/80 sm:gap-1 dark:bg-white/10 dark:ring-white/15"
         >
           {pill ? (
             <span
               aria-hidden
-              className={`pointer-events-none absolute top-0 left-0 z-0 rounded-full bg-amber-400 shadow-[0_6px_14px_-8px_rgba(180,83,9,0.55)] dark:bg-amber-400 ${
-                reducedMotion
-                  ? ""
-                  : "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)]"
-              }`}
+              className="pointer-events-none absolute top-0 left-0 z-0 rounded-full bg-amber-400 shadow-[0_6px_14px_-8px_rgba(180,83,9,0.55)] dark:bg-amber-400"
               style={{
                 width: pill.w,
                 height: pill.h,
@@ -181,7 +187,6 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
           ) : null}
           {LINKS.map((link) => {
             const current = pathname === link.href;
-            const lit = targetHref === link.href;
             return (
               <li key={link.href}>
                 <Link
@@ -190,16 +195,13 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                     linkRefs.current[link.href] = node;
                   }}
                   aria-current={current ? "page" : undefined}
-                  onPointerEnter={() => setHoverHref(link.href)}
-                  onFocus={() => setHoverHref(link.href)}
-                  onBlur={() => setHoverHref(null)}
                   className={`relative z-10 inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold ${FOCUS} ${
-                    lit
+                    current
                       ? "font-bold text-amber-950"
-                      : "text-zinc-900 dark:text-zinc-100"
+                      : "text-zinc-900 hover:text-amber-950 dark:text-zinc-100 dark:hover:text-amber-100"
                   }`}
                 >
-                  {link.label}
+                  {linkLabel[link.href]}
                 </Link>
               </li>
             );
@@ -208,7 +210,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
         <div className="flex shrink-0 items-center gap-2">
           <Link href="/teachers" className={ctaClass}>
             <FrostGlass />
-            <span className="relative z-10">See teachers</span>
+            <span className="relative z-10">{copy.seeTeachers}</span>
             <ArrowRight aria-hidden className="relative z-10 size-4" />
           </Link>
         </div>
@@ -220,7 +222,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
           <button
             type="button"
             className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]"
-            aria-label="Close main menu"
+            aria-label={copy.nav.closeMenu}
             onClick={closeMenu}
           />
           <div
@@ -228,7 +230,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
             id={panelId}
             role="dialog"
             aria-modal="true"
-            aria-label="Main menu"
+            aria-label={copy.nav.menu}
             tabIndex={-1}
             onKeyDown={onPanelKeyDown}
             className={`absolute inset-y-0 right-0 flex w-[min(100%,20rem)] flex-col bg-cream shadow-[-12px_0_40px_-20px_rgba(15,23,42,0.45)] outline-hidden dark:bg-slate-950 ${
@@ -237,12 +239,12 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
           >
             <div className="flex items-center justify-between border-b border-amber-200/80 px-4 py-3 dark:border-white/10">
               <p className="text-xs font-bold tracking-[0.14em] text-amber-800 uppercase dark:text-amber-300">
-                Menu
+                {copy.nav.menu}
               </p>
               <button
                 type="button"
                 className={`grid size-11 place-items-center rounded-full bg-white text-zinc-800 ring-1 ring-amber-200 dark:bg-slate-900 dark:text-zinc-100 dark:ring-white/15 ${FOCUS}`}
-                aria-label="Close main menu"
+                aria-label={copy.nav.closeMenu}
                 onClick={closeMenu}
               >
                 <X className="size-5" aria-hidden />
@@ -263,7 +265,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                           : "bg-white/70 text-zinc-900 ring-1 ring-amber-100 hover:bg-amber-50 dark:bg-white/5 dark:text-zinc-50 dark:ring-white/10 dark:hover:bg-white/10"
                       }`}
                     >
-                      {link.label}
+                      {linkLabel[link.href]}
                     </Link>
                   </li>
                 );
@@ -276,7 +278,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                 className={`${ctaClass} w-full justify-center`}
               >
                 <FrostGlass />
-                <span className="relative z-10">See teachers</span>
+                <span className="relative z-10">{copy.seeTeachers}</span>
                 <ArrowRight aria-hidden className="relative z-10 size-4" />
               </Link>
             </div>

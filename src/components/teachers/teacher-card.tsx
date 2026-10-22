@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
+import { useMessages } from "@/i18n/locale-context";
 import type { Teacher } from "@/data/teachers";
 import FrostGlass from "@/components/frost-glass";
 import { countLessons } from "@/components/roadmap/roadmap-data";
@@ -7,6 +10,7 @@ import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
 
 export default function TeacherCard({ teacher }: { teacher: Teacher }) {
+  const copy = useMessages();
   const accent = ACCENT_STYLES[teacher.accent];
   const { videos, games } = countLessons(teacher.nodes);
 
@@ -26,7 +30,7 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
         </span>
         <div className="min-w-0">
           <p aria-hidden className="text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-            Teacher
+            {copy.teachers.role}
           </p>
           <h3 className="truncate text-xl font-extrabold tracking-tight">{teacher.label}</h3>
         </div>
@@ -35,11 +39,11 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
       <ul className="relative mt-5 flex flex-wrap gap-2 text-sm font-bold">
         <li className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 ${accent.chip}`}>
           <CirclePlay aria-hidden className="size-4" />
-          {videos} videos
+          {copy.teachers.videos(videos)}
         </li>
         <li className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 ${accent.chip}`}>
           <Gamepad2 aria-hidden className="size-4" />
-          {games} games
+          {copy.teachers.games(games)}
         </li>
       </ul>
 
@@ -47,7 +51,7 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
         className={`relative mt-6 inline-flex min-h-11 items-center justify-center gap-2 self-stretch overflow-hidden rounded-2xl border-b-4 px-4 py-2 font-extrabold text-white transition-[colors,overflow] motion-safe:group-hover:overflow-visible ${accent.cta}`}
       >
         <FrostGlass />
-        <span className="relative z-10">Open path</span>
+        <span className="relative z-10">{copy.teachers.openPath}</span>
         <ArrowRight
           aria-hidden
           className="relative z-10 size-4 transition-transform motion-safe:group-hover:translate-x-1"

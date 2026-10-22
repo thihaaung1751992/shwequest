@@ -13,6 +13,7 @@ import {
 } from "react";
 import FrostGlass from "@/components/frost-glass";
 import PlanCalculator, { type CalcPlanMonths } from "@/components/plan-calculator";
+import { useMessages } from "@/i18n/locale-context";
 
 const MONTHLY_KYAT = 15_000;
 
@@ -655,6 +656,7 @@ export default function HomePricing({
   /** When true (`?result=true`), paint every slot filled and fire success papers once. */
   forceComplete?: boolean;
 }) {
+  const copy = useMessages();
   const sectionRef = useRef<HTMLElement>(null);
   const floorRef = useRef<HTMLDivElement>(null);
   const glyphRef = useRef<HTMLSpanElement>(null);
@@ -1600,15 +1602,15 @@ export default function HomePricing({
           id="home-pricing-title"
           className="pointer-events-auto mx-auto w-fit -rotate-2 rounded-full bg-emerald-500 px-3 py-1 text-sm font-semibold text-white motion-reduce:rotate-none"
         >
-          Plans
+          {copy.pricing.title}
         </h2>
         <p className="pointer-events-auto mx-auto mt-6 max-w-2xl text-center text-lg leading-snug font-bold text-zinc-700 sm:text-2xl dark:text-zinc-200">
-          Every length is {kyat(MONTHLY_KYAT)} per month.
+          {copy.pricing.intro(kyat(MONTHLY_KYAT))}
         </p>
         <ul className="pointer-events-auto mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {PLANS.map(({ months, extraDays }) => {
             const tone = TONE[months];
-            const lengthLabel = months === 1 ? "1 month" : `${months} months`;
+            const lengthLabel = copy.pricing.months(months);
             const total = months * MONTHLY_KYAT;
             const billedDays = months * 30;
             const coveredDays = billedDays + extraDays;
@@ -1627,7 +1629,7 @@ export default function HomePricing({
                     <button
                       type="button"
                       className={`grid size-9 shrink-0 cursor-pointer place-items-center rounded-full border-2 border-white shadow-md ring-1 ring-black/5 transition-transform motion-safe:hover:-translate-y-0.5 ${tone.cta} ${FOCUS}`}
-                      aria-label={`Flip to calculator for ${lengthLabel}`}
+                      aria-label={copy.pricing.flip(lengthLabel)}
                       aria-pressed={flipped}
                       onClick={() => setFlippedPlan(months)}
                     >
@@ -1636,13 +1638,13 @@ export default function HomePricing({
                   ) : null}
                 </div>
                 <p className={`mt-3 text-sm font-semibold ${tone.meta}`}>
-                  {kyat(MONTHLY_KYAT)} / month
+                  {kyat(MONTHLY_KYAT)} {copy.pricing.perMonth}
                 </p>
 
                 <div className="mt-4 grid flex-1 gap-2">
                   <div className={`rounded-3xl px-3.5 py-3.5 ${tone.row}`}>
                     <p className="text-[11px] font-bold tracking-[0.12em] text-zinc-500 uppercase dark:text-zinc-400">
-                      Total due
+                      {copy.pricing.totalDue}
                     </p>
                     <p
                       className={`mt-1.5 text-[1.75rem] leading-none font-extrabold tracking-tight ${tone.total}`}
@@ -1661,14 +1663,14 @@ export default function HomePricing({
                   <div
                     className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold ${tone.row}`}
                   >
-                    <span>Billed days</span>
-                    <span className="font-bold tabular-nums">{billedDays} days</span>
+                    <span>{copy.pricing.billedDays}</span>
+                    <span className="font-bold tabular-nums">{copy.pricing.days(billedDays)}</span>
                   </div>
                   {extraDays > 0 ? (
                     <div
                       className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold ${tone.row}`}
                     >
-                      <span>Extra days</span>
+                      <span>{copy.pricing.extraDays}</span>
                       <span className="font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
                         +{extraDays}
                       </span>
@@ -1677,8 +1679,8 @@ export default function HomePricing({
                   <div
                     className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold ${tone.row}`}
                   >
-                    <span>Access covers</span>
-                    <span className="font-bold tabular-nums">{coveredDays} days</span>
+                    <span>{copy.pricing.access}</span>
+                    <span className="font-bold tabular-nums">{copy.pricing.days(coveredDays)}</span>
                   </div>
                 </div>
 
@@ -1687,7 +1689,7 @@ export default function HomePricing({
                   className={`group relative mt-5 inline-flex min-h-12 w-fit items-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold transition-[transform,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${tone.cta} ${FOCUS}`}
                 >
                   <FrostGlass />
-                  <span className="relative z-10">See teachers</span>
+                  <span className="relative z-10">{copy.seeTeachers}</span>
                   <ArrowRight aria-hidden className="relative z-10 size-4" />
                 </Link>
               </article>
@@ -1737,10 +1739,10 @@ export default function HomePricing({
         <div
           className="pointer-events-none mx-auto mt-12 flex max-w-3xl flex-col items-center gap-2 sm:mt-16 sm:gap-3"
           role="group"
-          aria-label="Learn English fluently"
+          aria-label={copy.pricing.puzzle}
         >
           <p className="sr-only">
-            Click matching letters on the floor to fill LEARN ENGLISH FLUENTLY.
+            {copy.pricing.puzzleHint}
           </p>
           <div
             ref={puzzlePhraseRef}
@@ -1786,7 +1788,7 @@ export default function HomePricing({
             className={`pointer-events-auto inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-zinc-300 bg-white px-5 text-sm font-bold text-zinc-800 shadow-sm transition-[transform,background-color,border-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-50 hover:shadow-md active:translate-y-0 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-400 dark:hover:bg-zinc-800 ${FOCUS}`}
           >
             <RotateCcw aria-hidden className="size-4 shrink-0" />
-            Restart puzzle
+            {copy.pricing.restart}
           </button>
         </div>
 

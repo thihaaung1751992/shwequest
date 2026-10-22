@@ -11,7 +11,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-geist-sans), "Noto Sans Myanmar", "Myanmar Text", "Padauk", sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -229,6 +229,20 @@ body {
 
 .dark .puzzle-letter-outline__stroke {
   -webkit-text-stroke: 2px rgb(255 255 255 / 0.35);
+}
+
+/* Myanmar is a complex script. Tight tracking and 1.05 line-height stack vowel signs on top of each other. */
+:lang(my) {
+  font-family: "Myanmar MN", "Noto Sans Myanmar", "Pyidaungsu", "Padauk", var(--font-geist-sans), sans-serif;
+}
+
+:lang(my) :where(h1, h2, h3, h4, p, a, button, span, li, label) {
+  letter-spacing: normal !important;
+}
+
+:lang(my) :where(h1, h2, h3, p) {
+  line-height: 1.7 !important;
+  font-weight: 600;
 }
 
 @supports not (-webkit-text-stroke: 2px rgb(161 161 170 / 0.45)) {

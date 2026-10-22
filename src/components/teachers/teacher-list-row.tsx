@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
+import { useMessages } from "@/i18n/locale-context";
 import FrostGlass from "@/components/frost-glass";
 import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
@@ -7,6 +10,7 @@ import TeacherPortrait from "@/components/teachers/teacher-portrait";
 import type { Teacher } from "@/data/teachers";
 
 export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
+  const copy = useMessages();
   const accent = ACCENT_STYLES[teacher.accent];
   const { videos, games } = countLessons(teacher.nodes);
 
@@ -21,12 +25,12 @@ export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
         <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-bold text-zinc-600 dark:text-zinc-300">
           <span className="inline-flex items-center gap-1">
             <CirclePlay aria-hidden className="size-3.5" />
-            {videos} videos
+            {copy.teachers.videos(videos)}
           </span>
           <span className="sr-only">, </span>
           <span className="inline-flex items-center gap-1">
             <Gamepad2 aria-hidden className="size-3.5" />
-            {games} games
+            {copy.teachers.games(games)}
           </span>
         </span>
       </span>
@@ -34,7 +38,7 @@ export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
         className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl border-b-4 px-3 text-sm font-extrabold text-white transition-[overflow] motion-safe:group-hover:overflow-visible ${accent.cta}`}
       >
         <FrostGlass />
-        <span className="relative z-10 hidden sm:inline">Open path</span>
+        <span className="relative z-10 hidden sm:inline">{copy.teachers.openPath}</span>
         <ArrowRight aria-hidden className="relative z-10 size-4" />
       </span>
     </Link>

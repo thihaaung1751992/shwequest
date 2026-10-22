@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useMessages } from "@/i18n/locale-context";
 
 const RESULTS_ID = "teacher-results";
 
 export default function TeacherSearch() {
+  const copy = useMessages();
   const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
 
   useEffect(() => {
@@ -25,11 +28,14 @@ export default function TeacherSearch() {
         if (match) shown += 1;
       });
 
+      // Only the Card/Tile/List grids own [data-teacher-name] items as direct
+      // children. Skip nested lists (e.g. video/game chips inside TeacherCard).
       root.querySelectorAll("ul").forEach((list) => {
-        const visible = [...list.querySelectorAll<HTMLElement>("[data-teacher-name]")].some(
-          (item) => !item.hidden,
-        );
-        list.hidden = !visible;
+        const owned = [
+          ...list.querySelectorAll<HTMLElement>(":scope > [data-teacher-name]"),
+        ];
+        if (owned.length === 0) return;
+        list.hidden = !owned.some((item) => !item.hidden);
       });
 
       const empty = document.getElementById("teacher-search-empty");
@@ -38,12 +44,19 @@ export default function TeacherSearch() {
         const slot = empty.querySelector("[data-query]");
         const nextQuery = value.trim();
         if (slot && slot.textContent !== nextQuery) slot.textContent = nextQuery;
+        const lead = empty.querySelector("[data-empty-lead]");
+        const tail = empty.querySelector("[data-empty-tail]");
+        if (lead && lead.textContent !== copy.teachers.emptyLead) {
+          lead.textContent = copy.teachers.emptyLead;
+        }
+        if (tail && tail.textContent !== copy.teachers.emptyTail) {
+          tail.textContent = copy.teachers.emptyTail;
+        }
       }
 
       const status = document.getElementById("teacher-search-status");
       if (status) {
-        status.textContent =
-          q.length === 0 ? "" : `${shown} matching ${shown === 1 ? "teacher" : "teachers"}`;
+        status.textContent = q.length === 0 ? "" : copy.teachers.matches(shown);
       }
     };
 
@@ -53,41 +66,50 @@ export default function TeacherSearch() {
     const observer = new MutationObserver(apply);
     observer.observe(root, { childList: true });
     return () => observer.disconnect();
-  }, [value]);
+  }, [value, copy]);
 
   return (
-    <div className="relative w-full min-w-0 sm:max-w-sm">
+    <form
+      role="search"
+      className="flex w-full min-w-0 items-center gap-2 rounded-full bg-white py-1.5 pr-1.5 pl-5 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.28)] ring-1 ring-zinc-200/80 dark:bg-slate-950 dark:ring-white/10 sm:max-w-md"
+      onSubmit={(event) => {
+        event.preventDefault();
+        inputRef.current?.blur();
+      }}
+    >
       <label htmlFor={id} className="sr-only">
-        Search teachers
+        {copy.teachers.searchLabel}
       </label>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 left-1.5 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl bg-amber-400 text-amber-950 shadow-xs"
-      >
-        <Search className="size-4" strokeWidth={2.75} />
-      </span>
       <input
+        ref={inputRef}
         id={id}
         type="search"
         inputMode="search"
         value={value}
         maxLength={80}
-        placeholder="Search teachers"
+        placeholder={copy.teachers.searchPlaceholder}
         autoComplete="off"
         aria-controls={RESULTS_ID}
         onChange={(event) => setValue(event.target.value)}
-        className="h-12 w-full rounded-2xl border-2 border-amber-200 bg-white/80 pr-11 pl-12 text-sm font-bold text-zinc-900 shadow-xs outline-hidden placeholder:font-semibold placeholder:text-zinc-400 focus-visible:border-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 dark:border-white/10 dark:bg-slate-950/70 dark:text-zinc-100 dark:placeholder:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+        className="min-w-0 flex-1 bg-transparent py-2 text-sm font-semibold text-zinc-900 outline-hidden placeholder:font-medium placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
       />
       {value ? (
         <button
           type="button"
           onClick={() => setValue("")}
-          aria-label="Clear search"
-          className="absolute top-1/2 right-1.5 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-zinc-500 hover:bg-amber-50 hover:text-amber-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 dark:text-zinc-300 dark:hover:bg-white/5"
+          aria-label={copy.teachers.clear}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 dark:text-zinc-300 dark:hover:bg-white/10"
         >
           <X aria-hidden className="size-4" strokeWidth={2.75} />
         </button>
       ) : null}
-    </div>
+      <button
+        type="submit"
+        aria-label={copy.teachers.search}
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-xs transition-colors hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+      >
+        <Search aria-hidden className="size-4" strokeWidth={2.75} />
+      </button>
+    </form>
   );
 }
