@@ -17,13 +17,13 @@ const FOCUS =
 
 /** Orbit awhile, then slip off one by one into the banner. */
 const ORBIT_MS = 2600;
-const SLIP_STAGGER_MS = 380;
-  /** Grow from orbit size while free; fade as soon as the letter slips off. */
-  const TARGET_SCALE_MOBILE = 5.5;
-  const TARGET_SCALE_DESKTOP = 14;
-  /** Tailwind `sm` — keep bounce glyphs smaller below this width. */
-  const TARGET_SCALE_BREAKPOINT = 640;
-  const GROW_PER_SEC = 2.6;
+const SLIP_STAGGER_MS = 200;
+/** Grow from orbit size while free; fade as soon as the letter slips off. */
+const TARGET_SCALE_MOBILE = 4;
+const TARGET_SCALE_DESKTOP = 9;
+/** Tailwind `sm` — keep bounce glyphs smaller below this width. */
+const TARGET_SCALE_BREAKPOINT = 640;
+const GROW_PER_SEC = 2.6;
 const FADE_PER_SEC = 0.55;
 const FADE_FLOOR = 0.18;
 /** Release / bounce speed (px/s). */
@@ -31,67 +31,84 @@ const SLIP_SPEED = 260;
 /** +1 = CSS clockwise (hero-orbit), −1 = reverse. */
 type OrbitSense = 1 | -1;
 
+type OrbitRing = "outer" | "mid" | "inner";
+
 type OrbitSpec = {
+  id: string;
   letter: string;
+  ring: OrbitRing;
   motionClassName: string;
   counterClassName: string;
-  startClassName: string;
+  /** Degrees around the ring; applied as inline rotate (avoids Tailwind JIT gaps). */
+  startDeg: number;
   toneClassName: string;
   orbitSense: OrbitSense;
 };
 
-const ORBIT_LETTERS: OrbitSpec[] = [
-  {
-    letter: "E",
+const LETTER_TONES = [
+  "text-orange-500",
+  "text-emerald-600",
+  "text-amber-600",
+  "text-sky-600",
+  "text-orange-400",
+  "text-emerald-500",
+] as const;
+
+const RING_MOTION: Record<
+  OrbitRing,
+  { motionClassName: string; counterClassName: string; orbitSense: OrbitSense }
+> = {
+  outer: {
     motionClassName: "motion-safe:animate-hero-orbit",
     counterClassName: "motion-safe:animate-[hero-orbit_22s_linear_infinite_reverse]",
-    startClassName: "rotate-45",
-    toneClassName: "text-orange-500",
     orbitSense: 1,
   },
-  {
-    letter: "N",
+  mid: {
     motionClassName: "motion-safe:animate-hero-orbit-reverse",
     counterClassName: "motion-safe:animate-[hero-orbit_17s_linear_infinite]",
-    startClassName: "-rotate-12",
-    toneClassName: "text-emerald-600",
     orbitSense: -1,
   },
-  {
-    letter: "G",
-    motionClassName: "motion-safe:animate-hero-orbit",
-    counterClassName: "motion-safe:animate-[hero-orbit_22s_linear_infinite_reverse]",
-    startClassName: "rotate-[130deg]",
-    toneClassName: "text-amber-600",
-    orbitSense: 1,
-  },
-  {
-    letter: "I",
-    motionClassName: "motion-safe:animate-hero-orbit-reverse",
-    counterClassName: "motion-safe:animate-[hero-orbit_17s_linear_infinite]",
-    startClassName: "-rotate-[50deg]",
-    toneClassName: "text-sky-600",
-    orbitSense: -1,
-  },
-  {
-    letter: "S",
+  inner: {
     motionClassName: "motion-safe:animate-hero-orbit-inner",
     counterClassName: "motion-safe:animate-[hero-orbit_13s_linear_infinite_reverse]",
-    startClassName: "-rotate-90",
-    toneClassName: "text-orange-400",
     orbitSense: 1,
   },
-  {
-    letter: "H",
-    motionClassName: "motion-safe:animate-hero-orbit-reverse",
-    counterClassName: "motion-safe:animate-[hero-orbit_17s_linear_infinite]",
-    startClassName: "rotate-[110deg]",
-    toneClassName: "text-emerald-500",
-    orbitSense: -1,
-  },
+};
+
+/** Banner phrase — outer / mid / inner rings (spaces omitted). */
+const RING_WORDS: { ring: OrbitRing; word: string }[] = [
+  { ring: "outer", word: "LEARN" },
+  { ring: "mid", word: "ENGLISH" },
+  { ring: "inner", word: "FLUENTLY" },
 ];
 
+function buildOrbitLetters(): OrbitSpec[] {
+  const specs: OrbitSpec[] = [];
+  let toneIndex = 0;
+  for (const { ring, word } of RING_WORDS) {
+    const motion = RING_MOTION[ring];
+    const chars = word.split("");
+    chars.forEach((letter, index) => {
+      specs.push({
+        id: `${ring}-${index}-${letter}`,
+        letter,
+        ring,
+        motionClassName: motion.motionClassName,
+        counterClassName: motion.counterClassName,
+        startDeg: (360 / chars.length) * index,
+        toneClassName: LETTER_TONES[toneIndex % LETTER_TONES.length]!,
+        orbitSense: motion.orbitSense,
+      });
+      toneIndex += 1;
+    });
+  }
+  return specs;
+}
+
+const ORBIT_LETTERS = buildOrbitLetters();
+
 type FreeBody = {
+  id: string;
   letter: string;
   toneClassName: string;
   x: number;
@@ -119,13 +136,13 @@ function tangentVelocity(
 
 /**
  * Bare letter on the ring. Counter-spin is nested so it does not wipe the
- * path translate; start angle is a static rotate on the middle layer.
+ * path translate; start angle is an inline rotate on the middle layer.
  */
 function OrbitLetter({
   letter,
   motionClassName,
   counterClassName,
-  startClassName,
+  startDeg,
   toneClassName,
   glyphRef,
 }: OrbitSpec & {
@@ -133,7 +150,7 @@ function OrbitLetter({
 }) {
   return (
     <span className={`absolute inset-0 ${motionClassName}`}>
-      <span className={`absolute inset-0 ${startClassName}`}>
+      <span className="absolute inset-0" style={{ transform: `rotate(${startDeg}deg)` }}>
         <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <span
             ref={glyphRef}
@@ -157,7 +174,7 @@ export default function HomeHero() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const released = useMemo(
-    () => new Set(freeLetters.map((body) => body.letter)),
+    () => new Set(freeLetters.map((body) => body.id)),
     [freeLetters],
   );
 
@@ -179,10 +196,10 @@ export default function HomeHero() {
       if (section) {
         const sr = section.getBoundingClientRect();
         for (const spec of ORBIT_LETTERS) {
-          const glyph = glyphRefs.current[spec.letter];
+          const glyph = glyphRefs.current[spec.id];
           if (!glyph) continue;
           const gr = glyph.getBoundingClientRect();
-          samplesRef.current[spec.letter] = {
+          samplesRef.current[spec.id] = {
             x: gr.left - sr.left + gr.width / 2,
             y: gr.top - sr.top + gr.height / 2,
             t: now,
@@ -202,7 +219,7 @@ export default function HomeHero() {
     const timers = ORBIT_LETTERS.map((spec, index) =>
       window.setTimeout(() => {
         const section = sectionRef.current;
-        const glyph = glyphRefs.current[spec.letter];
+        const glyph = glyphRefs.current[spec.id];
         if (!section || !glyph) return;
 
         const now = performance.now();
@@ -213,7 +230,7 @@ export default function HomeHero() {
 
         let vx = 0;
         let vy = 0;
-        const prev = samplesRef.current[spec.letter];
+        const prev = samplesRef.current[spec.id];
         const sampleDt = prev ? (now - prev.t) / 1000 : 0;
         if (prev && sampleDt > 0.001 && sampleDt < 0.12) {
           const sx = (x - prev.x) / sampleDt;
@@ -237,8 +254,9 @@ export default function HomeHero() {
           ({ vx, vy } = tangentVelocity(dx / len, dy / len, spec.orbitSense, SLIP_SPEED));
         }
 
-        delete samplesRef.current[spec.letter];
+        delete samplesRef.current[spec.id];
         const body: FreeBody = {
+          id: spec.id,
           letter: spec.letter,
           toneClassName: spec.toneClassName,
           x,
@@ -298,7 +316,7 @@ export default function HomeHero() {
             vy = -Math.abs(vy) * 0.92;
           }
 
-          const node = freeNodeRefs.current[body.letter];
+          const node = freeNodeRefs.current[body.id];
           if (node) {
             node.style.left = `${x}px`;
             node.style.top = `${y}px`;
@@ -316,25 +334,28 @@ export default function HomeHero() {
     return () => cancelAnimationFrame(raf);
   }, [reducedMotion]);
 
-  const orbitByLetter = useMemo(
-    () => new Map(ORBIT_LETTERS.map((spec) => [spec.letter, spec])),
+  const orbitById = useMemo(
+    () => new Map(ORBIT_LETTERS.map((spec) => [spec.id, spec])),
     [],
   );
 
-  const showOrbit = (letter: string) => {
-    if (released.has(letter)) return null;
-    const spec = orbitByLetter.get(letter);
+  const showOrbit = (id: string) => {
+    if (released.has(id)) return null;
+    const spec = orbitById.get(id);
     if (!spec) return null;
     return (
       <OrbitLetter
-        key={letter}
+        key={id}
         {...spec}
         glyphRef={(node) => {
-          glyphRefs.current[letter] = node;
+          glyphRefs.current[id] = node;
         }}
       />
     );
   };
+
+  const ringIds = (ring: OrbitRing) =>
+    ORBIT_LETTERS.filter((spec) => spec.ring === ring).map((spec) => spec.id);
 
   const copy = useMessages();
 
@@ -389,24 +410,21 @@ export default function HomeHero() {
             className="absolute top-4 left-1/2 size-72 -translate-x-1/2 sm:size-96"
           >
             <span className="absolute inset-0 rounded-full border border-orange-200 dark:border-orange-500/30" />
-            {showOrbit("E")}
-            {showOrbit("N")}
+            {ringIds("outer").map((id) => showOrbit(id))}
           </span>
           <span
             data-hero-ring
             className="absolute top-10 left-1/2 size-60 -translate-x-1/2 sm:top-12 sm:size-80"
           >
             <span className="absolute inset-0 rounded-full border border-orange-200/90 dark:border-orange-500/25" />
-            {showOrbit("G")}
-            {showOrbit("I")}
+            {ringIds("mid").map((id) => showOrbit(id))}
           </span>
           <span
             data-hero-ring
             className="absolute top-16 left-1/2 size-48 -translate-x-1/2 sm:size-64"
           >
             <span className="absolute inset-0 rounded-full border border-orange-200/80 dark:border-orange-500/20" />
-            {showOrbit("S")}
-            {showOrbit("H")}
+            {ringIds("inner").map((id) => showOrbit(id))}
           </span>
           <svg
             className="pointer-events-none absolute right-[-6%] bottom-0 h-[18.5rem] w-[17rem] overflow-visible sm:right-[-2%] sm:h-[29rem] sm:w-[26rem]"
@@ -482,9 +500,9 @@ export default function HomeHero() {
       <div aria-hidden className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
         {freeLetters.map((body) => (
           <span
-            key={body.letter}
+            key={body.id}
             ref={(node) => {
-              freeNodeRefs.current[body.letter] = node;
+              freeNodeRefs.current[body.id] = node;
             }}
             className={`absolute text-sm leading-none font-extrabold sm:text-base ${body.toneClassName}`}
             style={{
