@@ -22,8 +22,8 @@ export default function PageShell({
     <div className="relative flex min-h-dvh flex-col bg-cream font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50">
       <LearnerStrip xp={earnedXpTotal()} tone="cream" />
       <header className={SITE_HEADER_CLASS}>
-        <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-3 gap-y-2">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+          <div className="flex min-w-0 shrink-0 items-center gap-3">
             {isHome ? (
               <h1>
                 <SiteLogo />
