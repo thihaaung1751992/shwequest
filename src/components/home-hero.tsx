@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Play, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import FrostGlass from "@/components/frost-glass";
 import { useMessages } from "@/i18n/locale-context";
 import { catalogTotals } from "@/data/teachers";
@@ -168,6 +168,20 @@ function OrbitLetter({
 /** Below this, a 0 currentTime is the real start, not a reset after hide. */
 const RESUME_MIN_SEC = 0.5;
 
+type HowPanel = "video" | "guide";
+
+/**
+ * Ignore a hide-induced jump to 0. Read concealment from the element so a
+ * stale event (fired as `hidden` is applied) cannot replace a real position.
+ * A seek to the start while the video is on screen still saves.
+ */
+function rememberHowTime(video: HTMLVideoElement, savedSec: number): number {
+  const concealed = video.hidden || video.offsetParent === null;
+  const resetWhileHidden =
+    concealed && savedSec > RESUME_MIN_SEC && video.currentTime < RESUME_MIN_SEC;
+  return resetWhileHidden ? savedSec : video.currentTime;
+}
+
 /**
  * Resume the same media element. If hiding it dropped playback to 0,
  * seek and wait for `seeked` before `play()` so an ended clip does not restart.
@@ -229,20 +243,51 @@ export default function HomeHero() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const howButtonRef = useRef<HTMLButtonElement>(null);
   const backButtonRef = useRef<HTMLButtonElement>(null);
+  const videoTabRef = useRef<HTMLButtonElement>(null);
+  const guideTabRef = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  /** Playback position kept while the overlay is hidden. */
+  /** Playback position kept while the overlay or the video tab is hidden. */
   const playbackTimeRef = useRef(0);
   const howWasOpenRef = useRef(false);
   const [howOpen, setHowOpen] = useState(false);
+  const [howPanel, setHowPanel] = useState<HowPanel>("video");
 
   const closeHow = () => {
     const video = videoRef.current;
     if (video) {
-      playbackTimeRef.current = video.currentTime;
+      playbackTimeRef.current = rememberHowTime(video, playbackTimeRef.current);
       video.pause();
     }
+    setHowPanel("video");
     setHowOpen(false);
   };
+
+  const selectHowPanel = (panel: HowPanel) => {
+    if (panel === howPanel) return;
+    if (howPanel === "video") {
+      const video = videoRef.current;
+      if (video) {
+        playbackTimeRef.current = rememberHowTime(video, playbackTimeRef.current);
+        video.pause();
+      }
+    }
+    setHowPanel(panel);
+  };
+
+  const onHowTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const next: HowPanel = howPanel === "video" ? "guide" : "video";
+    selectHowPanel(next);
+    (next === "video" ? videoTabRef : guideTabRef).current?.focus();
+  };
+
+  const howTabClass = (selected: boolean) =>
+    `inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full px-2.5 text-sm font-bold transition-[transform,background-color,color] motion-safe:hover:-translate-y-0.5 sm:px-3 active:translate-y-0 ${
+      selected
+        ? "bg-amber-400 text-amber-950 shadow-[0_6px_14px_-8px_rgba(180,83,9,0.55)]"
+        : "text-amber-950/75 hover:bg-white/80 dark:text-zinc-200 dark:hover:bg-white/15"
+    } ${FOCUS}`;
 
   const released = useMemo(
     () => new Set(freeLetters.map((body) => body.id)),
@@ -258,32 +303,31 @@ export default function HomeHero() {
   }, []);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (howOpen) {
-      howWasOpenRef.current = true;
-      backButtonRef.current?.focus();
-      if (!video) return;
-      let cancelled = false;
-      const detach = resumeHowVideo(
-        video,
-        playbackTimeRef.current,
-        () => cancelled,
-      );
-      return () => {
-        cancelled = true;
-        detach();
-      };
-    }
-    if (video) {
-      const resetToStart =
-        playbackTimeRef.current > RESUME_MIN_SEC && video.currentTime < RESUME_MIN_SEC;
-      if (!resetToStart) playbackTimeRef.current = video.currentTime;
-      video.pause();
-    }
-    if (howWasOpenRef.current) {
-      howButtonRef.current?.focus();
-    }
+    if (howOpen) backButtonRef.current?.focus();
   }, [howOpen]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!howOpen || howPanel !== "video") {
+      if (video) {
+        playbackTimeRef.current = rememberHowTime(video, playbackTimeRef.current);
+        video.pause();
+      }
+      if (!howOpen && howWasOpenRef.current) {
+        howButtonRef.current?.focus();
+      }
+      return;
+    }
+
+    howWasOpenRef.current = true;
+    if (!video) return;
+    let cancelled = false;
+    const detach = resumeHowVideo(video, playbackTimeRef.current, () => cancelled);
+    return () => {
+      cancelled = true;
+      detach();
+    };
+  }, [howOpen, howPanel]);
 
   // Sample orbit positions so slip velocity matches travel direction.
   useEffect(() => {
@@ -498,7 +542,7 @@ export default function HomeHero() {
             <button
               ref={howButtonRef}
               type="button"
-              className={`group inline-flex min-h-11 items-center gap-3 rounded-full pr-2 text-sm font-bold text-zinc-950 dark:text-white ${FOCUS}`}
+              className={`group inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-full pr-2 text-sm font-bold text-zinc-950 dark:text-white ${FOCUS}`}
               onClick={() => {
                 bodiesRef.current = [];
                 setFreeLetters([]);
@@ -637,25 +681,60 @@ export default function HomeHero() {
       <div
         className={
           howOpen
-            ? "absolute inset-0 z-30 flex justify-center bg-cream dark:bg-slate-950"
+            ? "absolute inset-0 z-30 flex justify-center bg-linear-to-b from-amber-50 to-cream dark:from-slate-950 dark:to-slate-950"
             : "hidden"
         }
         inert={howOpen ? undefined : true}
       >
           <div className="flex h-full w-full max-w-page flex-col px-4 py-4 sm:py-6">
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex items-center justify-between gap-3 border-b border-amber-200/80 pb-3 dark:border-white/10">
               <button
                 ref={backButtonRef}
                 type="button"
-                className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-sm font-bold text-zinc-950 transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-zinc-100 active:translate-y-0 dark:text-white dark:hover:bg-white/10 ${FOCUS}`}
+                className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full bg-white px-3.5 text-sm font-bold text-amber-950 ring-1 ring-amber-200 shadow-[0_6px_14px_-10px_rgba(180,83,9,0.55)] transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-amber-50 active:translate-y-0 dark:bg-slate-900 dark:text-amber-100 dark:ring-white/15 dark:hover:bg-white/10 ${FOCUS}`}
                 onClick={closeHow}
               >
                 <ArrowLeft aria-hidden className="size-4" />
                 {copy.hero.back}
               </button>
+              <div className="flex min-w-0 flex-1 justify-center">
+                <div
+                  role="tablist"
+                  aria-label={copy.hero.how}
+                  className="flex w-max max-w-full min-w-0 gap-1 rounded-full bg-amber-100/80 p-1 ring-1 ring-amber-200/80 dark:bg-white/10 dark:ring-white/15"
+                  onKeyDown={onHowTabKeyDown}
+                >
+                  <button
+                    ref={videoTabRef}
+                    id="how-tab-video"
+                    type="button"
+                    role="tab"
+                    aria-selected={howPanel === "video"}
+                    aria-controls="how-video-panel"
+                    tabIndex={howPanel === "video" ? 0 : -1}
+                    className={howTabClass(howPanel === "video")}
+                    onClick={() => selectHowPanel("video")}
+                  >
+                    {copy.hero.videoTab}
+                  </button>
+                  <button
+                    ref={guideTabRef}
+                    id="how-tab-guide"
+                    type="button"
+                    role="tab"
+                    aria-selected={howPanel === "guide"}
+                    aria-controls="how-guide-panel"
+                    tabIndex={howPanel === "guide" ? 0 : -1}
+                    className={howTabClass(howPanel === "guide")}
+                    onClick={() => selectHowPanel("guide")}
+                  >
+                    {copy.hero.guideTab}
+                  </button>
+                </div>
+              </div>
               <button
                 type="button"
-                className={`grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-zinc-100 text-zinc-700 transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-zinc-200 active:translate-y-0 dark:bg-white/10 dark:text-zinc-100 dark:hover:bg-white/20 ${FOCUS}`}
+                className={`grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-white text-amber-950 ring-1 ring-amber-200 shadow-[0_6px_14px_-10px_rgba(180,83,9,0.55)] transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-amber-50 active:translate-y-0 dark:bg-slate-900 dark:text-amber-100 dark:ring-white/15 dark:hover:bg-white/15 ${FOCUS}`}
                 aria-label={copy.path.close}
                 onClick={closeHow}
               >
@@ -663,30 +742,57 @@ export default function HomeHero() {
               </button>
             </div>
             <video
+              id="how-video-panel"
               ref={videoRef}
+              role="tabpanel"
+              aria-labelledby="how-tab-video"
+              hidden={howPanel !== "video"}
               src={HOW_VIDEO}
               controls
               playsInline
               preload="metadata"
               aria-label={copy.hero.how}
-              className="min-h-0 w-full flex-1 rounded-2xl bg-black object-contain"
+              className="min-h-0 w-full flex-1 rounded-2xl bg-zinc-950 object-contain ring-1 ring-amber-200/80 shadow-[0_18px_40px_-24px_rgba(120,53,15,0.45)] dark:ring-white/10"
               onTimeUpdate={(event) => {
-                const time = event.currentTarget.currentTime;
-                const resetWhileHidden =
-                  !howOpen &&
-                  playbackTimeRef.current > RESUME_MIN_SEC &&
-                  time < RESUME_MIN_SEC;
-                if (!resetWhileHidden) playbackTimeRef.current = time;
+                playbackTimeRef.current = rememberHowTime(
+                  event.currentTarget,
+                  playbackTimeRef.current,
+                );
               }}
               onPause={(event) => {
-                const time = event.currentTarget.currentTime;
-                const resetWhileHidden =
-                  !howOpen &&
-                  playbackTimeRef.current > RESUME_MIN_SEC &&
-                  time < RESUME_MIN_SEC;
-                if (!resetWhileHidden) playbackTimeRef.current = time;
+                playbackTimeRef.current = rememberHowTime(
+                  event.currentTarget,
+                  playbackTimeRef.current,
+                );
               }}
             />
+            <div
+              id="how-guide-panel"
+              role="tabpanel"
+              aria-labelledby="how-tab-guide"
+              hidden={howPanel !== "guide"}
+              className="min-h-0 w-full flex-1 overflow-y-auto rounded-2xl bg-white px-5 py-6 ring-1 ring-amber-200/80 shadow-[0_18px_40px_-24px_rgba(120,53,15,0.4)] sm:px-8 dark:bg-slate-900 dark:ring-white/10"
+            >
+              <h3 className="text-xl font-extrabold tracking-tight text-zinc-950 dark:text-white">
+                {copy.hero.guideTitle}
+              </h3>
+              <ol className="mt-5 flex list-none flex-col gap-4 p-0">
+                {copy.hero.guideSteps.map((step, index) => (
+                  <li
+                    key={step}
+                    className="flex items-start gap-3 text-sm leading-relaxed font-medium text-zinc-700 sm:text-base dark:text-zinc-200"
+                  >
+                    <span
+                      aria-hidden
+                      className="grid size-8 shrink-0 place-items-center rounded-full bg-orange-500 text-sm font-bold text-white"
+                    >
+                      {index + 1}
+                    </span>
+                    <span className="pt-1">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
       </div>
     </section>

@@ -28,6 +28,10 @@ export type Messages = {
     body: (videos: number, games: number) => string;
     how: string;
     back: string;
+    videoTab: string;
+    guideTab: string;
+    guideTitle: string;
+    guideSteps: readonly string[];
   };
   about: {
     title: string;
@@ -154,6 +158,14 @@ const en: Messages = {
       `Choose a teacher and follow their path. ${videos} videos and ${games} games across the teachers.`,
     how: "How it works",
     back: "Back",
+    videoTab: "Video",
+    guideTab: "How to use",
+    guideTitle: "How to use the site",
+    guideSteps: [
+      "Choose a teacher.",
+      "Open their path.",
+      "Follow the videos and games on that path.",
+    ],
   },
   about: {
     title: "About Us",
@@ -273,6 +285,14 @@ const my: Messages = {
       `ဆရာတစ်ယောက်ရွေးပြီး သူ့လမ်းကြောင်းအတိုင်းလိုက်ပါ။ ဆရာများတစ်လျှောက် ဗီဒီယို ${videos} ခု၊ ဂိမ်း ${games} ခု ရှိပါတယ်။`,
     how: "ဘယ်လိုလုပ်သလဲ",
     back: "နောက်သို့",
+    videoTab: "ဗီဒီယို",
+    guideTab: "အသုံးပြုနည်း",
+    guideTitle: "ဝဘ်ဆိုက်ကို ဘယ်လိုသုံးမလဲ",
+    guideSteps: [
+      "ဆရာတစ်ယောက်ရွေးပါ။",
+      "သူ့လမ်းကြောင်းကို ဖွင့်ပါ။",
+      "အဲ့ဒီလမ်းကြောင်းပေါ်က ဗီဒီယိုနဲ့ ဂိမ်းတွေကို လိုက်လုပ်ပါ။",
+    ],
   },
   about: {
     title: "ကျွန်ုပ်တို့အကြောင်း",
