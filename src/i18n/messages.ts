@@ -27,6 +27,7 @@ export type Messages = {
     start: string;
     body: (videos: number, games: number) => string;
     how: string;
+    back: string;
   };
   about: {
     title: string;
@@ -152,6 +153,7 @@ const en: Messages = {
     body: (videos, games) =>
       `Choose a teacher and follow their path. ${videos} videos and ${games} games across the teachers.`,
     how: "How it works",
+    back: "Back",
   },
   about: {
     title: "About Us",
@@ -270,6 +272,7 @@ const my: Messages = {
     body: (videos, games) =>
       `ဆရာတစ်ယောက်ရွေးပြီး သူ့လမ်းကြောင်းအတိုင်းလိုက်ပါ။ ဆရာများတစ်လျှောက် ဗီဒီယို ${videos} ခု၊ ဂိမ်း ${games} ခု ရှိပါတယ်။`,
     how: "ဘယ်လိုလုပ်သလဲ",
+    back: "နောက်သို့",
   },
   about: {
     title: "ကျွန်ုပ်တို့အကြောင်း",

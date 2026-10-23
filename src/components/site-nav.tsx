@@ -41,24 +41,34 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
   const linkRefs = useRef<Partial<Record<LinkHref, HTMLAnchorElement | null>>>({});
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [hoverHref, setHoverHref] = useState<LinkHref | null>(null);
   const [pill, setPill] = useState<PillBox | null>(null);
+  const [pillMotion, setPillMotion] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathSeen = useRef(pathname);
 
-  // Pill follows the current route only — hover must not move it (avoids a second
-  // slide-in after click when SiteNav remounts on the destination page).
+  // Route change: drop hover and snap. Transition stays off until after that paint
+  // so a remounted nav does not slide the pill in a second time.
+  if (pathSeen.current !== pathname) {
+    pathSeen.current = pathname;
+    if (hoverHref !== null) setHoverHref(null);
+    if (pillMotion) setPillMotion(false);
+  }
+
   const activeHref =
     LINKS.find((link) => link.href === pathname)?.href ?? null;
+  const targetHref = hoverHref ?? activeHref;
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   const placePill = useCallback(() => {
     const list = listRef.current;
-    if (!list || !activeHref) {
+    if (!list || !targetHref) {
       setPill(null);
       return;
     }
-    const el = linkRefs.current[activeHref];
+    const el = linkRefs.current[targetHref];
     if (!el) {
       setPill(null);
       return;
@@ -72,7 +82,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
       w: linkBox.width,
       h: linkBox.height,
     });
-  }, [activeHref]);
+  }, [targetHref]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -113,8 +123,13 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
       const el = linkRefs.current[link.href];
       if (el) ro.observe(el);
     }
-    return () => ro.disconnect();
-  }, [placePill, pathname]);
+    let frame = 0;
+    frame = window.requestAnimationFrame(() => setPillMotion(true));
+    return () => {
+      window.cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
+  }, [placePill]);
 
   function onPanelKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
@@ -168,16 +183,21 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
         )}
       </button>
 
-      {/* Desktop: active pill (snap) + CTA — hover is text-only, does not move the pill */}
+      {/* Desktop: sliding pill follows hover, snaps on the active route */}
       <div className="hidden min-w-0 items-center gap-x-3 md:flex">
         <ul
           ref={listRef}
+          onPointerLeave={() => setHoverHref(null)}
           className="relative flex items-center gap-0.5 rounded-full bg-amber-100/70 p-1 ring-1 ring-amber-200/80 sm:gap-1 dark:bg-white/10 dark:ring-white/15"
         >
           {pill ? (
             <span
               aria-hidden
-              className="pointer-events-none absolute top-0 left-0 z-0 rounded-full bg-amber-400 shadow-[0_6px_14px_-8px_rgba(180,83,9,0.55)] dark:bg-amber-400"
+              className={`pointer-events-none absolute top-0 left-0 z-0 rounded-full bg-amber-400 shadow-[0_6px_14px_-8px_rgba(180,83,9,0.55)] dark:bg-amber-400 ${
+                reducedMotion || !pillMotion
+                  ? ""
+                  : "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)]"
+              }`}
               style={{
                 width: pill.w,
                 height: pill.h,
@@ -187,6 +207,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
           ) : null}
           {LINKS.map((link) => {
             const current = pathname === link.href;
+            const lit = targetHref === link.href;
             return (
               <li key={link.href}>
                 <Link
@@ -195,10 +216,13 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                     linkRefs.current[link.href] = node;
                   }}
                   aria-current={current ? "page" : undefined}
+                  onPointerEnter={() => setHoverHref(link.href)}
+                  onFocus={() => setHoverHref(link.href)}
+                  onBlur={() => setHoverHref(null)}
                   className={`relative z-10 inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold ${FOCUS} ${
-                    current
+                    lit
                       ? "font-bold text-amber-950"
-                      : "text-zinc-900 hover:text-amber-950 dark:text-zinc-100 dark:hover:text-amber-100"
+                      : "text-zinc-900 dark:text-zinc-100"
                   }`}
                 >
                   {linkLabel[link.href]}

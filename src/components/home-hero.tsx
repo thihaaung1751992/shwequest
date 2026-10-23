@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Play, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import FrostGlass from "@/components/frost-glass";
 import { useMessages } from "@/i18n/locale-context";
 import { catalogTotals } from "@/data/teachers";
 
 const HERO_FIGURE = "/home/hero-figure.svg";
+const HOW_VIDEO = "/home/sample-video.mp4";
 
 const TOTALS = catalogTotals();
 
@@ -164,6 +165,60 @@ function OrbitLetter({
   );
 }
 
+/** Below this, a 0 currentTime is the real start, not a reset after hide. */
+const RESUME_MIN_SEC = 0.5;
+
+/**
+ * Resume the same media element. If hiding it dropped playback to 0,
+ * seek and wait for `seeked` before `play()` so an ended clip does not restart.
+ * Returns a detach function for effect cleanup.
+ */
+function resumeHowVideo(
+  video: HTMLVideoElement,
+  savedSec: number,
+  isCancelled: () => boolean,
+): () => void {
+  let removeSeeked = () => {};
+
+  const playIfContinuing = () => {
+    if (isCancelled()) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (video.ended) return;
+    void video.play().then(() => {
+      if (isCancelled()) video.pause();
+    }).catch(() => {});
+  };
+
+  const seekThenPlay = () => {
+    if (isCancelled()) return;
+    const resetToStart =
+      savedSec > RESUME_MIN_SEC && video.currentTime < RESUME_MIN_SEC;
+    if (!resetToStart) {
+      playIfContinuing();
+      return;
+    }
+    const onSeeked = () => {
+      removeSeeked = () => {};
+      playIfContinuing();
+    };
+    video.addEventListener("seeked", onSeeked, { once: true });
+    removeSeeked = () => video.removeEventListener("seeked", onSeeked);
+    video.currentTime = savedSec;
+  };
+
+  if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+    seekThenPlay();
+    return () => removeSeeked();
+  }
+
+  const onMeta = () => seekThenPlay();
+  video.addEventListener("loadedmetadata", onMeta, { once: true });
+  return () => {
+    video.removeEventListener("loadedmetadata", onMeta);
+    removeSeeked();
+  };
+}
+
 export default function HomeHero() {
   const sectionRef = useRef<HTMLElement>(null);
   const glyphRefs = useRef<Partial<Record<string, HTMLSpanElement | null>>>({});
@@ -172,6 +227,22 @@ export default function HomeHero() {
   const samplesRef = useRef<Partial<Record<string, OrbitSample>>>({});
   const [freeLetters, setFreeLetters] = useState<FreeBody[]>([]);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const howButtonRef = useRef<HTMLButtonElement>(null);
+  const backButtonRef = useRef<HTMLButtonElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  /** Playback position kept while the overlay is hidden. */
+  const playbackTimeRef = useRef(0);
+  const howWasOpenRef = useRef(false);
+  const [howOpen, setHowOpen] = useState(false);
+
+  const closeHow = () => {
+    const video = videoRef.current;
+    if (video) {
+      playbackTimeRef.current = video.currentTime;
+      video.pause();
+    }
+    setHowOpen(false);
+  };
 
   const released = useMemo(
     () => new Set(freeLetters.map((body) => body.id)),
@@ -186,9 +257,37 @@ export default function HomeHero() {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (howOpen) {
+      howWasOpenRef.current = true;
+      backButtonRef.current?.focus();
+      if (!video) return;
+      let cancelled = false;
+      const detach = resumeHowVideo(
+        video,
+        playbackTimeRef.current,
+        () => cancelled,
+      );
+      return () => {
+        cancelled = true;
+        detach();
+      };
+    }
+    if (video) {
+      const resetToStart =
+        playbackTimeRef.current > RESUME_MIN_SEC && video.currentTime < RESUME_MIN_SEC;
+      if (!resetToStart) playbackTimeRef.current = video.currentTime;
+      video.pause();
+    }
+    if (howWasOpenRef.current) {
+      howButtonRef.current?.focus();
+    }
+  }, [howOpen]);
+
   // Sample orbit positions so slip velocity matches travel direction.
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || howOpen) return;
 
     let raf = 0;
     const sample = (now: number) => {
@@ -211,10 +310,10 @@ export default function HomeHero() {
 
     raf = requestAnimationFrame(sample);
     return () => cancelAnimationFrame(raf);
-  }, [reducedMotion]);
+  }, [reducedMotion, howOpen]);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (howOpen || reducedMotion) return;
 
     const timers = ORBIT_LETTERS.map((spec, index) =>
       window.setTimeout(() => {
@@ -274,10 +373,10 @@ export default function HomeHero() {
     return () => {
       for (const timer of timers) window.clearTimeout(timer);
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, howOpen]);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || howOpen) return;
 
     let raf = 0;
     let last = performance.now();
@@ -332,7 +431,7 @@ export default function HomeHero() {
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [reducedMotion]);
+  }, [reducedMotion, howOpen]);
 
   const orbitById = useMemo(
     () => new Map(ORBIT_LETTERS.map((spec) => [spec.id, spec])),
@@ -363,8 +462,14 @@ export default function HomeHero() {
     <section
       ref={sectionRef}
       className="relative overflow-hidden"
-      aria-labelledby="home-hero-title"
+      aria-labelledby={howOpen ? undefined : "home-hero-title"}
+      aria-label={howOpen ? copy.hero.how : undefined}
     >
+      <div
+        className={howOpen ? "invisible" : undefined}
+        inert={howOpen ? true : undefined}
+        aria-hidden={howOpen ? true : undefined}
+      >
       <div className="relative z-20 mx-auto grid w-full max-w-page items-center gap-6 px-4 pt-6 pb-4 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pt-14">
         <div className="relative z-20 max-w-xl">
           <p className="inline-flex -rotate-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-600 motion-reduce:rotate-none dark:bg-orange-500/15 dark:text-orange-300">
@@ -390,9 +495,15 @@ export default function HomeHero() {
               <span className="relative z-10">{copy.seeTeachers}</span>
               <ArrowRight aria-hidden className="relative z-10 size-4" />
             </Link>
-            <Link
-              href="/teachers"
+            <button
+              ref={howButtonRef}
+              type="button"
               className={`group inline-flex min-h-11 items-center gap-3 rounded-full pr-2 text-sm font-bold text-zinc-950 dark:text-white ${FOCUS}`}
+              onClick={() => {
+                bodiesRef.current = [];
+                setFreeLetters([]);
+                setHowOpen(true);
+              }}
             >
               <span className="relative grid size-12 place-items-center overflow-hidden rounded-full bg-orange-500/90 text-white transition-[background-color,overflow] motion-safe:group-hover:overflow-visible group-hover:bg-orange-500">
                 <FrostGlass />
@@ -400,7 +511,7 @@ export default function HomeHero() {
               </span>
               {copy.hero.how}
               <ArrowRight aria-hidden className="size-4" />
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -496,7 +607,9 @@ export default function HomeHero() {
           </div>
         </div>
       </div>
+      </div>
 
+      {howOpen ? null : (
       <div aria-hidden className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
         {freeLetters.map((body) => (
           <span
@@ -516,8 +629,66 @@ export default function HomeHero() {
           </span>
         ))}
       </div>
+      )}
 
       <div className="relative z-0 h-14 bg-linear-to-b from-cream to-white dark:from-slate-950 dark:to-slate-950" />
+
+      {/* Stay mounted so Back/Close keeps currentTime on this element. */}
+      <div
+        className={
+          howOpen
+            ? "absolute inset-0 z-30 flex justify-center bg-cream dark:bg-slate-950"
+            : "hidden"
+        }
+        inert={howOpen ? undefined : true}
+      >
+          <div className="flex h-full w-full max-w-page flex-col px-4 py-4 sm:py-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <button
+                ref={backButtonRef}
+                type="button"
+                className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-sm font-bold text-zinc-950 transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-zinc-100 active:translate-y-0 dark:text-white dark:hover:bg-white/10 ${FOCUS}`}
+                onClick={closeHow}
+              >
+                <ArrowLeft aria-hidden className="size-4" />
+                {copy.hero.back}
+              </button>
+              <button
+                type="button"
+                className={`grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-zinc-100 text-zinc-700 transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-zinc-200 active:translate-y-0 dark:bg-white/10 dark:text-zinc-100 dark:hover:bg-white/20 ${FOCUS}`}
+                aria-label={copy.path.close}
+                onClick={closeHow}
+              >
+                <X className="size-5" aria-hidden />
+              </button>
+            </div>
+            <video
+              ref={videoRef}
+              src={HOW_VIDEO}
+              controls
+              playsInline
+              preload="metadata"
+              aria-label={copy.hero.how}
+              className="min-h-0 w-full flex-1 rounded-2xl bg-black object-contain"
+              onTimeUpdate={(event) => {
+                const time = event.currentTarget.currentTime;
+                const resetWhileHidden =
+                  !howOpen &&
+                  playbackTimeRef.current > RESUME_MIN_SEC &&
+                  time < RESUME_MIN_SEC;
+                if (!resetWhileHidden) playbackTimeRef.current = time;
+              }}
+              onPause={(event) => {
+                const time = event.currentTarget.currentTime;
+                const resetWhileHidden =
+                  !howOpen &&
+                  playbackTimeRef.current > RESUME_MIN_SEC &&
+                  time < RESUME_MIN_SEC;
+                if (!resetWhileHidden) playbackTimeRef.current = time;
+              }}
+            />
+          </div>
+      </div>
     </section>
   );
 }
