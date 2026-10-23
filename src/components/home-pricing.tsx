@@ -106,6 +106,14 @@ const LETTER_FILL: Record<LetterTint, string> = {
 const FLY_MS = 560;
 /** Matches `letter-hop` (0.55s) in globals.css — wrong-tap ball kick. */
 const HOP_MS = 550;
+/** Matches `letter-jostle` (0.9s) in globals.css — pile jump before the mix. */
+const JOSTLE_MS = 900;
+/** Isotope-style glide after the jump. Eased layout move, not a snap. */
+const MIX_MS = 650;
+/** A swapped letter should travel at least this much of the floor (%). */
+const MIX_MIN_SHIFT_PCT = 12;
+/** Screen delta below this (px) is already there — skip the glide. */
+const MIX_SETTLE_PX = 1;
 
 /** Puzzle success papers — warmer + cooler mix so the burst reads colorful. */
 const CONFETTI_COLORS = [
@@ -185,6 +193,7 @@ type FlyStyle = CSSProperties & {
 
 type HopStyle = CSSProperties & {
   "--hop-x"?: string;
+  "--jostle-y"?: string;
 };
 
 type LetterHop = {
@@ -265,6 +274,39 @@ type LetterSettle = {
   toY: number;
   phase: "start" | "anim";
 };
+
+/** One red-button press. `ids` are still in the jump. `mixIds` shuffle after it. */
+type FloorJostle = {
+  nonce: number;
+  ids: ReadonlySet<string>;
+  mixIds: ReadonlySet<string>;
+};
+
+type MixDelta = { dx: number; dy: number };
+
+/** FLIP mix: hold the old screen pose, then ease onto the shuffled layout. */
+type PileMix = {
+  nonce: number;
+  phase: "invert" | "hold" | "run";
+  ids: ReadonlySet<string>;
+  delta: Readonly<Record<string, MixDelta>>;
+};
+
+/** Spread the pile jump so the letters do not leave as one slab. */
+function jostleDelaySec(id: string): number {
+  let n = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    n = (n + id.charCodeAt(i) * (i + 1)) % 16;
+  }
+  return n * 0.012;
+}
+
+/** Peak rise clears the pile so the jump reads. Varies a little per glyph. */
+function jostleRise(id: string): string {
+  let n = 0;
+  for (let i = 0; i < id.length; i += 1) n = (n + id.charCodeAt(i)) % 5;
+  return `${-(6 + n * 0.3)}rem`;
+}
 
 function randomLandRotate(): number {
   const pose = Math.random();
@@ -578,6 +620,51 @@ function restackLifts(letters: readonly LetterDrop[]): LetterDrop[] {
   });
 }
 
+/**
+ * Trade horizontal slots among `ids`, then push short swaps apart so the mix
+ * is visible. Lifts are restacked by the caller.
+ */
+function permuteMixLefts(
+  letters: readonly LetterDrop[],
+  ids: ReadonlySet<string>,
+): Map<string, number> {
+  const moving = letters.filter((letter) => ids.has(letter.id));
+  const lefts = moving.map((letter) => letter.left);
+  for (let i = lefts.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = lefts[i]!;
+    lefts[i] = lefts[j]!;
+    lefts[j] = tmp;
+  }
+  const assigned = moving.map((letter, index) => ({
+    id: letter.id,
+    from: letter.left,
+    to: lefts[index]!,
+  }));
+  for (let i = 0; i < assigned.length; i += 1) {
+    const entry = assigned[i]!;
+    if (Math.abs(entry.to - entry.from) >= MIX_MIN_SHIFT_PCT) continue;
+    let best = -1;
+    let bestGain = 0;
+    for (let k = 0; k < assigned.length; k += 1) {
+      if (k === i) continue;
+      const other = assigned[k]!;
+      const d1 = Math.abs(other.to - entry.from);
+      const d2 = Math.abs(entry.to - other.from);
+      if (d1 < MIX_MIN_SHIFT_PCT || d2 < MIX_MIN_SHIFT_PCT) continue;
+      if (d1 <= bestGain) continue;
+      best = k;
+      bestGain = d1;
+    }
+    if (best < 0) continue;
+    const other = assigned[best]!;
+    const tmp = entry.to;
+    entry.to = other.to;
+    other.to = tmp;
+  }
+  return new Map(assigned.map((entry) => [entry.id, entry.to]));
+}
+
 /** Apply restacked lifts onto the full drops list; ids in `skip` keep prior pose. */
 function withRestacked(
   drops: readonly LetterDrop[],
@@ -683,7 +770,27 @@ export default function HomePricing({
   const [settle, setSettle] = useState<LetterSettle | null>(null);
   /** Wrong-tap ball-kick hops (original letter-hop on the glyph). */
   const [hops, setHops] = useState<Record<string, LetterHop>>({});
+  /** In-place jump, then a shuffle. `ids` still animating; `mixIds` land in the mix. */
+  const [jostle, setJostle] = useState<FloorJostle | null>(null);
+  /** Screen-space glide onto the shuffled pile. Null when the floor is still. */
+  const [mix, setMix] = useState<PileMix | null>(null);
   const hopTimersRef = useRef<Record<string, number>>({});
+  const jostleTimerRef = useRef<number | null>(null);
+  const jostleNonceRef = useRef(0);
+  const jostleRef = useRef(jostle);
+  jostleRef.current = jostle;
+  const mixRef = useRef(mix);
+  mixRef.current = mix;
+  const hopsRef = useRef(hops);
+  hopsRef.current = hops;
+  const settleRef = useRef(settle);
+  settleRef.current = settle;
+  const settledRef = useRef(settled);
+  settledRef.current = settled;
+  /** Outer rects captured the moment the jump ends, before left/lift change. */
+  const mixFirstRectsRef = useRef<Map<string, { left: number; top: number }>>(
+    new Map(),
+  );
   /** Outer position nodes — updated directly while dragging to avoid 98-letter re-renders. */
   const letterOuterRefs = useRef<Map<string, HTMLElement>>(new Map());
   const [flippedPlan, setFlippedPlan] = useState<CalcPlanMonths | null>(null);
@@ -743,6 +850,21 @@ export default function HomePricing({
     setHops({});
   }, [clearDragVisual, clearHopTimers]);
 
+  /** Stop the jump timer and the mix glide. Inline drag styles stay on clearDrag. */
+  const clearPileMotion = useCallback(() => {
+    if (jostleTimerRef.current !== null) {
+      window.clearTimeout(jostleTimerRef.current);
+      jostleTimerRef.current = null;
+    }
+    jostleRef.current = null;
+    mixRef.current = null;
+    setJostle(null);
+    setMix(null);
+    for (const el of letterOuterRefs.current.values()) {
+      el.style.transition = "";
+    }
+  }, []);
+
   /** True once a puzzle letter is matched (fill, consume, or in-flight fly). Drag-only does not count. */
   const hasPuzzleProgress = useCallback(
     () =>
@@ -768,7 +890,163 @@ export default function HomePricing({
     fillTintRef.current = {};
     setRunId((n) => n + 1);
     setDrops(seedLetters());
-  }, [clearDrag, clearFlyTimers]);
+    clearPileMotion();
+  }, [clearDrag, clearFlyTimers, clearPileMotion]);
+
+  /**
+   * After the shared jump, permute settled lefts and restack. FLIP plays on
+   * the next frames so letters ease into the new pile instead of popping.
+   */
+  const beginMix = useCallback((nonce: number) => {
+    const current = jostleRef.current;
+    if (!current || current.nonce !== nonce) return;
+    const skip = new Set(consumedRef.current);
+    const dragId = dragRef.current?.id;
+    if (dragId) skip.add(dragId);
+    if (settleRef.current) skip.add(settleRef.current.id);
+    for (const id of Object.keys(hopsRef.current)) skip.add(id);
+    for (const drop of dropsRef.current) {
+      if (!settledRef.current.has(drop.id)) skip.add(drop.id);
+    }
+
+    const ids = new Set<string>();
+    for (const id of current.mixIds) {
+      if (!skip.has(id)) ids.add(id);
+    }
+    if (ids.size < 2) {
+      jostleRef.current = null;
+      setJostle(null);
+      return;
+    }
+
+    const first = new Map<string, { left: number; top: number }>();
+    for (const id of ids) {
+      const el = letterOuterRefs.current.get(id);
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      first.set(id, { left: rect.left, top: rect.top });
+    }
+    mixFirstRectsRef.current = first;
+
+    const prev = dropsRef.current;
+    const nextLeft = permuteMixLefts(prev, ids);
+    const relocated = prev.map((item) => {
+      const left = nextLeft.get(item.id);
+      return left === undefined ? item : { ...item, left };
+    });
+    const active = relocated.filter((item) => !skip.has(item.id));
+    setDrops(withRestacked(relocated, active, skip));
+    jostleRef.current = null;
+    setJostle(null);
+    setMix({ nonce, phase: "invert", ids, delta: {} });
+  }, []);
+
+  /** Jump the settled pile, then shuffle it once the last letter has landed. */
+  const jostleFloor = useCallback(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (jostleRef.current || mixRef.current) return;
+    const skip = new Set<string>(Object.keys(hopsRef.current));
+    if (dragRef.current) skip.add(dragRef.current.id);
+    if (settleRef.current) skip.add(settleRef.current.id);
+    const ids = new Set<string>();
+    for (const drop of dropsRef.current) {
+      if (consumedRef.current.has(drop.id)) continue;
+      if (!settledRef.current.has(drop.id)) continue;
+      if (skip.has(drop.id)) continue;
+      ids.add(drop.id);
+    }
+    if (ids.size < 2) return;
+    let maxDelay = 0;
+    for (const id of ids) maxDelay = Math.max(maxDelay, jostleDelaySec(id));
+    const nonce = jostleNonceRef.current + 1;
+    jostleNonceRef.current = nonce;
+    const next: FloorJostle = {
+      nonce,
+      ids: new Set(ids),
+      mixIds: new Set(ids),
+    };
+    jostleRef.current = next;
+    setJostle(next);
+    if (jostleTimerRef.current !== null) {
+      window.clearTimeout(jostleTimerRef.current);
+    }
+    jostleTimerRef.current = window.setTimeout(() => {
+      jostleTimerRef.current = null;
+      beginMix(nonce);
+    }, maxDelay * 1000 + JOSTLE_MS + 40);
+  }, [beginMix]);
+
+  /** Drop a hopper out of the jump and out of the upcoming shuffle. */
+  useEffect(() => {
+    const hoppingIds = Object.keys(hops);
+    if (hoppingIds.length === 0) return;
+    setJostle((prev) => {
+      if (!prev) return prev;
+      const ids = new Set(prev.ids);
+      const mixIds = new Set(prev.mixIds);
+      let changed = false;
+      for (const id of hoppingIds) {
+        if (ids.delete(id)) changed = true;
+        if (mixIds.delete(id)) changed = true;
+      }
+      if (!changed) return prev;
+      if (mixIds.size === 0) return null;
+      return { nonce: prev.nonce, ids, mixIds };
+    });
+  }, [hops]);
+
+  /** Measure the new layout before paint and pin glyphs to their old screen pose. */
+  useLayoutEffect(() => {
+    if (!mix || mix.phase !== "invert") return;
+    const delta: Record<string, MixDelta> = {};
+    const movers = new Set<string>();
+    for (const id of mix.ids) {
+      const el = letterOuterRefs.current.get(id);
+      const first = mixFirstRectsRef.current.get(id);
+      if (!el || !first) continue;
+      const last = el.getBoundingClientRect();
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+      if (Math.abs(dx) < MIX_SETTLE_PX && Math.abs(dy) < MIX_SETTLE_PX) continue;
+      delta[id] = { dx, dy };
+      movers.add(id);
+    }
+    if (movers.size === 0) {
+      setMix(null);
+      return;
+    }
+    setMix({ nonce: mix.nonce, phase: "hold", ids: movers, delta });
+  }, [mix]);
+
+  /** Next frame: ease the pin off so the glyphs glide into the shuffled pile. */
+  useLayoutEffect(() => {
+    if (!mix || mix.phase !== "hold") return;
+    const nonce = mix.nonce;
+    const frame = window.requestAnimationFrame(() => {
+      setMix((prev) => {
+        if (!prev || prev.nonce !== nonce || prev.phase !== "hold") return prev;
+        return { ...prev, phase: "run", delta: {} };
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [mix]);
+
+  useEffect(() => {
+    if (!mix || mix.phase !== "run") return;
+    const nonce = mix.nonce;
+    const timer = window.setTimeout(() => {
+      setMix((prev) => (prev && prev.nonce === nonce ? null : prev));
+    }, MIX_MS + 80);
+    return () => window.clearTimeout(timer);
+  }, [mix]);
+
+  useEffect(() => {
+    return () => {
+      if (jostleTimerRef.current !== null) {
+        window.clearTimeout(jostleTimerRef.current);
+      }
+    };
+  }, []);
 
   const commitFill = useCallback((slotKey: string) => {
     const tint = fillTintRef.current[slotKey] ?? LETTER_TINTS[0]!;
@@ -1207,6 +1485,7 @@ export default function HomePricing({
   const onFloorPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLSpanElement>) => {
       if (event.button !== 0) return;
+      if (jostleRef.current || mixRef.current) return;
       if (draggingId || dragRef.current) return;
 
       const hit = pickLetterAtPoint(
@@ -1397,6 +1676,7 @@ export default function HomePricing({
         setFlies([]);
         pendingFlyRef.current = {};
         fillTintRef.current = {};
+        clearPileMotion();
         setDrops([]);
       },
       { threshold: 0, rootMargin: "-18% 0px -18% 0px" },
@@ -1409,7 +1689,7 @@ export default function HomePricing({
       clearFlyTimers();
       clearDrag();
     };
-  }, [clearDrag, clearFlyTimers, hasPuzzleProgress, restartPuzzle]);
+  }, [clearDrag, clearFlyTimers, clearPileMotion, hasPuzzleProgress, restartPuzzle]);
 
   return (
     <section
@@ -1439,6 +1719,12 @@ export default function HomePricing({
                 const isDragging = draggingId === drop.id;
                 const liveDrag = isDragging ? dragRef.current : null;
                 const isSettling = settle?.id === drop.id;
+                const showJostle = jostle !== null && !hop && jostle.ids.has(drop.id);
+                const floorLocked = jostle !== null || mix !== null;
+                const inMix = mix !== null && mix.ids.has(drop.id);
+                const mixDelta = mix?.phase === "hold" ? mix.delta[drop.id] : undefined;
+                const canGrab =
+                  landed && !isSettling && !hop && (!floorLocked || isDragging);
                 const style: LetterStyle = isDragging && liveDrag
                   ? {
                       left: 0,
@@ -1462,12 +1748,21 @@ export default function HomePricing({
                   : landed
                     ? {
                         left: `${drop.left}%`,
-                        transform: `translate(-50%, ${dropY}px)`,
+                        transform: `translate(-50%, ${dropY}px)${
+                          mixDelta
+                            ? ` translate3d(${mixDelta.dx}px, ${mixDelta.dy}px, 0)`
+                            : ""
+                        }`,
                         zIndex: drop.stack,
-                        // Gravity settle when lift drops after a support is removed.
-                        transition: hop
-                          ? undefined
-                          : "transform 0.55s cubic-bezier(0.33, 0, 0.2, 1)",
+                        // Mix eases onto the shuffled layout. Otherwise gravity
+                        // eases a lift change after a support leaves.
+                        transition: inMix
+                          ? mix.phase === "run"
+                            ? `transform ${MIX_MS}ms ease`
+                            : "none"
+                          : hop
+                            ? undefined
+                            : "transform 0.55s cubic-bezier(0.33, 0, 0.2, 1)",
                       }
                     : {
                         left: `${drop.left}%`,
@@ -1513,6 +1808,28 @@ export default function HomePricing({
                     }}
                   >
                     <span
+                      key={showJostle && jostle ? `jostle-${jostle.nonce}` : "rest"}
+                      className={`block ${showJostle ? "motion-safe:animate-letter-jostle" : ""}`}
+                      style={
+                        showJostle
+                          ? ({
+                              animationDelay: `${jostleDelaySec(drop.id)}s`,
+                              "--jostle-y": jostleRise(drop.id),
+                            } as HopStyle)
+                          : undefined
+                      }
+                      onAnimationEnd={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (!event.animationName.includes("letter-jostle")) return;
+                        setJostle((prev) => {
+                          if (!prev?.ids.has(drop.id)) return prev;
+                          const ids = new Set(prev.ids);
+                          ids.delete(drop.id);
+                          return { ...prev, ids };
+                        });
+                      }}
+                    >
+                    <span
                       className={`block ${hop ? "motion-safe:animate-letter-hop" : ""}`}
                       style={
                         hop
@@ -1533,36 +1850,21 @@ export default function HomePricing({
                         }}
                         data-letter-id={drop.id}
                         className={`block touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
-                          landed && !isSettling && !hop
+                          canGrab
                             ? isDragging && dragLifted
                               ? "pointer-events-auto cursor-grabbing"
                               : "pointer-events-auto cursor-pointer"
                             : "pointer-events-none"
                         }`}
                         style={spinStyle}
-                        onPointerDown={
-                          landed && !isSettling && !hop
-                            ? onFloorPointerDown
-                            : undefined
-                        }
-                        onPointerMove={
-                          landed && !isSettling && !hop
-                            ? onFloorPointerMove
-                            : undefined
-                        }
-                        onPointerUp={
-                          landed && !isSettling && !hop
-                            ? onFloorPointerUp
-                            : undefined
-                        }
-                        onPointerCancel={
-                          landed && !isSettling && !hop
-                            ? onFloorPointerUp
-                            : undefined
-                        }
+                        onPointerDown={canGrab ? onFloorPointerDown : undefined}
+                        onPointerMove={canGrab ? onFloorPointerMove : undefined}
+                        onPointerUp={canGrab ? onFloorPointerUp : undefined}
+                        onPointerCancel={canGrab ? onFloorPointerUp : undefined}
                       >
                         {drop.char}
                       </span>
+                    </span>
                     </span>
                   </span>
                 );
@@ -1796,14 +2098,22 @@ export default function HomePricing({
               </div>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={restartPuzzle}
-            className={`pointer-events-auto inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-zinc-300 bg-white px-5 text-sm font-bold text-zinc-800 shadow-sm transition-[transform,background-color,border-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-50 hover:shadow-md active:translate-y-0 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-400 dark:hover:bg-zinc-800 ${FOCUS}`}
-          >
-            <RotateCcw aria-hidden className="size-4 shrink-0" />
-            {copy.pricing.restart}
-          </button>
+          <div className="pointer-events-auto flex items-center gap-3">
+            <button
+              type="button"
+              onClick={restartPuzzle}
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-zinc-300 bg-white px-5 text-sm font-bold text-zinc-800 shadow-sm transition-[transform,background-color,border-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-50 hover:shadow-md active:translate-y-0 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-400 dark:hover:bg-zinc-800 ${FOCUS}`}
+            >
+              <RotateCcw aria-hidden className="size-4 shrink-0" />
+              {copy.pricing.restart}
+            </button>
+            <button
+              type="button"
+              onClick={jostleFloor}
+              aria-label={copy.pricing.jostle}
+              className={`inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-red-600 shadow-[0_8px_16px_-8px_rgba(185,28,28,0.9)] transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-red-700 active:translate-y-0 ${FOCUS}`}
+            />
+          </div>
         </div>
 
         <div ref={floorRef} aria-hidden className="pointer-events-none h-44 sm:h-56" />

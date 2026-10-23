@@ -35,6 +35,10 @@
   /* Wrong-tap kick: linear clock so the arc does not stutter between keys.
      Duration matches HOP_MS in home-pricing. */
   --animate-letter-hop: letter-hop 0.55s linear both;
+  /* In-place pile jump. Linear samples so the rise and settle do not stutter.
+     --jostle-y is the peak (negative). Ends at identity — the mix glide
+     owns the move to the new spots. Duration matches JOSTLE_MS. */
+  --animate-letter-jostle: letter-jostle 0.9s linear both;
   --animate-letter-slot-in: letter-slot-in 0.35s ease-out both;
   --animate-letter-fly-in: letter-fly-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-nav-sheet-in: nav-sheet-in 0.28s cubic-bezier(0.34, 1.15, 0.64, 1) both;
@@ -187,6 +191,32 @@
     }
     100% {
       transform: translate3d(var(--hop-x, 0px), 0, 0);
+    }
+  }
+
+  /* Peak uses --jostle-y. Samples are fractions of that peak so a taller
+     rise stays one smooth arc. Ends on the same spot. */
+  @keyframes letter-jostle {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    18% {
+      transform: translate3d(0, calc(var(--jostle-y) * 0.45), 0);
+    }
+    36% {
+      transform: translate3d(0, var(--jostle-y), 0);
+    }
+    55% {
+      transform: translate3d(0, calc(var(--jostle-y) * 0.35), 0);
+    }
+    74% {
+      transform: translate3d(0, 0, 0);
+    }
+    86% {
+      transform: translate3d(0, calc(var(--jostle-y) * 0.12), 0);
+    }
+    100% {
+      transform: translate3d(0, 0, 0);
     }
   }
 }

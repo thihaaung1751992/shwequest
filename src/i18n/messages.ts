@@ -54,6 +54,7 @@ export type Messages = {
     puzzle: string;
     puzzleHint: string;
     restart: string;
+    jostle: string;
   };
   calc: {
     title: string;
@@ -188,6 +189,7 @@ const en: Messages = {
     puzzle: "Learn English fluently",
     puzzleHint: "Click matching letters on the floor to fill LEARN ENGLISH FLUENTLY.",
     restart: "Restart puzzle",
+    jostle: "Bounce the letters",
   },
   calc: {
     title: "Calculator",
@@ -316,6 +318,7 @@ const my: Messages = {
     puzzleHint:
       "LEARN ENGLISH FLUENTLY ပြည့်အောင် ကြမ်းပြင်က တူညီတဲ့ အက္ခရာတွေကို နှိပ်ပါ။",
     restart: "ပဟေဠိပြန်စရန်",
+    jostle: "စာလုံးများခုန်ရန်",
   },
   calc: {
     title: "ဂဏန်းတွက်စက်",
