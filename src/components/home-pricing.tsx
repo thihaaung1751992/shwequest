@@ -676,6 +676,8 @@ export default function HomePricing({
   const [settled, setSettled] = useState<ReadonlySet<string>>(() => new Set());
   /** Which floor glyph is mid-drag (null = none). Live x/y live in dragRef. */
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  /** Pointer moved past the tap threshold — only then show the grabbing cursor. */
+  const [dragLifted, setDragLifted] = useState(false);
   const dragRef = useRef<LetterDrag | null>(null);
   /** Release → floor gravity settle (from drop height, not section top). */
   const [settle, setSettle] = useState<LetterSettle | null>(null);
@@ -731,6 +733,7 @@ export default function HomePricing({
     const drag = dragRef.current;
     dragRef.current = null;
     setDraggingId(null);
+    setDragLifted(false);
     if (drag) {
       releasePointerCaptureSafe(drag.captureEl, drag.pointerId);
       clearDragVisual(drag.id);
@@ -1129,6 +1132,7 @@ export default function HomePricing({
       // Claim immediately so lostpointercapture from release cannot re-enter.
       dragRef.current = null;
       setDraggingId(null);
+      setDragLifted(false);
       releasePointerCaptureSafe(drag.captureEl, drag.pointerId);
 
       const section = sectionRef.current;
@@ -1239,6 +1243,7 @@ export default function HomePricing({
       };
       dragRef.current = next;
       setDraggingId(hit.drop.id);
+      setDragLifted(false);
       applyDragVisual(next);
       // Capture on the ink-hit glyph (may be under the front box that received the event).
       hit.el.setPointerCapture(event.pointerId);
@@ -1267,6 +1272,7 @@ export default function HomePricing({
       ) {
         drag.lifted = true;
         liftDragFromPile(drag.id);
+        setDragLifted(true);
       }
 
       applyDragVisual(drag);
@@ -1528,9 +1534,9 @@ export default function HomePricing({
                         data-letter-id={drop.id}
                         className={`block touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
                           landed && !isSettling && !hop
-                            ? isDragging
+                            ? isDragging && dragLifted
                               ? "pointer-events-auto cursor-grabbing"
-                              : "pointer-events-auto cursor-grab"
+                              : "pointer-events-auto cursor-pointer"
                             : "pointer-events-none"
                         }`}
                         style={spinStyle}
