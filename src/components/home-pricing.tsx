@@ -2107,12 +2107,20 @@ export default function HomePricing({
               <RotateCcw aria-hidden className="size-4 shrink-0" />
               {copy.pricing.restart}
             </button>
-            <button
-              type="button"
-              onClick={jostleFloor}
-              aria-label={copy.pricing.jostle}
-              className={`inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-red-600 shadow-[0_8px_16px_-8px_rgba(185,28,28,0.9)] transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-red-700 active:translate-y-0 ${FOCUS}`}
-            />
+            <span className="relative inline-flex">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-full bg-rose-200 motion-safe:animate-[ping_1.6s_linear_infinite] motion-reduce:hidden"
+              />
+              <button
+                type="button"
+                onClick={jostleFloor}
+                aria-label={copy.pricing.jostle}
+                className={`pointer-events-auto relative z-10 inline-flex h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-red-600 px-3 text-xs font-bold tracking-wide text-white shadow-sm ring-1 ring-black/5 transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-red-700 active:translate-y-0 ${FOCUS}`}
+              >
+                mix
+              </button>
+            </span>
           </div>
         </div>
 
