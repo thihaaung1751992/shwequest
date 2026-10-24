@@ -17,10 +17,18 @@ import { useMessages } from "@/i18n/locale-context";
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/teachers", label: "Teachers" },
+  { href: "/team", label: "Team" },
   { href: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
 type LinkHref = (typeof LINKS)[number]["href"];
+
+function isCurrent(href: LinkHref, pathname: string): boolean {
+  if (href === "/team") {
+    return pathname === "/team" || pathname.startsWith("/team/");
+  }
+  return pathname === href;
+}
 
 const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
@@ -33,6 +41,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
   const linkLabel: Record<LinkHref, string> = {
     "/": copy.nav.home,
     "/teachers": copy.nav.teachers,
+    "/team": copy.nav.team,
     "/leaderboard": copy.nav.leaderboard,
   };
   const spread = layout === "bar";
@@ -57,7 +66,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
   }
 
   const activeHref =
-    LINKS.find((link) => link.href === pathname)?.href ?? null;
+    LINKS.find((link) => isCurrent(link.href, pathname))?.href ?? null;
   const targetHref = hoverHref ?? activeHref;
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -206,7 +215,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
             />
           ) : null}
           {LINKS.map((link) => {
-            const current = pathname === link.href;
+            const current = isCurrent(link.href, pathname);
             const lit = targetHref === link.href;
             return (
               <li key={link.href}>
@@ -276,7 +285,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
             </div>
             <ul className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
               {LINKS.map((link) => {
-                const current = pathname === link.href;
+                const current = isCurrent(link.href, pathname);
                 return (
                   <li key={link.href}>
                     <Link

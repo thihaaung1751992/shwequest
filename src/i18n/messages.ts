@@ -14,6 +14,7 @@ export type Messages = {
   nav: {
     home: string;
     teachers: string;
+    team: string;
     leaderboard: string;
     main: string;
     menu: string;
@@ -102,6 +103,19 @@ export type Messages = {
     emptyTail: string;
     matches: (count: number) => string;
   };
+  team: {
+    title: string;
+    body: string;
+    builders: string;
+    buildersBody: string;
+    teachers: string;
+    teachersBody: string;
+    builderRole: string;
+    teacherRole: string;
+    open: string;
+    back: string;
+    seeLessons: string;
+  };
   path: {
     learning: string;
     now: (title: string) => string;
@@ -144,6 +158,7 @@ const en: Messages = {
   nav: {
     home: "Home",
     teachers: "Teachers",
+    team: "Team",
     leaderboard: "Leaderboard",
     main: "Main",
     menu: "Menu",
@@ -187,7 +202,7 @@ const en: Messages = {
     days: (count) => (count === 1 ? "1 day" : `${count} days`),
     flip: (label) => `Flip to calculator for ${label}`,
     puzzle: "Learn English fluently",
-    puzzleHint: "Click matching letters on the floor to fill LEARN ENGLISH FLUENTLY.",
+    puzzleHint: "Tap a letter to fill it, or drag it aside.",
     restart: "Restart puzzle",
     jostle: "Bounce the letters",
   },
@@ -238,6 +253,19 @@ const en: Messages = {
     matches: (count) =>
       `${count} matching ${count === 1 ? "teacher" : "teachers"}`,
   },
+  team: {
+    title: "Team",
+    body: "The people who build the site, and the teachers who lead a path.",
+    builders: "IT",
+    buildersBody: "People who build this site.",
+    teachers: "Teachers",
+    teachersBody: "Teachers who lead a learning path.",
+    builderRole: "IT",
+    teacherRole: "Teacher",
+    open: "Open",
+    back: "Back to team",
+    seeLessons: "See lessons",
+  },
   path: {
     learning: "Learning path",
     now: (title) => `Now: ${title}`,
@@ -272,6 +300,7 @@ const my: Messages = {
   nav: {
     home: "ပင်မ",
     teachers: "ဆရာများ",
+    team: "အဖွဲ့",
     leaderboard: "ဦးဆောင်ဇယား",
     main: "ပင်မ",
     menu: "မီနူး",
@@ -315,8 +344,7 @@ const my: Messages = {
     days: (count) => `${count} ရက်`,
     flip: (label) => `${label} အတွက် ဂဏန်းတွက်စက်`,
     puzzle: "အင်္ဂလိပ်စာ ကျွမ်းကျင်အောင်",
-    puzzleHint:
-      "LEARN ENGLISH FLUENTLY ပြည့်အောင် ကြမ်းပြင်က တူညီတဲ့ အက္ခရာတွေကို နှိပ်ပါ။",
+    puzzleHint: "အက္ခရာကို တို့ရင် ပြည့်မယ်၊ ဖုံးနေရင် ဆွဲဖယ်ပါ။",
     restart: "ပဟေဠိပြန်စရန်",
     jostle: "စာလုံးများခုန်ရန်",
   },
@@ -365,6 +393,19 @@ const my: Messages = {
     emptyLead: "“",
     emptyTail: "” နဲ့ ကိုက်ညီတဲ့ ဆရာမရှိပါ။",
     matches: (count) => `ကိုက်ညီတဲ့ ဆရာ ${count} ယောက်`,
+  },
+  team: {
+    title: "အဖွဲ့",
+    body: "ဆိုက်ကို တည်ဆောက်သူတွေနဲ့ လမ်းကြောင်းဦးဆောင်တဲ့ ဆရာတွေ။",
+    builders: "အိုင်တီ",
+    buildersBody: "ဒီဆိုက်ကို တည်ဆောက်သူတွေ။",
+    teachers: "ဆရာများ",
+    teachersBody: "သင်ယူလမ်းကြောင်း ဦးဆောင်တဲ့ ဆရာတွေ။",
+    builderRole: "အိုင်တီ",
+    teacherRole: "ဆရာ",
+    open: "ဖွင့်ရန်",
+    back: "အဖွဲ့သို့",
+    seeLessons: "သင်ခန်းစာများ",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",

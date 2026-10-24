@@ -25,7 +25,9 @@ export default function PageShell({
       ? copy.nav.teachers
       : title === "Leaderboard"
         ? copy.nav.leaderboard
-        : title;
+        : title === "Team"
+          ? copy.nav.team
+          : title;
   const fullMain = isHome || bleed;
 
   return (

@@ -796,6 +796,8 @@ export default function HomePricing({
   const [flippedPlan, setFlippedPlan] = useState<CalcPlanMonths | null>(null);
   /** slotKey → floor tint used for solid fill. */
   const [filled, setFilled] = useState<Readonly<Partial<Record<string, LetterTint>>>>({});
+  /** How-to line. Hidden on the solved share URL until Restart. */
+  const [showHow, setShowHow] = useState(!forceComplete);
   const filledRef = useRef(filled);
   filledRef.current = filled;
   /** Floor glyph ids removed after a match fly starts. */
@@ -882,6 +884,7 @@ export default function HomePricing({
     celebratedRef.current = false;
     filledRef.current = {};
     setFilled({});
+    setShowHow(true);
     const empty = new Set<string>();
     consumedRef.current = empty;
     setConsumed(empty);
@@ -1691,6 +1694,8 @@ export default function HomePricing({
     };
   }, [clearDrag, clearFlyTimers, clearPileMotion, hasPuzzleProgress, restartPuzzle]);
 
+  const howVisible = showHow;
+
   return (
     <section
       ref={sectionRef}
@@ -2057,9 +2062,6 @@ export default function HomePricing({
           role="group"
           aria-label={copy.pricing.puzzle}
         >
-          <p className="sr-only">
-            {copy.pricing.puzzleHint}
-          </p>
           <div
             ref={puzzlePhraseRef}
             className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 sm:gap-x-8 sm:gap-y-4"
@@ -2097,6 +2099,24 @@ export default function HomePricing({
                 })}
               </div>
             ))}
+          </div>
+          <div
+            aria-hidden={howVisible ? undefined : true}
+            className={`grid w-full transition-[grid-template-rows,opacity] duration-500 ease-out motion-reduce:transition-none ${
+              howVisible ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <p className="overflow-hidden text-center text-sm leading-snug font-semibold whitespace-nowrap text-zinc-500 dark:text-zinc-400">
+              <span className="inline-flex items-center justify-center gap-2 px-3 pt-1">
+                <span
+                  aria-hidden
+                  className="shrink-0 -rotate-6 text-2xl leading-none font-extrabold text-orange-500 motion-reduce:rotate-none"
+                >
+                  L
+                </span>
+                {copy.pricing.puzzleHint}
+              </span>
+            </p>
           </div>
           <div className="pointer-events-auto flex items-center gap-3">
             <button

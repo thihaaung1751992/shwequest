@@ -12,6 +12,7 @@ const TOTALS = catalogTotals();
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/teachers", label: "Teachers" },
+  { href: "/team", label: "Team" },
   { href: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
@@ -72,6 +73,7 @@ export default function SiteFooter() {
   const linkLabel = {
     "/": copy.nav.home,
     "/teachers": copy.nav.teachers,
+    "/team": copy.nav.team,
     "/leaderboard": copy.nav.leaderboard,
   } as const;
 
