@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import StreamPlayer from "@/components/stream-player";
+import { videoStreamSrc } from "@/lib/video-stream-src";
 
 const TITLE_MAX = 120;
 
@@ -101,7 +102,7 @@ export default function TestVideoScreen() {
 
   function playMessage(id: number) {
     setMessageId(String(id));
-    setSrc(`/api/video/${id}`);
+    setSrc(videoStreamSrc(id));
   }
 
   return (
@@ -112,7 +113,7 @@ export default function TestVideoScreen() {
         onSubmit={(event) => {
           event.preventDefault();
           if (!idReady) return;
-          setSrc(`/api/video/${trimmed}`);
+          setSrc(videoStreamSrc(trimmed));
         }}
       >
         <label className="flex flex-col gap-1 text-sm font-semibold text-zinc-800">
@@ -154,7 +155,7 @@ export default function TestVideoScreen() {
         ) : null}
         <ul className="flex flex-col gap-2">
           {videos.map((video) => {
-            const playing = src === `/api/video/${video.id}`;
+            const playing = src === videoStreamSrc(video.id);
             const label = video.title || `Message ${video.id}`;
             const duration = video.durationSec === null ? "" : formatDuration(video.durationSec);
             return (

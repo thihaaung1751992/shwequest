@@ -5,6 +5,10 @@ import { telegramClient, videoFile, type VideoFile } from "@/lib/telegram-video"
 const CHUNK_BYTES = 512 * 1024;
 const WINDOW_BYTES = 2 * 1024 * 1024;
 const CACHE_BYTES = 16 * 1024 * 1024;
+// Seven days for shared caches. Vary: Range keeps each byte slice separate.
+const STREAM_CACHE_CONTROL =
+  "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400";
+const STREAM_CDN_CACHE_CONTROL = "max-age=604800";
 
 type FileCache = {
   video: VideoFile;
@@ -264,7 +268,9 @@ export async function GET(
     const headers = new Headers({
       "Content-Type": video.mime,
       "Accept-Ranges": "bytes",
-      "Cache-Control": "private, max-age=3600",
+      "Cache-Control": STREAM_CACHE_CONTROL,
+      "CDN-Cache-Control": STREAM_CDN_CACHE_CONTROL,
+      Vary: "Range",
       "Content-Length": String(end - start + 1),
     });
     if (ranged) {

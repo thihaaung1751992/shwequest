@@ -15,6 +15,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { isVideoStreamSrc } from "@/lib/video-stream-src";
 
 const FOCUS =
   "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200";
@@ -34,7 +35,7 @@ function formatClock(seconds: number): string {
 }
 
 export default function StreamPlayer({ src }: StreamPlayerProps) {
-  const safeSrc = src && /^\/api\/video\/[1-9]\d*$/.test(src) ? src : null;
+  const safeSrc = src && isVideoStreamSrc(src) ? src : null;
   const shellRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
