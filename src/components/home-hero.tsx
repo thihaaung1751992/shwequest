@@ -9,7 +9,7 @@ import { useMessages } from "@/i18n/locale-context";
 import { catalogTotals } from "@/data/teachers";
 
 const HERO_FIGURE = "/home/hero-figure.svg";
-const HOW_VIDEO = "/home/sample-video.mp4";
+const HOW_VIDEO = "/api/video/3";
 
 const TOTALS = catalogTotals();
 

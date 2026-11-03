@@ -1,7 +1,6 @@
 import bigInt from "big-integer";
 import { Api, TelegramClient } from "telegram";
-import { Logger, LogLevel } from "telegram/extensions/Logger";
-import { StringSession } from "telegram/sessions";
+import { telegramClient, videoFile, type VideoFile } from "@/lib/telegram-video";
 
 const CHUNK_BYTES = 512 * 1024;
 const WINDOW_BYTES = 2 * 1024 * 1024;
@@ -16,58 +15,8 @@ type FileCache = {
 };
 
 const globalForTelegram = globalThis as typeof globalThis & {
-  __shwequestTelegram?: Promise<TelegramClient>;
   __shwequestVideoFiles?: Map<number, FileCache>;
 };
-
-type VideoFile = {
-  media: Api.TypeMessageMedia;
-  mime: string;
-  size: number;
-};
-
-function telegramClient(): Promise<TelegramClient> {
-  if (!globalForTelegram.__shwequestTelegram) {
-    const apiId = Number(process.env.TELEGRAM_API_ID);
-    const apiHash = process.env.TELEGRAM_API_HASH;
-    const botAuthToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!Number.isInteger(apiId) || apiId <= 0 || !apiHash || !botAuthToken) {
-      return Promise.reject(new Error("Telegram credentials are not configured"));
-    }
-    const client = new TelegramClient(new StringSession(""), apiId, apiHash, {
-      connectionRetries: 5,
-      baseLogger: new Logger(LogLevel.NONE),
-    });
-    globalForTelegram.__shwequestTelegram = client
-      .start({ botAuthToken })
-      .then(() => client)
-      .catch((error: unknown) => {
-        globalForTelegram.__shwequestTelegram = undefined;
-        throw error;
-      });
-  }
-  return globalForTelegram.__shwequestTelegram;
-}
-
-function fileSize(size: bigInt.BigInteger): number | null {
-  if (!size.greaterOrEquals(0) || size.greater(Number.MAX_SAFE_INTEGER)) return null;
-  return size.toJSNumber();
-}
-
-function videoFile(message: Api.Message): VideoFile | null {
-  const media = message.media;
-  if (!(media instanceof Api.MessageMediaDocument)) return null;
-  const document = media.document;
-  if (!(document instanceof Api.Document)) return null;
-  const mime = document.mimeType || "video/mp4";
-  const isVideo = document.attributes.some(
-    (attribute) => attribute instanceof Api.DocumentAttributeVideo,
-  );
-  if (!isVideo && !mime.startsWith("video/")) return null;
-  const size = fileSize(document.size);
-  if (size === null) return null;
-  return { media, mime, size };
-}
 
 function parseRange(
   header: string | null,
@@ -306,7 +255,7 @@ export async function GET(
       });
     }
 
-    let start = range?.start ?? 0;
+    const start = range?.start ?? 0;
     let end = range?.end ?? video.size - 1;
     // Open ranges used to stream the whole file. The index sits at the end, so a seek
     // waited on that download. Cap each response and let the player ask for the next piece.
