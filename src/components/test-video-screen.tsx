@@ -46,11 +46,7 @@ function formatDuration(seconds: number): string {
   return `${minutes}:${rest.toString().padStart(2, "0")}`;
 }
 
-type TestVideoScreenProps = {
-  cdnUrl: string;
-};
-
-export default function TestVideoScreen({ cdnUrl }: TestVideoScreenProps) {
+export default function TestVideoScreen() {
   const [messageId, setMessageId] = useState("3");
   const [src, setSrc] = useState<string | null>(null);
   const [videos, setVideos] = useState<ListedVideo[]>([]);
@@ -106,7 +102,7 @@ export default function TestVideoScreen({ cdnUrl }: TestVideoScreenProps) {
 
   function playMessage(id: number) {
     setMessageId(String(id));
-    setSrc(videoStreamSrc(id, cdnUrl));
+    setSrc(videoStreamSrc(id));
   }
 
   return (
@@ -117,7 +113,7 @@ export default function TestVideoScreen({ cdnUrl }: TestVideoScreenProps) {
         onSubmit={(event) => {
           event.preventDefault();
           if (!idReady) return;
-          setSrc(videoStreamSrc(trimmed, cdnUrl));
+          setSrc(videoStreamSrc(trimmed));
         }}
       >
         <label className="flex flex-col gap-1 text-sm font-semibold text-zinc-800">
@@ -159,7 +155,7 @@ export default function TestVideoScreen({ cdnUrl }: TestVideoScreenProps) {
         ) : null}
         <ul className="flex flex-col gap-2">
           {videos.map((video) => {
-            const playing = src === videoStreamSrc(video.id, cdnUrl);
+            const playing = src === videoStreamSrc(video.id);
             const label = video.title || `Message ${video.id}`;
             const duration = video.durationSec === null ? "" : formatDuration(video.durationSec);
             return (
