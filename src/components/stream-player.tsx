@@ -58,6 +58,7 @@ export default function StreamPlayer({ src }: StreamPlayerProps) {
   const [rateOpen, setRateOpen] = useState(false);
   const [looping, setLooping] = useState(false);
   const [pip, setPip] = useState(false);
+  const [mediaSrc, setMediaSrc] = useState<string | null>(null);
   const pipOk = useSyncExternalStore(
     () => () => {},
     () =>
@@ -68,7 +69,42 @@ export default function StreamPlayer({ src }: StreamPlayerProps) {
   );
 
   const canSeek = Number.isFinite(duration) && duration > 0 && !failed;
+  const playbackSrc = safeSrc && mediaSrc === safeSrc ? safeSrc : null;
+  const preparing = Boolean(safeSrc) && !playbackSrc && !failed;
   const showChrome = coarse || !playing || hot || scrubbing || waiting || failed || rateOpen || !safeSrc;
+
+  useEffect(() => {
+    if (!safeSrc) return;
+    let cancelled = false;
+    const apply = () => {
+      if (!cancelled) setMediaSrc(safeSrc);
+    };
+    if (!("serviceWorker" in navigator)) {
+      queueMicrotask(apply);
+      return () => {
+        cancelled = true;
+      };
+    }
+    let timer = 0;
+    const finish = () => {
+      window.clearTimeout(timer);
+      apply();
+    };
+    timer = window.setTimeout(finish, 2000);
+    const onControl = () => finish();
+    navigator.serviceWorker.addEventListener("controllerchange", onControl);
+    navigator.serviceWorker
+      .register("/api/video-cache-sw", { scope: "/", updateViaCache: "none" })
+      .then(() => {
+        if (navigator.serviceWorker.controller) finish();
+      })
+      .catch(() => finish());
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      navigator.serviceWorker.removeEventListener("controllerchange", onControl);
+    };
+  }, [safeSrc]);
 
   useEffect(() => {
     const query = window.matchMedia("(hover: none)");
@@ -101,7 +137,7 @@ export default function StreamPlayer({ src }: StreamPlayerProps) {
       video.removeEventListener("enterpictureinpicture", onEnter);
       video.removeEventListener("leavepictureinpicture", onLeave);
     };
-  }, [safeSrc]);
+  }, [playbackSrc]);
 
   useEffect(() => {
     if (!rateOpen) return;
@@ -260,10 +296,10 @@ export default function StreamPlayer({ src }: StreamPlayerProps) {
       className="group relative w-full overflow-hidden rounded-2xl bg-zinc-950 shadow-2xl ring-1 ring-amber-200/50 outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 sm:aspect-video"
     >
       <div className="relative aspect-video">
-      {safeSrc ? (
+      {playbackSrc ? (
         <video
           ref={videoRef}
-          src={safeSrc}
+          src={playbackSrc}
           playsInline
           preload="metadata"
           className="absolute inset-0 h-full w-full object-contain"
@@ -292,7 +328,7 @@ export default function StreamPlayer({ src }: StreamPlayerProps) {
         />
       ) : null}
 
-      {safeSrc && !failed ? (
+      {playbackSrc && !failed ? (
         <button
           type="button"
           tabIndex={-1}
@@ -317,11 +353,11 @@ export default function StreamPlayer({ src }: StreamPlayerProps) {
         </p>
       ) : null}
 
-      {safeSrc && !failed && waiting ? (
+      {(preparing || (playbackSrc && !failed && waiting)) ? (
         <span className="pointer-events-none absolute top-1/2 left-1/2 z-20 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/20 border-t-amber-300 motion-safe:animate-spin" />
       ) : null}
 
-      {safeSrc && !failed && !playing && !waiting ? (
+      {playbackSrc && !failed && !playing && !waiting ? (
         <button
           type="button"
           aria-label={ended ? "Replay" : "Play"}
