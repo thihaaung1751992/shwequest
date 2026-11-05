@@ -75,6 +75,8 @@ export type Messages = {
     teachers: string;
     start: string;
     startBody: string;
+    ctaTitle: string;
+    backToTop: string;
   };
   ranks: {
     kicker: string;
@@ -232,6 +234,8 @@ const en: Messages = {
     teachers: "teachers",
     start: "Start",
     startBody: "Open the teacher list and follow the lessons already on the path.",
+    ctaTitle: "Ready to start your path?",
+    backToTop: "Back to top",
   },
   ranks: {
     kicker: "Ranks",
@@ -382,6 +386,8 @@ const my: Messages = {
     teachers: "ဆရာ",
     start: "စတင်ရန်",
     startBody: "ဆရာစာရင်းဖွင့်ပြီး လမ်းကြောင်းပေါ်က သင်ခန်းစာတွေကို လိုက်ပါ။",
+    ctaTitle: "သင့်လမ်းကြောင်း စဖို့ အသင့်ဖြစ်ပြီလား။",
+    backToTop: "အပေါ်သို့",
   },
   ranks: {
     kicker: "အဆင့်",
