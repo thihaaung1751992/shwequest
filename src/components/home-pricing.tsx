@@ -97,23 +97,17 @@ const PUZZLE_SLOTS = PUZZLE_WORDS.flatMap((word) =>
 );
 
 const LETTER_TINTS = [
-  "text-sky-600/90",
-  "text-amber-600/90",
-  "text-orange-600/90",
-  "text-emerald-600/90",
-  "text-zinc-600/90",
+  "hero-glyph-sky",
+  "hero-glyph-amber",
+  "hero-glyph-orange",
+  "hero-glyph-emerald",
+  "hero-glyph-rose",
 ] as const;
 
 type LetterTint = (typeof LETTER_TINTS)[number];
 
-/** Solid slot fill after fly-in — same hue as the floor glyph, full opacity. */
-const LETTER_FILL: Record<LetterTint, string> = {
-  "text-sky-600/90": "text-sky-600",
-  "text-amber-600/90": "text-amber-600",
-  "text-orange-600/90": "text-orange-600",
-  "text-emerald-600/90": "text-emerald-600",
-  "text-zinc-600/90": "text-zinc-600",
-};
+/** Candy 3D glyph; the element also needs `data-glyph` and must not be `absolute`. */
+const LETTER_GLYPH = "hero-glyph puzzle-glyph";
 
 /** Matches `letter-fly-in` in globals.css. */
 const FLY_MS = 560;
@@ -1719,7 +1713,7 @@ export default function HomePricing({
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
           <span
             ref={glyphRef}
-            className="pointer-events-none absolute top-0 text-7xl leading-none font-extrabold opacity-0 sm:text-8xl"
+            className="pointer-events-none absolute top-0 text-7xl leading-none font-black opacity-0 sm:text-8xl"
           >
             M
           </span>
@@ -1804,7 +1798,7 @@ export default function HomePricing({
                       if (node) letterOuterRefs.current.set(drop.id, node);
                       else letterOuterRefs.current.delete(drop.id);
                     }}
-                    className={`pointer-events-none absolute top-0 text-7xl leading-none font-extrabold tracking-tight select-none sm:text-8xl ${drop.tint} ${landed ? "drop-shadow-[0_2px_2px_rgb(0_0_0_/_0.45)]" : "motion-safe:animate-letter-fall"}`}
+                    className={`pointer-events-none absolute top-0 text-7xl leading-none font-black select-none sm:text-8xl ${drop.tint} ${landed ? "" : "motion-safe:animate-letter-fall"}`}
                     style={style}
                     onAnimationEnd={(event) => {
                       if (event.target !== event.currentTarget) return;
@@ -1867,7 +1861,8 @@ export default function HomePricing({
                           else letterElsRef.current.delete(drop.id);
                         }}
                         data-letter-id={drop.id}
-                        className={`block touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
+                        data-glyph={drop.char}
+                        className={`${LETTER_GLYPH} block! touch-none ${landed ? "" : "motion-safe:animate-letter-spin"} ${
                           canGrab
                             ? isDragging && dragLifted
                               ? "pointer-events-auto cursor-grabbing"
@@ -1906,7 +1901,7 @@ export default function HomePricing({
             return (
               <span
                 key={fly.id}
-                className={`pointer-events-none absolute text-7xl leading-none font-extrabold tracking-tight select-none sm:text-8xl ${fly.tint} motion-safe:animate-letter-fly-in`}
+                className={`pointer-events-none absolute text-7xl leading-none font-black select-none sm:text-8xl ${fly.tint} motion-safe:animate-letter-fly-in`}
                 style={flyStyle}
                 onAnimationEnd={(event) => {
                   if (event.target !== event.currentTarget) return;
@@ -1916,7 +1911,9 @@ export default function HomePricing({
                   if (left <= 0) commitFill(fly.slotKey);
                 }}
               >
-                {fly.char}
+                <span className={LETTER_GLYPH} data-glyph={fly.char}>
+                  {fly.char}
+                </span>
               </span>
             );
           })}
@@ -2091,14 +2088,16 @@ export default function HomePricing({
                         if (el) slotRefs.current.set(key, el);
                         else slotRefs.current.delete(key);
                       }}
-                      className={`inline-grid place-items-center text-5xl leading-none font-extrabold tracking-tight sm:text-7xl ${
+                      className={`inline-grid place-items-center text-5xl leading-none font-black tracking-tight sm:text-7xl ${
                         tint
-                          ? `${LETTER_FILL[tint]} motion-safe:animate-letter-slot-in`
+                          ? `${tint} motion-safe:animate-letter-slot-in`
                           : "puzzle-letter-outline"
                       }`}
                     >
                       {tint ? (
-                        char
+                        <span className={LETTER_GLYPH} data-glyph={char}>
+                          {char}
+                        </span>
                       ) : (
                         <>
                           <span className="puzzle-letter-outline__stroke" aria-hidden>
