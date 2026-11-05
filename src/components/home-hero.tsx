@@ -516,7 +516,7 @@ export default function HomeHero() {
       >
       <div className="relative z-20 mx-auto grid w-full max-w-page items-center gap-6 px-4 pt-6 pb-4 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pt-14">
         <div className="relative z-20 max-w-xl">
-          <p className="inline-flex -rotate-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-600 motion-reduce:rotate-none dark:bg-orange-500/15 dark:text-orange-300">
+          <p className="pill-3d pill-3d-orange inline-flex -rotate-2 rounded-full px-3 py-1 text-sm font-bold text-orange-950 motion-reduce:rotate-none">
             {copy.hero.kicker}
           </p>
           <h2

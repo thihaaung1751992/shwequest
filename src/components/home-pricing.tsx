@@ -1913,7 +1913,7 @@ export default function HomePricing({
       <div className="pointer-events-none relative z-10 mx-auto w-full max-w-page px-4 pt-4 pb-6">
         <h2
           id="home-pricing-title"
-          className="pointer-events-auto mx-auto w-fit -rotate-2 rounded-full bg-emerald-500 px-3 py-1 text-sm font-semibold text-white motion-reduce:rotate-none"
+          className="pill-3d pill-3d-emerald pointer-events-auto mx-auto w-fit -rotate-2 rounded-full px-3 py-1 text-sm font-bold text-white motion-reduce:rotate-none"
         >
           {copy.pricing.title}
         </h2>

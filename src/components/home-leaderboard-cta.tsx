@@ -204,7 +204,7 @@ export default function HomeLeaderboardCta() {
         </div>
 
         <div className="max-w-md lg:justify-self-start">
-          <p className="inline-flex -rotate-2 rounded-full bg-amber-400 px-3 py-1 text-sm font-semibold text-amber-950 motion-reduce:rotate-none">
+          <p className="pill-3d pill-3d-amber inline-flex -rotate-2 rounded-full px-3 py-1 text-sm font-bold text-amber-950 motion-reduce:rotate-none">
             {copy.ranks.kicker}
           </p>
           <h2

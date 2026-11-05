@@ -20,7 +20,7 @@ export default function HomeAbout() {
       <div className="mx-auto flex w-full max-w-page flex-col items-center px-4 pt-8 pb-4 sm:pt-12 sm:pb-6">
         <h2
           id="home-about-title"
-          className="inline-flex -rotate-2 rounded-full bg-emerald-500 px-3 py-1 text-sm font-semibold text-white motion-reduce:rotate-none"
+          className="pill-3d pill-3d-emerald inline-flex -rotate-2 rounded-full px-3 py-1 text-sm font-bold text-white motion-reduce:rotate-none"
         >
           {copy.about.title}
         </h2>
