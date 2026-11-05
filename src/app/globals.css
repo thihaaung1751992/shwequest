@@ -27,6 +27,7 @@
   /* One pillar rises and presses, then the next. Slow enough to read. */
   --animate-podium-press: podium-press 6s ease-in-out infinite;
   --animate-podium-star: podium-star 6s ease-in-out infinite;
+  --animate-podium-twinkle: podium-twinkle 2.4s ease-in-out infinite;
   /* Plans A–Z: duration/delay set per letter; land angle via --land-rotate.
      both keeps the clipped start pose during the delay.
      Spin is its own transform so the click pop does not reset the land angle. */
@@ -101,6 +102,18 @@
     34%,
     86% {
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes podium-twinkle {
+    0%,
+    100% {
+      opacity: 0.2;
+      transform: scale(0.5) rotate(0deg);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1) rotate(45deg);
     }
   }
 
