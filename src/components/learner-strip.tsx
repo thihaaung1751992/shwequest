@@ -25,7 +25,7 @@ export default function LearnerStrip({
       aria-label={copy.account}
       className={`relative z-50 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5 sm:px-4 sm:pb-3 ${surface}`}
     >
-      <div className="mx-auto flex w-full max-w-page min-w-0 items-center gap-1.5 rounded-full border border-amber-200/90 bg-white/95 px-1.5 py-1 shadow-[0_8px_20px_-14px_rgba(120,53,15,0.55)] ring-1 ring-amber-100/80 sm:gap-2 sm:px-2.5 sm:py-1.5 dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10">
+      <div className="mx-auto flex w-full max-w-page min-w-0 items-center gap-1.5 rounded-full border border-amber-300 bg-white/95 px-1.5 pt-1 pb-1.5 shadow-[0_8px_20px_-14px_rgba(120,53,15,0.55)] ring-1 ring-amber-100/80 sm:gap-2 sm:px-2.5 sm:pt-1.5 sm:pb-2 dark:border-white/10 dark:bg-slate-900/95 dark:ring-white/10">
         <PlanDaysLeft endsOn={LEARNER.planEndsOn} />
         <span
           aria-hidden

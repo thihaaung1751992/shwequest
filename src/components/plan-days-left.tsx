@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarClock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useMessages } from "@/i18n/locale-context";
 import type { Messages } from "@/i18n/messages";
@@ -30,8 +31,13 @@ export default function PlanDaysLeft({ endsOn }: { endsOn: string | null }) {
   return (
     <p
       title={labels.full}
-      className="inline-flex min-h-7 shrink-0 items-center rounded-full bg-emerald-100 px-2 text-xs font-extrabold tracking-tight text-emerald-900 sm:min-h-8 sm:px-3 sm:text-sm dark:bg-emerald-500/15 dark:text-emerald-100"
+      className="stat-chip-3d pill-3d-emerald-deep inline-flex min-h-7 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-black tracking-tight text-white sm:min-h-8 sm:gap-1.5 sm:px-3 sm:text-sm"
     >
+      <CalendarClock
+        className="hidden size-4 shrink-0 sm:block"
+        strokeWidth={2.5}
+        aria-hidden
+      />
       <span className="sm:hidden">{labels.short}</span>
       <span className="hidden sm:inline">{labels.full}</span>
     </p>
