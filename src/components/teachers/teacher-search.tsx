@@ -71,7 +71,7 @@ export default function TeacherSearch() {
   return (
     <form
       role="search"
-      className="flex w-full min-w-0 items-center gap-2 rounded-full bg-white py-1.5 pr-1.5 pl-5 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.28)] ring-1 ring-zinc-200/80 dark:bg-slate-950 dark:ring-white/10 sm:max-w-md"
+      className="nav-track-3d flex w-full min-w-0 items-center gap-2 rounded-full py-1.5 pr-1.5 pl-5 sm:max-w-md"
       onSubmit={(event) => {
         event.preventDefault();
         inputRef.current?.blur();
@@ -106,7 +106,7 @@ export default function TeacherSearch() {
       <button
         type="submit"
         aria-label={copy.teachers.search}
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-xs transition-colors hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full text-white transition-[box-shadow] cta-3d cta-3d-orange focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
       >
         <Search aria-hidden className="size-4" strokeWidth={2.75} />
       </button>

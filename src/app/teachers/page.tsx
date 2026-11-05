@@ -35,7 +35,7 @@ export default function TeachersPage({ searchParams }: { searchParams: SearchPar
   return (
     <PageShell title="Teachers">
       <TeachersIntro />
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <TeacherSearch />
         <div className="flex shrink-0 justify-end">
           <Suspense fallback={<TeacherViewToggle current="card" />}>

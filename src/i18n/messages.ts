@@ -104,6 +104,11 @@ export type Messages = {
     emptyLead: string;
     emptyTail: string;
     matches: (count: number) => string;
+    kicker: string;
+    teacherCount: (count: number) => string;
+    progress: string;
+    notStarted: string;
+    lessonsDone: (done: number, total: number) => string;
   };
   team: {
     title: string;
@@ -257,6 +262,11 @@ const en: Messages = {
     emptyTail: "”.",
     matches: (count) =>
       `${count} matching ${count === 1 ? "teacher" : "teachers"}`,
+    kicker: "Your guides",
+    teacherCount: (count) => `${count} ${count === 1 ? "teacher" : "teachers"}`,
+    progress: "Progress",
+    notStarted: "Not started yet",
+    lessonsDone: (done, total) => `${done}/${total} done`,
   },
   team: {
     title: "Team",
@@ -401,6 +411,11 @@ const my: Messages = {
     emptyLead: "“",
     emptyTail: "” နဲ့ ကိုက်ညီတဲ့ ဆရာမရှိပါ။",
     matches: (count) => `ကိုက်ညီတဲ့ ဆရာ ${count} ယောက်`,
+    kicker: "လမ်းပြဆရာများ",
+    teacherCount: (count) => `ဆရာ ${count} ယောက်`,
+    progress: "တိုးတက်မှု",
+    notStarted: "မစရသေးပါ",
+    lessonsDone: (done, total) => `${done}/${total} ပြီး`,
   },
   team: {
     title: "အဖွဲ့",

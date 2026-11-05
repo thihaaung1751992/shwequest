@@ -22,7 +22,7 @@ export default function TeacherViewToggle({ current }: { current: TeacherView })
   return (
     <nav
       aria-label={copy.teachers.layout}
-      className="inline-flex rounded-full bg-white p-1 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.22)] ring-1 ring-zinc-200/80 dark:bg-slate-950 dark:ring-white/10"
+      className="nav-track-3d inline-flex gap-0.5 rounded-full p-1.5"
     >
       {OPTIONS.map(({ view, Icon }) => {
         const active = view === current;
@@ -32,10 +32,10 @@ export default function TeacherViewToggle({ current }: { current: TeacherView })
             href={view === "card" ? "/teachers" : `/teachers?view=${view}`}
             scroll={false}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${
+            className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${
               active
-                ? "bg-orange-500 text-white shadow-xs"
-                : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-300 dark:hover:bg-white/10"
+                ? "stat-chip-3d pill-3d-amber font-black text-amber-950"
+                : "font-bold text-zinc-600 hover:bg-amber-100/80 hover:text-amber-950 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white"
             }`}
           >
             <Icon aria-hidden className="size-4" />

@@ -64,6 +64,17 @@ export function earnedXpTotal(teachers: readonly Teacher[] = TEACHERS): number {
   return teachers.reduce((sum, teacher) => sum + earnedXp(teacher.nodes), 0);
 }
 
+/** Completed lessons (videos + games) on one teacher's path. */
+export function teacherProgress(teacher: Teacher): {
+  done: number;
+  total: number;
+  percent: number;
+} {
+  const total = teacher.nodes.length;
+  const done = teacher.nodes.filter((node) => node.status === "completed").length;
+  return { done, total, percent: total === 0 ? 0 : Math.round((done / total) * 100) };
+}
+
 /** Videos and games added across every teacher. */
 export function catalogTotals(teachers: readonly Teacher[] = TEACHERS): {
   videos: number;

@@ -7,6 +7,7 @@ import FrostGlass from "@/components/frost-glass";
 import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
+import TeacherProgress from "@/components/teachers/teacher-progress";
 import type { Teacher } from "@/data/teachers";
 
 export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
@@ -17,11 +18,13 @@ export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
   return (
     <Link
       href={`/map?teacher=${teacher.id}`}
-      className={`group flex min-h-16 items-center gap-3 rounded-2xl border-2 border-b-4 bg-white/90 px-3 py-2.5 shadow-xs transition-transform focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0.5 motion-safe:active:border-b-2 dark:bg-slate-900/80 ${accent.edge}`}
+      className={`teacher-card-3d group flex min-h-20 items-center gap-3 overflow-hidden rounded-2xl px-3 py-3 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 sm:gap-4 sm:px-4 ${accent.tone}`}
     >
-      <TeacherPortrait src={teacher.image} size="list" />
+      <span className="teacher-stage shrink-0 rounded-[0.9rem] p-1.5">
+        <TeacherPortrait src={teacher.image} size="list" />
+      </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-extrabold tracking-tight">{teacher.label}</span>{" "}
+        <span className="block truncate text-base font-black tracking-tight">{teacher.label}</span>{" "}
         <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs font-bold text-zinc-600 dark:text-zinc-300">
           <span className="inline-flex items-center gap-1">
             <CirclePlay aria-hidden className="size-3.5" />
@@ -33,9 +36,12 @@ export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
             {copy.teachers.games(games)}
           </span>
         </span>
+        <span className="mt-2 block max-w-xs">
+          <TeacherProgress teacher={teacher} variant="bar" />
+        </span>
       </span>
       <span
-        className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl border-b-4 px-3 text-sm font-extrabold text-white transition-[overflow] motion-safe:group-hover:overflow-visible ${accent.cta}`}
+        className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-extrabold text-white transition-[box-shadow,overflow] motion-safe:group-hover:overflow-visible cta-3d ${accent.cta}`}
       >
         <FrostGlass />
         <span className="relative z-10 hidden sm:inline">{copy.teachers.openPath}</span>

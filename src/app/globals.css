@@ -45,6 +45,19 @@
   --animate-nav-sheet-in: nav-sheet-in 0.28s cubic-bezier(0.34, 1.15, 0.64, 1) both;
   --animate-price-shine: price-shine 0.9s ease-out;
   --animate-count-pop: count-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Teachers grid entry. Delay is set per item. */
+  --animate-teacher-rise: teacher-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes teacher-rise {
+    from {
+      opacity: 0;
+      translate: 0 1.25rem;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
 
   @keyframes price-shine {
     0% {
@@ -571,6 +584,126 @@
     --cta-edge: var(--color-zinc-400);
     --cta-text-shadow: transparent;
   }
+}
+
+/*
+ * Teacher card: solid tone lip, ground shadow, pointer glare. Colour comes from
+ * a teacher-tone-* helper. --tilt-x / --tilt-y / --glare-x / --glare-y are set
+ * from the pointer in JS; tilt only applies for hover pointers with motion on.
+ */
+@utility teacher-card-3d {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-white);
+  border: 2px solid var(--card-border);
+  --card-lip: 6px;
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.9),
+    0 var(--card-lip) 0 var(--card-edge),
+    0 calc(var(--card-lip) + 12px) 28px -14px color-mix(in oklab, var(--card-edge) 75%, transparent);
+  transition:
+    translate 200ms ease,
+    box-shadow 200ms ease,
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle at var(--glare-x, 50%) var(--glare-y, 0%),
+      rgb(255 255 255 / 0.4),
+      transparent 55%
+    );
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+  }
+
+  &:where(.dark, .dark *) {
+    background-color: var(--color-slate-900);
+    border-color: color-mix(in oklab, var(--card-glow) 35%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 var(--card-lip) 0 color-mix(in oklab, var(--card-edge) 45%, var(--color-slate-950)),
+      0 calc(var(--card-lip) + 12px) 30px -12px color-mix(in oklab, var(--card-glow) 35%, transparent);
+
+    &::after {
+      background: radial-gradient(
+        circle at var(--glare-x, 50%) var(--glare-y, 0%),
+        rgb(255 255 255 / 0.12),
+        transparent 55%
+      );
+    }
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+
+    &:hover {
+      --card-lip: 9px;
+      translate: 0 -4px;
+      transition:
+        translate 200ms ease,
+        box-shadow 200ms ease,
+        transform 120ms linear;
+    }
+
+    &:hover::after {
+      opacity: 1;
+    }
+
+    &:active {
+      --card-lip: 2px;
+      translate: 0 4px;
+    }
+  }
+}
+
+/* Dotted tone backdrop behind a portrait (teacher card stage, intro band). */
+@utility teacher-stage {
+  background-image:
+    radial-gradient(color-mix(in oklab, var(--card-edge) 40%, transparent) 1.2px, transparent 1.5px),
+    radial-gradient(120% 90% at 50% 0%, var(--card-stage-top) 0%, var(--card-stage-bottom) 100%);
+  background-size:
+    16px 16px,
+    auto;
+
+  &:where(.dark, .dark *) {
+    background-image:
+      radial-gradient(color-mix(in oklab, var(--card-glow) 28%, transparent) 1.2px, transparent 1.5px),
+      radial-gradient(
+        120% 90% at 50% 0%,
+        color-mix(in oklab, var(--card-glow) 28%, var(--color-slate-900)) 0%,
+        var(--color-slate-900) 100%
+      );
+  }
+}
+
+@utility teacher-tone-amber {
+  --card-glow: var(--color-amber-300);
+  --card-border: var(--color-amber-300);
+  --card-edge: var(--color-amber-400);
+  --card-stage-top: var(--color-amber-50);
+  --card-stage-bottom: var(--color-amber-200);
+}
+
+@utility teacher-tone-sky {
+  --card-glow: var(--color-sky-300);
+  --card-border: var(--color-sky-300);
+  --card-edge: var(--color-sky-400);
+  --card-stage-top: var(--color-sky-50);
+  --card-stage-bottom: var(--color-sky-200);
+}
+
+@utility teacher-tone-emerald {
+  --card-glow: var(--color-emerald-300);
+  --card-border: var(--color-emerald-300);
+  --card-edge: var(--color-emerald-400);
+  --card-stage-top: var(--color-emerald-50);
+  --card-stage-bottom: var(--color-emerald-200);
 }
 
 body {
