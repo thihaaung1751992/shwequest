@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { Crown, Star, TrendingUp, Trophy, Users } from "lucide-react";
+import type { CSSProperties } from "react";
+import { Crown, Flag, Star, TrendingUp, Trophy, Users } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
-import DiamondAvatar from "@/components/leaderboard/diamond-avatar";
-import { resetTilt, tiltCard } from "@/components/teachers/teacher-tilt";
+import { CountUp, CountUpScope } from "@/components/count-up";
 import { LEARNER } from "@/data/learner";
 import {
   formatRank,
@@ -15,101 +15,101 @@ import {
 import { earnedXpTotal } from "@/data/teachers";
 
 const PODIUM_ORDER = [2, 1, 3] as const;
-const ROW_STAGGER_MS = 70;
-/** Avatars drop in after their pillar has mostly grown. */
-const AVATAR_AFTER_PILLAR_MS = 450;
-const MIN_BAR_PERCENT = 6;
+const LANE_STAGGER_MS = 90;
+/** Badges drop in after their step has mostly grown. */
+const BADGE_AFTER_STEP_MS = 450;
+/** Runners stay inside the lane so the token never touches the edges. */
+const RUN_MIN = 8;
+const RUN_MAX = 92;
 
 type Place = (typeof PODIUM_ORDER)[number];
 
-const PODIUM: Record<
-  Place,
-  {
-    pillar: string;
-    cap: string;
-    front: string;
-    edge: string;
-    medal: string;
-    digit: string;
-    ring: string;
-    avatar: string;
-    chip: string;
-    delayMs: number;
-  }
-> = {
-  1: {
-    pillar: "h-36 sm:h-48",
-    cap: "from-amber-200 to-amber-300",
-    front: "from-amber-400 via-amber-400 to-amber-600",
-    edge: "",
-    medal: "from-yellow-100 via-amber-400 to-amber-600",
-    digit: "text-amber-700",
-    ring: "from-yellow-200 via-amber-400 to-amber-600 shadow-[0_4px_0_var(--color-amber-700),0_14px_20px_-8px_rgb(180_83_9/0.6)]",
-    avatar: "size-20 sm:size-24",
-    chip: "pill-3d-amber text-amber-950",
-    delayMs: 400,
-  },
-  2: {
-    pillar: "h-28 sm:h-36",
-    cap: "from-sky-200 to-sky-300",
-    front: "from-sky-400 via-sky-500 to-sky-700",
-    edge: "shadow-[inset_-10px_0_12px_-8px_rgb(0_0_0/0.35)]",
-    medal: "from-white via-zinc-300 to-zinc-500",
-    digit: "text-zinc-600",
-    ring: "from-white via-slate-300 to-slate-500 shadow-[0_4px_0_var(--color-slate-600),0_12px_18px_-8px_rgb(15_23_42/0.5)]",
-    avatar: "size-16 sm:size-20",
-    chip: "pill-3d-sky text-sky-950",
-    delayMs: 200,
-  },
-  3: {
-    pillar: "h-20 sm:h-28",
-    cap: "from-orange-200 to-orange-300",
-    front: "from-orange-400 via-orange-500 to-orange-700",
-    edge: "shadow-[inset_10px_0_12px_-8px_rgb(0_0_0/0.35)]",
-    medal: "from-orange-100 via-orange-400 to-orange-700",
-    digit: "text-orange-800",
-    ring: "from-orange-200 via-orange-400 to-orange-700 shadow-[0_4px_0_var(--color-orange-800),0_12px_18px_-8px_rgb(154_52_18/0.55)]",
-    avatar: "size-16 sm:size-20",
-    chip: "pill-3d-orange text-orange-950",
-    delayMs: 0,
-  },
+const PODIUM: Record<Place, { tier: string; step: string; badge: string; delayMs: number }> = {
+  1: { tier: "lb-tier-gold", step: "h-32 sm:h-44", badge: "w-24 sm:w-32", delayMs: 400 },
+  2: { tier: "lb-tier-silver", step: "h-24 sm:h-32", badge: "w-20 sm:w-24", delayMs: 200 },
+  3: { tier: "lb-tier-bronze", step: "h-16 sm:h-24", badge: "w-20 sm:w-24", delayMs: 0 },
 };
 
-/** Card tone follows the avatar frame colour. */
-const ROW_TONE: Record<LeaderboardFrame, { card: string; coin: string }> = {
-  orange: { card: "teacher-tone-orange", coin: "pill-3d-orange text-orange-950" },
-  amber: { card: "teacher-tone-amber", coin: "pill-3d-amber text-amber-950" },
-  sky: { card: "teacher-tone-sky", coin: "pill-3d-sky text-sky-950" },
+const RUNNER_RING: Record<LeaderboardFrame, string> = {
+  orange: "ring-orange-300",
+  amber: "ring-amber-300",
+  sky: "ring-sky-300",
 };
 
-const SPARKLES = [
-  { position: "-left-6 top-2 size-3.5", delay: "0s" },
-  { position: "-right-7 top-0 size-4", delay: "0.8s" },
-  { position: "-right-4 bottom-3 size-2.5", delay: "1.6s" },
-  { position: "-left-3 bottom-5 size-2.5", delay: "1.2s" },
+const CONFETTI = [
+  { left: "4%", delay: 0, duration: 3.2, color: "bg-sky-400", size: "h-3 w-1.5", drift: "2rem", spin: "540deg" },
+  { left: "10%", delay: 0.5, duration: 3.6, color: "bg-white", size: "size-2", drift: "-1.5rem", spin: "420deg" },
+  { left: "17%", delay: 0.2, duration: 3, color: "bg-emerald-400", size: "h-2.5 w-1.5", drift: "3rem", spin: "-480deg" },
+  { left: "24%", delay: 0.9, duration: 3.4, color: "bg-rose-400", size: "h-3 w-1.5", drift: "-2rem", spin: "600deg" },
+  { left: "31%", delay: 0.3, duration: 3.8, color: "bg-amber-200", size: "size-2", drift: "1rem", spin: "-360deg" },
+  { left: "38%", delay: 1.1, duration: 3.1, color: "bg-sky-300", size: "h-2.5 w-1.5", drift: "-3rem", spin: "520deg" },
+  { left: "45%", delay: 0.1, duration: 3.5, color: "bg-white", size: "h-3 w-1.5", drift: "2.5rem", spin: "-560deg" },
+  { left: "52%", delay: 0.7, duration: 3.3, color: "bg-emerald-300", size: "size-2", drift: "-1rem", spin: "440deg" },
+  { left: "59%", delay: 0.4, duration: 3.7, color: "bg-rose-300", size: "h-2.5 w-1.5", drift: "3rem", spin: "-500deg" },
+  { left: "66%", delay: 1, duration: 3, color: "bg-sky-400", size: "h-3 w-1.5", drift: "-2.5rem", spin: "580deg" },
+  { left: "73%", delay: 0.2, duration: 3.6, color: "bg-amber-100", size: "size-2", drift: "1.5rem", spin: "-420deg" },
+  { left: "80%", delay: 0.8, duration: 3.2, color: "bg-emerald-400", size: "h-2.5 w-1.5", drift: "-2rem", spin: "500deg" },
+  { left: "87%", delay: 0.35, duration: 3.9, color: "bg-white", size: "h-3 w-1.5", drift: "2rem", spin: "-620deg" },
+  { left: "94%", delay: 0.6, duration: 3.4, color: "bg-rose-400", size: "size-2", drift: "-1.5rem", spin: "460deg" },
+] as const;
+
+/** [x, y, stem angle] along the laurel stem; two leaves sprout from each point. */
+const LAUREL_LEAVES = [
+  [22, 84, -40],
+  [16, 72, -30],
+  [12, 59, -18],
+  [10, 46, -6],
+  [11, 33, 6],
+  [14, 20, 18],
 ] as const;
 
 function formatXp(xp: number): string {
   return xp.toLocaleString("en-US");
 }
 
+function xpLabel(xp: number): string {
+  return `${formatXp(xp)} XP`;
+}
+
 function byRank(rank: number): LeaderboardEntry | undefined {
   return LEADERBOARD.find((entry) => entry.rank === rank);
 }
 
-function Sparkle({ className, delay }: { className: string; delay: string }) {
+/** Maps a 0–1 share onto the lane, between RUN_MIN and RUN_MAX percent. */
+function lanePercent(share: number): number {
+  const clamped = Math.min(1, Math.max(0, share));
+  return RUN_MIN + (RUN_MAX - RUN_MIN) * clamped;
+}
+
+function Laurel({ className }: { className: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      className={`absolute text-amber-300 motion-safe:animate-podium-twinkle dark:text-amber-200 ${className}`}
-      style={{ animationDelay: delay }}
-      aria-hidden
-    >
+    <svg viewBox="0 0 32 96" className={className} aria-hidden>
       <path
-        d="M12 0c.6 6.4 5.6 11.4 12 12-6.4.6-11.4 5.6-12 12-.6-6.4-5.6-11.4-12-12C6.4 11.4 11.4 6.4 12 0Z"
-        fill="currentColor"
+        d="M26 94C8 72 4 36 18 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
       />
+      {LAUREL_LEAVES.map(([x, y, angle]) => (
+        <g key={y} className="fill-amber-300 stroke-amber-600 dark:fill-amber-400" strokeWidth="1.2">
+          <ellipse cx={x} cy={y - 6} rx="3.2" ry="6.5" transform={`rotate(${angle - 45} ${x} ${y})`} />
+          <ellipse cx={x} cy={y - 6} rx="3.2" ry="6.5" transform={`rotate(${angle + 35} ${x} ${y})`} />
+        </g>
+      ))}
     </svg>
+  );
+}
+
+function ShieldBadge({ src, className }: { src: string; className: string }) {
+  return (
+    <span className={`lb-lift relative block aspect-[1/1.15] ${className}`}>
+      <span className="lb-shield-shape lb-metal absolute inset-0" />
+      <span className="lb-shield-shape absolute inset-[8%] overflow-hidden bg-amber-50 dark:bg-slate-800">
+        <Image src={src} alt="" fill sizes="128px" className="object-cover" />
+      </span>
+      <span className="lb-shield-shape pointer-events-none absolute inset-0 bg-linear-to-b from-white/40 to-transparent to-35%" />
+    </span>
   );
 }
 
@@ -118,79 +118,94 @@ function PodiumSlot({ entry, place }: { entry: LeaderboardEntry; place: Place })
   const isFirst = place === 1;
 
   return (
-    <li className="relative flex min-w-0 flex-col items-center justify-end text-center">
+    <li className={`relative flex min-w-0 flex-col items-center justify-end text-center ${style.tier}`}>
       <span className="sr-only">{formatRank(place)}</span>
       <div
         className="relative z-10 flex w-full min-w-0 flex-col items-center px-1 motion-safe:animate-teacher-rise"
-        style={{ animationDelay: `${style.delayMs + AVATAR_AFTER_PILLAR_MS}ms` }}
+        style={{ animationDelay: `${style.delayMs + BADGE_AFTER_STEP_MS}ms` }}
       >
-        <span className="relative grid place-items-center">
+        <span className="relative">
           {isFirst ? (
-            <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
-              <span className="absolute size-44 sm:size-56">
-                <span className="block size-full rounded-full bg-[repeating-conic-gradient(rgb(251_191_36/0.45)_0deg_7deg,transparent_7deg_22deg)] [mask-image:radial-gradient(circle_at_50%_50%,black_20%,transparent_64%)] motion-safe:animate-hero-orbit dark:bg-[repeating-conic-gradient(rgb(251_191_36/0.28)_0deg_7deg,transparent_7deg_22deg)]" />
-              </span>
-              <span className="absolute size-28 rounded-full bg-radial from-amber-200/90 to-transparent to-70% blur-md sm:size-32 dark:from-amber-400/35" />
-              {SPARKLES.map((sparkle) => (
-                <Sparkle key={sparkle.position} className={sparkle.position} delay={sparkle.delay} />
-              ))}
-            </span>
-          ) : null}
-          {isFirst ? (
-            <span
-              aria-hidden
-              className="absolute bottom-full left-1/2 z-10 -mb-2 -translate-x-1/2 motion-safe:animate-hero-bob"
-            >
-              <Crown
-                strokeWidth={2}
-                className="size-9 fill-amber-300 text-amber-600 drop-shadow-[0_3px_0_var(--color-amber-700)] sm:size-11"
+            <>
+              <span
+                aria-hidden
+                className="absolute top-1/2 left-1/2 size-[170%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-radial from-yellow-100/90 to-transparent to-70% blur-md dark:from-amber-400/35"
               />
-            </span>
+              <Laurel className="absolute top-[12%] -left-6 hidden h-[82%] text-amber-700 sm:-left-8 sm:block" />
+              <Laurel className="absolute top-[12%] -right-6 hidden h-[82%] -scale-x-100 text-amber-700 sm:-right-8 sm:block" />
+              <span
+                aria-hidden
+                className="absolute bottom-full left-1/2 z-10 -mb-1 -translate-x-1/2 motion-safe:animate-hero-bob"
+              >
+                <Crown
+                  strokeWidth={2}
+                  className="size-9 fill-amber-300 text-amber-600 drop-shadow-[0_3px_0_var(--color-amber-800)] sm:size-12"
+                />
+              </span>
+            </>
           ) : null}
-          <span
-            className={`relative block rounded-full bg-linear-to-b p-1 sm:p-1.5 ${style.ring} ${style.avatar}`}
-          >
-            <span className="relative block size-full overflow-hidden rounded-full bg-amber-50 ring-2 ring-white/80 dark:bg-slate-800">
-              <Image src={entry.image} alt="" fill sizes="96px" className="object-cover" />
-            </span>
+          <ShieldBadge src={entry.image} className={style.badge} />
+        </span>
+        <span className="lb-lift relative z-10 -mt-3 inline-block max-w-full">
+          <span className="lb-ribbon block px-3.5 py-1 text-[0.7rem] font-black whitespace-nowrap text-zinc-950 tabular-nums sm:px-5 sm:text-sm">
+            <CountUp value={entry.score} format={xpLabel} />
           </span>
         </span>
-        <p className="mt-3 w-full truncate text-sm font-black tracking-tight text-zinc-950 sm:text-lg dark:text-white">
+        <p className="mt-2 w-full truncate text-sm font-black tracking-tight text-zinc-950 sm:text-lg dark:text-white">
           {entry.displayName}
-        </p>
-        <p
-          className={`stat-chip-3d mt-1.5 inline-flex max-w-full rounded-full px-2 py-0.5 text-[0.7rem] font-black whitespace-nowrap tabular-nums sm:px-3 sm:text-sm ${style.chip}`}
-        >
-          {formatXp(entry.score)} XP
         </p>
       </div>
 
       <div
         aria-hidden
-        className={`mt-4 flex w-full origin-bottom flex-col motion-safe:animate-podium-rise ${style.pillar}`}
+        className={`mt-3 flex w-full origin-bottom flex-col motion-safe:animate-podium-rise ${style.step}`}
         style={{ animationDelay: `${style.delayMs}ms` }}
       >
-        <div
-          className={`h-3 shrink-0 bg-linear-to-b [clip-path:polygon(8%_0,92%_0,100%_100%,0_100%)] sm:h-4 ${style.cap}`}
-        />
-        <div
-          className={`relative flex flex-1 flex-col items-center justify-start overflow-hidden bg-linear-to-b pt-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.55)] sm:pt-4 ${style.front}`}
-        >
-          <span className="absolute inset-y-0 left-[12%] w-[18%] bg-linear-to-r from-white/0 via-white/25 to-white/0" />
-          <span className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black/20 to-transparent" />
-          {style.edge ? <span className={`absolute inset-0 ${style.edge}`} /> : null}
-          <span
-            className={`relative grid size-10 place-items-center rounded-full bg-linear-to-b p-[3px] shadow-[0_3px_0_rgb(0_0_0/0.22),0_6px_10px_rgb(0_0_0/0.25)] sm:size-12 ${style.medal}`}
-          >
-            <span
-              className={`grid size-full place-items-center rounded-full bg-linear-to-b from-white to-zinc-100 text-lg font-black shadow-[inset_0_2px_3px_rgb(0_0_0/0.18)] text-shadow-[0_1px_0_rgb(255_255_255)] sm:text-xl ${style.digit}`}
-            >
-              {place}
-            </span>
-          </span>
+        <div className="lb-step-cap h-3 shrink-0 sm:h-4" />
+        <div className="lb-step flex flex-1 items-start justify-center overflow-hidden pt-2 sm:pt-3">
+          <span className="lb-engrave text-4xl leading-none font-black sm:text-6xl">{place}</span>
         </div>
       </div>
     </li>
+  );
+}
+
+function Runner({
+  src,
+  ring,
+  percent,
+  delayMs,
+  className = "",
+}: {
+  src: string;
+  ring: string;
+  percent: number;
+  delayMs: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`absolute top-1/2 left-0 motion-safe:animate-lb-run ${className}`}
+      style={{ translate: `calc(${percent}cqw - 50%) -50%`, animationDelay: `${delayMs}ms` }}
+    >
+      <span
+        className={`relative block size-9 overflow-hidden rounded-full border-2 border-white bg-amber-50 shadow-[0_4px_0_rgb(0_0_0/0.25)] ring-3 sm:size-11 dark:bg-slate-800 ${ring}`}
+      >
+        <Image src={src} alt="" fill sizes="44px" className="object-cover" />
+      </span>
+    </span>
+  );
+}
+
+function LaneTrail({ percent, delayMs, tone }: { percent: number; delayMs: number; tone: string }) {
+  return (
+    <>
+      <span className={`absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed ${tone}`} />
+      <span
+        className="absolute top-1/2 left-0 h-1.5 origin-left -translate-y-1/2 rounded-full bg-linear-to-r from-white/0 to-white/70 motion-safe:animate-lb-trail"
+        style={{ width: `${percent}%`, animationDelay: `${delayMs}ms` }}
+      />
+    </>
   );
 }
 
@@ -201,7 +216,10 @@ export default function LeaderboardBoard() {
     return entry ? { place, entry } : null;
   }).filter((slot): slot is { place: Place; entry: LeaderboardEntry } => slot !== null);
   const rest = LEADERBOARD.filter((entry) => entry.rank > 3);
-  const leaderScore = Math.max(...LEADERBOARD.map((entry) => entry.score));
+  const scores = LEADERBOARD.map((entry) => entry.score);
+  const leaderScore = Math.max(...scores);
+  const lowScore = Math.min(...scores);
+  const spread = leaderScore - lowScore;
 
   const myXp = earnedXpTotal();
   const ahead = LEADERBOARD.filter((entry) => entry.score > myXp);
@@ -210,6 +228,8 @@ export default function LeaderboardBoard() {
     (lowest, entry) => (!lowest || entry.score < lowest.score ? entry : lowest),
     undefined,
   );
+  const myPercent = nextUp ? lanePercent(myXp / nextUp.score) : RUN_MAX;
+  const youDelayMs = rest.length * LANE_STAGGER_MS;
   const chip = "stat-chip-3d inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold";
 
   return (
@@ -217,144 +237,158 @@ export default function LeaderboardBoard() {
       aria-labelledby="leaderboard-heading"
       className="relative overflow-hidden bg-linear-to-b from-cream via-cream to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-950"
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[36rem] bg-[radial-gradient(45%_40%_at_15%_10%,rgb(253_186_116/0.35),transparent_70%),radial-gradient(40%_35%_at_90%_25%,rgb(125_211_252/0.35),transparent_70%)] dark:bg-[radial-gradient(45%_40%_at_15%_10%,rgb(251_146_60/0.12),transparent_70%),radial-gradient(40%_35%_at_90%_25%,rgb(56_189_248/0.12),transparent_70%)]"
-      />
-
-      <div className="relative mx-auto flex w-full max-w-3xl flex-col px-4 pt-6 pb-16 sm:pt-10 sm:pb-20">
-        <div className="teacher-stage teacher-tone-amber relative overflow-hidden rounded-[2rem] border-2 border-amber-300 px-5 py-7 shadow-[inset_0_2px_0_rgb(255_255_255/0.9),0_5px_0_var(--color-amber-300),0_20px_36px_-18px_rgb(180_83_9/0.45)] sm:px-8 sm:py-9 dark:border-white/10 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_5px_0_rgb(255_255_255/0.08)]">
-          <div className="flex items-center justify-between gap-6">
-            <div className="min-w-0">
-              <p className="pill-3d pill-3d-orange inline-flex -rotate-2 items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-bold text-orange-950 motion-reduce:rotate-none">
-                <Trophy aria-hidden className="size-4" />
-                {copy.ranks.kicker}
-              </p>
-              <h2
-                id="leaderboard-heading"
-                className="mt-4 text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl dark:text-white"
-              >
-                {copy.ranks.boardTitle}
-              </h2>
-              <p className="mt-2 max-w-prose text-sm font-medium text-zinc-700 sm:text-base dark:text-zinc-300">
-                {copy.ranks.boardBody}
-              </p>
-              <ul className="mt-5 flex flex-wrap gap-2.5">
-                <li className={`${chip} pill-3d-amber text-amber-950`}>
-                  <Users aria-hidden className="size-4" />
-                  {copy.ranks.learners(LEADERBOARD.length)}
-                </li>
-                <li className={`${chip} pill-3d-sky text-sky-950 tabular-nums`}>
-                  <Star aria-hidden className="size-4 fill-white" />
-                  {copy.ranks.topXp(formatXp(leaderScore))}
-                </li>
-                <li className={`${chip} pill-3d-emerald text-white tabular-nums`}>
-                  <TrendingUp aria-hidden className="size-4" />
-                  {copy.ranks.yourRank(myRank)}
-                </li>
-              </ul>
-            </div>
-
-            <span aria-hidden className="hidden shrink-0 rotate-6 pr-2 sm:block motion-reduce:rotate-none">
-              <span className="stat-chip-3d pill-3d-amber grid size-28 place-items-center rounded-[2rem] motion-safe:animate-hero-bob">
-                <Trophy strokeWidth={1.75} className="size-14 fill-white/90 text-amber-700" />
-              </span>
-            </span>
-          </div>
-        </div>
-
-        <div className="teacher-stage teacher-tone-sky relative isolate mt-8 overflow-hidden rounded-[2rem] border-2 border-sky-300 px-3 pt-16 pb-7 shadow-[inset_0_2px_0_rgb(255_255_255/0.9),0_5px_0_var(--color-sky-300),0_20px_36px_-18px_rgb(3_105_161/0.45)] sm:px-10 sm:pt-20 sm:pb-9 dark:border-white/10 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_5px_0_rgb(255_255_255/0.08)]">
-          <ol
-            aria-label={copy.ranks.topThree}
-            className="relative mx-auto grid max-w-md grid-cols-3 items-end"
-          >
-            {podium.map(({ place, entry }) => (
-              <PodiumSlot key={entry.id} entry={entry} place={place} />
+      <div className="relative mx-auto flex w-full max-w-page flex-col px-4 pt-6 pb-16 sm:pt-10 sm:pb-20">
+        <div className="lb-stage relative isolate overflow-hidden rounded-[2.5rem] px-3 pt-8 pb-8 sm:px-10 sm:pt-12 sm:pb-10 lg:px-16">
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+            <span className="lb-sunburst absolute top-[62%] left-1/2 size-[64rem] -translate-x-1/2 -translate-y-1/2 motion-safe:animate-lb-spin" />
+            <span className="lb-beam absolute -top-6 left-1/2 h-[36rem] w-56 -translate-x-1/2 opacity-60" />
+            <span className="lb-beam absolute -top-6 left-[12%] h-[32rem] w-40 origin-top -translate-x-1/2 -rotate-[16deg] opacity-40" />
+            <span className="lb-beam absolute -top-6 left-[88%] h-[32rem] w-40 origin-top -translate-x-1/2 rotate-[16deg] opacity-40" />
+            {CONFETTI.map((piece) => (
+              <span
+                key={piece.left}
+                className={`absolute top-0 rounded-[2px] motion-safe:animate-lb-confetti motion-reduce:hidden ${piece.color} ${piece.size}`}
+                style={
+                  {
+                    left: piece.left,
+                    animationDelay: `${piece.delay}s`,
+                    animationDuration: `${piece.duration}s`,
+                    "--drift": piece.drift,
+                    "--spin": piece.spin,
+                  } as CSSProperties
+                }
+              />
             ))}
-          </ol>
-          <div aria-hidden className="relative isolate mx-auto -mt-px w-full max-w-[29rem]">
-            <div className="absolute inset-x-[-4%] -bottom-3 -z-10 h-4 rounded-full bg-slate-900/25 blur-md dark:bg-black/70" />
-            <div className="h-2.5 bg-linear-to-b from-slate-500 to-slate-600 [clip-path:polygon(3%_0,97%_0,100%_100%,0_100%)] sm:h-3" />
-            <div className="h-3.5 rounded-b-lg bg-linear-to-b from-slate-700 to-slate-900 shadow-[inset_0_1px_0_rgb(255_255_255/0.15)] sm:h-4" />
+          </div>
+
+          <div className="flex flex-col items-center px-2 text-center">
+            <p className="pill-3d pill-3d-amber inline-flex -rotate-2 items-center gap-1.5 rounded-full px-3.5 py-1 text-sm font-bold text-amber-950 motion-reduce:rotate-none">
+              <Trophy aria-hidden className="size-4" />
+              {copy.ranks.kicker}
+            </p>
+            <h2
+              id="leaderboard-heading"
+              className="lb-title mt-4 text-4xl font-black tracking-tight sm:text-6xl"
+            >
+              {copy.ranks.boardTitle}
+            </h2>
+            <p className="mt-3 max-w-xl text-sm font-semibold text-orange-950 sm:text-base dark:text-zinc-300">
+              {copy.ranks.boardBody}
+            </p>
+            <ul className="mt-5 flex flex-wrap justify-center gap-2.5">
+              <li className={`${chip} pill-3d-amber text-amber-950`}>
+                <Users aria-hidden className="size-4" />
+                {copy.ranks.learners(LEADERBOARD.length)}
+              </li>
+              <li className={`${chip} pill-3d-sky text-sky-950 tabular-nums`}>
+                <Star aria-hidden className="size-4 fill-white" />
+                {copy.ranks.topXp(formatXp(leaderScore))}
+              </li>
+              <li className={`${chip} pill-3d-emerald text-white tabular-nums`}>
+                <TrendingUp aria-hidden className="size-4" />
+                {copy.ranks.yourRank(myRank)}
+              </li>
+            </ul>
+          </div>
+
+          <CountUpScope className="relative mx-auto mt-14 max-w-md sm:mt-20 sm:max-w-lg lg:max-w-2xl">
+            <ol aria-label={copy.ranks.topThree} className="grid grid-cols-3 items-end">
+              {podium.map(({ place, entry }) => (
+                <PodiumSlot key={entry.id} entry={entry} place={place} />
+              ))}
+            </ol>
+          </CountUpScope>
+          <div aria-hidden className="relative isolate mx-auto -mt-px w-full max-w-[34rem] lg:max-w-[44rem]">
+            <div className="absolute inset-x-[-6%] -bottom-4 -z-10 h-6 rounded-full bg-orange-900/30 blur-lg dark:bg-black/70" />
+            <div className="h-3 bg-linear-to-b from-amber-100 to-amber-300 [clip-path:polygon(3%_0,97%_0,100%_100%,0_100%)] sm:h-4 dark:from-slate-500 dark:to-slate-600" />
+            <div className="h-4 rounded-b-xl bg-linear-to-b from-amber-700 to-amber-900 shadow-[inset_0_1px_0_rgb(255_255_255/0.2)] sm:h-5 dark:from-slate-700 dark:to-slate-900" />
           </div>
         </div>
 
-        <ol aria-label={copy.ranks.restRanking} className="mt-10 flex flex-col gap-4 sm:mt-12">
-          {rest.map((entry, index) => {
-            const tone = ROW_TONE[entry.frame];
-            const share = Math.max(MIN_BAR_PERCENT, Math.round((entry.score / leaderScore) * 100));
+        <div className="lb-track mt-10 overflow-hidden rounded-[2rem] sm:mt-12">
+          <ol aria-label={copy.ranks.restRanking} className="divide-y-2 divide-white/60 dark:divide-white/10">
+            {rest.map((entry, index) => {
+              const percent = lanePercent(spread > 0 ? (entry.score - lowScore) / spread : 1);
+              const above = byRank(entry.rank - 1);
+              const delayMs = index * LANE_STAGGER_MS;
 
-            return (
-              <li
-                key={entry.id}
-                className="motion-safe:animate-teacher-rise"
-                style={{ animationDelay: `${index * ROW_STAGGER_MS}ms` }}
-              >
-                <div
-                  onPointerMove={tiltCard}
-                  onPointerLeave={resetTilt}
-                  className={`teacher-card-3d flex items-center gap-3 rounded-3xl py-2.5 pr-4 pl-2.5 sm:gap-4 sm:py-3 sm:pr-5 sm:pl-3 ${tone.card}`}
+              return (
+                <li
+                  key={entry.id}
+                  className="flex items-stretch text-white transition-colors motion-safe:animate-teacher-rise hover:bg-white/5"
+                  style={{ animationDelay: `${delayMs}ms` }}
                 >
-                  <span
-                    aria-hidden
-                    className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
-                  />
-                  <span
-                    className={`stat-chip-3d grid size-10 shrink-0 place-items-center rounded-full text-sm font-black tabular-nums sm:size-11 sm:text-base ${tone.coin}`}
-                  >
+                  <span className="grid w-11 shrink-0 place-items-center text-2xl font-black text-white/85 italic tabular-nums text-shadow-[0_2px_0_rgb(0_0_0/0.25)] sm:w-16 sm:text-4xl">
                     {formatRank(entry.rank)}
                   </span>
-                  <DiamondAvatar src={entry.image} frame={entry.frame} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-base font-black tracking-tight text-zinc-950 sm:text-lg dark:text-white">
-                      {entry.displayName}
-                    </span>
-                    <span aria-hidden className="progress-track-3d mt-1.5 block h-3 overflow-hidden rounded-full">
-                      <span className="progress-fill-3d block h-full rounded-full" style={{ width: `${share}%` }} />
-                    </span>
+                  <span aria-hidden className="@container relative min-w-0 flex-1">
+                    <LaneTrail percent={percent} delayMs={delayMs} tone="border-white/25" />
+                    <Runner src={entry.image} ring={RUNNER_RING[entry.frame]} percent={percent} delayMs={delayMs} />
                   </span>
-                  <span className="shrink-0 text-right font-black tabular-nums">
-                    <span className="block text-lg leading-none text-zinc-950 sm:text-xl dark:text-white">
-                      {formatXp(entry.score)}
+                  <span aria-hidden className="lb-checker w-2 shrink-0 sm:w-3" />
+                  <span className="flex w-32 shrink-0 flex-col justify-center py-3 pr-3 pl-3 sm:w-44 sm:pr-5 sm:pl-4 lg:w-56">
+                    <span className="truncate text-sm font-black tracking-tight sm:text-lg">{entry.displayName}</span>
+                    <span className="text-xs font-bold text-white/90 tabular-nums sm:text-sm">
+                      {xpLabel(entry.score)}
                     </span>
-                    <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">XP</span>
+                    {above ? (
+                      <span className="mt-1 w-fit max-w-full rounded-lg bg-black/20 px-1.5 py-0.5 text-[0.65rem] leading-tight font-bold tabular-nums">
+                        {copy.ranks.behind(formatXp(above.score - entry.score), above.rank)}
+                      </span>
+                    ) : null}
                   </span>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                </li>
+              );
+            })}
+          </ol>
 
-        <div className="mt-8">
-          <div className="relative isolate flex items-center gap-3 overflow-hidden rounded-3xl border-2 border-orange-300 bg-linear-to-b from-orange-400 to-orange-600 py-2.5 pr-4 pl-2.5 text-white shadow-[inset_0_2px_0_rgb(255_255_255/0.45),0_6px_0_var(--color-orange-800),0_20px_32px_-12px_rgb(154_52_18/0.65)] text-shadow-[0_1px_1px_rgb(0_0_0/0.25)] sm:gap-4 sm:py-3 sm:pr-5 sm:pl-3 dark:border-orange-400/60">
+          <div
+            className="lb-lane-you relative flex items-stretch border-t-4 border-white text-amber-950 motion-safe:animate-teacher-rise dark:border-amber-400/40 dark:text-amber-50"
+            style={{ animationDelay: `${youDelayMs}ms` }}
+          >
             <span
               aria-hidden
-              className="absolute inset-0 -z-10 bg-[radial-gradient(rgb(255_255_255/0.2)_1.2px,transparent_1.5px)] bg-size-[16px_16px]"
+              className="pointer-events-none absolute inset-1.5 rounded-[1.4rem] border-2 border-dashed border-amber-900/45 motion-safe:animate-pulse dark:border-amber-300/50"
             />
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-linear-to-b from-white to-orange-50 text-sm font-black text-orange-600 tabular-nums shadow-[0_3px_0_var(--color-orange-800)] text-shadow-none sm:size-11 sm:text-base">
+            <span className="grid w-11 shrink-0 place-items-center text-2xl font-black italic tabular-nums sm:w-16 sm:text-4xl">
               {formatRank(myRank)}
             </span>
-            <span className="relative block size-10 shrink-0 overflow-hidden rounded-full bg-amber-100 ring-2 ring-white sm:size-12">
-              <Image src={LEARNER.image} alt="" fill sizes="48px" className="object-cover" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-base font-black tracking-tight sm:text-lg">
-                  {LEARNER.displayName}
+            <span aria-hidden className="@container relative min-w-0 flex-1">
+              <LaneTrail percent={myPercent} delayMs={youDelayMs} tone="border-amber-900/25 dark:border-amber-200/25" />
+              {nextUp ? (
+                <span
+                  className="absolute top-1/2 left-0 flex flex-col items-center"
+                  style={{ translate: `calc(${RUN_MAX}cqw - 50%) -50%` }}
+                >
+                  <span className="relative block size-9 overflow-hidden rounded-full border-2 border-dashed border-amber-900/60 opacity-60 grayscale sm:size-11 dark:border-amber-200/60">
+                    <Image src={nextUp.image} alt="" fill sizes="44px" className="object-cover" />
+                  </span>
+                  <span className="absolute -top-3 inline-flex items-center gap-0.5 rounded-full bg-amber-950 px-1.5 py-px text-[0.6rem] font-black text-amber-50 tabular-nums dark:bg-amber-300 dark:text-amber-950">
+                    <Flag className="size-2.5" />#{nextUp.rank}
+                  </span>
                 </span>
-                <span className="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-[0.7rem] font-black tracking-wider uppercase ring-1 ring-white/40">
+              ) : null}
+              <Runner
+                src={LEARNER.image}
+                ring="ring-orange-500"
+                percent={myPercent}
+                delayMs={youDelayMs}
+                className="z-10"
+              />
+            </span>
+            <span className="flex w-32 shrink-0 flex-col justify-center py-3 pr-3 pl-3 sm:w-44 sm:pr-5 sm:pl-4 lg:w-56">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className="truncate text-sm font-black tracking-tight sm:text-lg">{LEARNER.displayName}</span>
+                <span className="shrink-0 rounded-full bg-amber-950 px-1.5 py-px text-[0.6rem] font-black tracking-wider text-amber-50 uppercase dark:bg-amber-300 dark:text-amber-950">
                   {copy.ranks.you}
                 </span>
               </span>
+              <span className="text-xs font-bold tabular-nums sm:text-sm">{xpLabel(myXp)}</span>
               {nextUp ? (
-                <span className="mt-0.5 block truncate text-xs font-bold text-orange-50 sm:text-sm">
+                <span className="mt-0.5 text-[0.65rem] leading-tight font-bold">
                   {copy.ranks.xpToNext(formatXp(nextUp.score - myXp), nextUp.rank)}
                 </span>
               ) : null}
-            </span>
-            <span className="shrink-0 text-right font-black tabular-nums">
-              <span className="block text-lg leading-none sm:text-xl">{formatXp(myXp)}</span>
-              <span className="text-xs font-bold text-orange-50">XP</span>
             </span>
           </div>
         </div>

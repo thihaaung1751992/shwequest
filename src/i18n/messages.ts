@@ -94,6 +94,7 @@ export type Messages = {
     yourRank: (rank: number) => string;
     you: string;
     xpToNext: (xp: string, rank: number) => string;
+    behind: (xp: string, rank: number) => string;
   };
   teachers: {
     title: string;
@@ -263,6 +264,7 @@ const en: Messages = {
     yourRank: (rank) => `You are #${rank}`,
     you: "You",
     xpToNext: (xp, rank) => `${xp} XP to reach #${rank}`,
+    behind: (xp, rank) => `${xp} XP behind #${rank}`,
   },
   teachers: {
     title: "Choose a teacher",
@@ -425,6 +427,7 @@ const my: Messages = {
     yourRank: (rank) => `သင့်အဆင့် #${rank}`,
     you: "သင်",
     xpToNext: (xp, rank) => `#${rank} ရောက်ဖို့ ${xp} XP လိုသေး`,
+    behind: (xp, rank) => `#${rank} ထက် ${xp} XP နောက်ကျ`,
   },
   teachers: {
     title: "ဆရာရွေးပါ",
