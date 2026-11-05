@@ -16,8 +16,9 @@ import {
   useAnimation,
   useReducedMotion,
 } from "framer-motion";
-import { ArrowRight, Check, Clock, Crown, Lock, Play, Star, Swords, X } from "lucide-react";
+import { ArrowRight, Check, Clock, Crown, Flag, Lock, Play, Star, Swords, X } from "lucide-react";
 import {
+  type IslandBox,
   type PathUnit,
   type RoadmapNode,
   earnedXp,
@@ -26,10 +27,43 @@ import {
   smoothPath,
   unitAt,
   unitChipY,
+  unitIsland,
   videoNumberAt,
 } from "@/components/roadmap/roadmap-data";
 
+const TRAIL_GRADIENT_ID = "roadmap-trail-done";
+const ISLAND_DOTS_ID = "roadmap-island-dots";
 const CONFETTI_COLORS = ["#f6c445", "#22c55e", "#fb923c", "#fef9c3", "#4ade80"];
+// Scenery needs the island margin beside the lane, which only opens up on wide columns.
+const SCENERY_MIN_WIDTH = 960;
+const SCENERY_MIN_MARGIN = 80;
+
+const ISLAND_TINTS = [
+  {
+    top: "fill-emerald-100 dark:fill-slate-800",
+    rim: "stroke-emerald-300 dark:stroke-emerald-700",
+    wall: "fill-emerald-300 dark:fill-emerald-900",
+    base: "fill-emerald-500 dark:fill-emerald-950",
+    ribbon: "pill-3d-emerald text-white",
+  },
+  {
+    top: "fill-amber-100 dark:fill-slate-800",
+    rim: "stroke-amber-300 dark:stroke-amber-700",
+    wall: "fill-amber-300 dark:fill-amber-900",
+    base: "fill-amber-500 dark:fill-amber-950",
+    ribbon: "pill-3d-amber text-amber-950",
+  },
+  {
+    top: "fill-sky-100 dark:fill-slate-800",
+    rim: "stroke-sky-300 dark:stroke-sky-700",
+    wall: "fill-sky-300 dark:fill-sky-900",
+    base: "fill-sky-500 dark:fill-sky-950",
+    ribbon: "pill-3d-sky text-sky-950",
+  },
+] as const;
+
+type SceneryKind = "tree" | "bush" | "rock";
+const SCENERY_KINDS: readonly SceneryKind[] = ["tree", "bush", "rock"];
 
 function LessonLine({ text }: { text: string }) {
   return (
@@ -60,7 +94,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   const lesson = current ? copy.path.now(current.title) : copy.path.learning;
   const lessonLine = teacher ? `${teacher.label} · ${lesson}` : lesson;
   const progress = nodes.length === 0 ? 0 : Math.round((completed.length / nodes.length) * 100);
-  const height = roadmapHeight(nodes.length);
+  const height = roadmapHeight(nodes.length, width);
   const points = nodes.map((_, index) => nodePoint(index, nodes.length, width));
   const currentIndex = nodes.findIndex((node) => node.status === "current");
   const lastCompleted = nodes.reduce(
@@ -72,6 +106,10 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   const donePath = trailEnd >= 0 ? smoothPath(points.slice(0, trailEnd + 1)) : "";
   const selectedIndex = nodes.findIndex((node) => node.id === selectedId);
   const selected = selectedIndex >= 0 ? nodes[selectedIndex] : null;
+  const islands = units
+    .map((_, unitIndex) => unitIsland(unitIndex, nodes.length, width))
+    .filter((box): box is IslandBox => box !== null);
+  const scenic = width >= SCENERY_MIN_WIDTH;
 
   useLayoutEffect(() => {
     const column = columnRef.current;
@@ -104,7 +142,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   }, [lockedTip]);
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-linear-to-b from-cream to-white font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50">
+    <div className="relative flex min-h-dvh flex-col bg-linear-to-b from-cream to-white font-sans text-zinc-900 dark:from-slate-950 dark:to-slate-950 dark:text-zinc-50">
       <LearnerStrip xp={xpEarned} tone="cream" />
       <header className={SITE_HEADER_CLASS}>
         <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-3 gap-y-1">
@@ -140,7 +178,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
         ) : null}
       </header>
 
-      <main className="relative z-10 flex-1 px-4 pt-6 pb-10">
+      <main className="relative z-10 flex-1 bg-linear-to-b from-sky-100/80 via-sky-50/60 to-cream px-4 pt-6 pb-10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950">
         {teacher ? (
         <div ref={columnRef} className="relative mx-auto w-full max-w-page">
           <div className="relative" style={{ height }}>
@@ -149,38 +187,66 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
               viewBox={`0 0 ${width} ${height}`}
               role="presentation"
             >
-              <path
-                d={fullPath}
-                fill="none"
-                strokeWidth={22}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="stroke-white dark:stroke-slate-950"
-              />
-              <path
-                d={fullPath}
-                fill="none"
-                strokeWidth={14}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="stroke-stone-300 dark:stroke-slate-700"
-              />
-              <path
-                d={donePath}
-                fill="none"
-                strokeWidth={14}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="stroke-emerald-500"
-              />
-              <path
-                d={donePath}
-                fill="none"
-                strokeWidth={5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="stroke-emerald-200"
-              />
+              <defs>
+                <linearGradient
+                  id={TRAIL_GRADIENT_ID}
+                  gradientUnits="userSpaceOnUse"
+                  x1="0"
+                  x2="0"
+                  y1={points[0]?.y ?? 0}
+                  y2={trailEnd >= 0 ? points[trailEnd].y : height}
+                >
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#6ee7b7" />
+                </linearGradient>
+                <pattern id={ISLAND_DOTS_ID} width="22" height="22" patternUnits="userSpaceOnUse">
+                  <circle cx="4" cy="4" r="1.6" className="fill-white/70 dark:fill-white/5" />
+                </pattern>
+              </defs>
+              {islands.map((box, unitIndex) => (
+                <Island key={unitIndex} box={box} tint={ISLAND_TINTS[unitIndex % ISLAND_TINTS.length]} />
+              ))}
+              {scenic
+                ? islands.map((box, unitIndex) =>
+                    box.margin >= SCENERY_MIN_MARGIN ? (
+                      <IslandScenery key={unitIndex} box={box} seed={unitIndex} />
+                    ) : null,
+                  )
+                : null}
+              <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <path
+                  d={fullPath}
+                  transform="translate(0 16)"
+                  strokeWidth={36}
+                  className="stroke-slate-900/10 dark:stroke-black/40"
+                />
+                <path d={fullPath} transform="translate(0 10)" strokeWidth={36} className="stroke-stone-400 dark:stroke-slate-950" />
+                <path d={fullPath} transform="translate(0 5)" strokeWidth={36} className="stroke-stone-300 dark:stroke-slate-900" />
+                <path d={fullPath} strokeWidth={36} className="stroke-white dark:stroke-slate-600" />
+                <path d={fullPath} strokeWidth={26} className="stroke-stone-200 dark:stroke-slate-700" />
+                <path d={fullPath} transform="translate(0 -4)" strokeWidth={8} className="stroke-white/70 dark:stroke-white/10" />
+                <path
+                  d={fullPath}
+                  strokeWidth={5}
+                  strokeDasharray="0.1 18"
+                  className="stroke-stone-400 dark:stroke-slate-500"
+                />
+                {donePath ? (
+                  <>
+                    <path d={donePath} transform="translate(0 10)" strokeWidth={36} className="stroke-emerald-800" />
+                    <path d={donePath} transform="translate(0 5)" strokeWidth={36} className="stroke-emerald-700" />
+                    <path d={donePath} strokeWidth={36} className="stroke-emerald-50 dark:stroke-emerald-200" />
+                    <path d={donePath} strokeWidth={26} stroke={`url(#${TRAIL_GRADIENT_ID})`} />
+                    <path d={donePath} transform="translate(0 -4)" strokeWidth={8} className="stroke-white/50" />
+                    <path
+                      d={donePath}
+                      strokeWidth={5}
+                      strokeDasharray="10 14"
+                      className="stroke-white motion-safe:animate-trail-flow"
+                    />
+                  </>
+                ) : null}
+              </g>
             </svg>
 
             <ol className="absolute inset-0 list-none" aria-label={copy.path.roadmap}>
@@ -188,9 +254,14 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
                 <li
                   key={`${unit.title}-${unitIndex}`}
                   className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-                  style={{ top: unitChipY(unitIndex + 1, nodes.length) }}
+                  style={{ top: unitChipY(unitIndex + 1, nodes.length, width) }}
                 >
-                  <p className="rounded-full border border-amber-200 bg-white/90 px-3 py-1 text-center text-xs font-bold tracking-wide text-amber-800 shadow-md dark:border-white/10 dark:bg-slate-900/90 dark:text-amber-200">
+                  <p
+                    className={`pill-3d ${ISLAND_TINTS[unitIndex % ISLAND_TINTS.length].ribbon} flex items-center gap-2 rounded-full py-1 pr-4 pl-1 text-xs font-black tracking-wide whitespace-nowrap md:text-sm`}
+                  >
+                    <span className="grid size-6 place-items-center rounded-full bg-white text-amber-600 shadow-[inset_0_-2px_0_rgba(0,0,0,0.12)] md:size-7">
+                      <Flag className="size-3.5 fill-current md:size-4" aria-hidden />
+                    </span>
                     {copy.path.unit(unitIndex + 1, unit.title)}
                   </p>
                 </li>
@@ -357,30 +428,32 @@ function LessonNode({
           >
             {node.status === "current" && !reduce ? (
               <motion.span
-                className="pointer-events-none absolute -inset-1.5 rounded-full border-4 border-amber-300"
-                animate={{ scale: [1, 1.14, 1], opacity: [0.9, 0.25, 0.9] }}
+                className="pointer-events-none absolute -inset-3.5 rounded-full border-4 border-amber-300"
+                animate={{ scale: [1, 1.12, 1], opacity: [0.9, 0.2, 0.9] }}
                 transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
                 aria-hidden
               />
             ) : null}
+            <span
+              className="pointer-events-none absolute inset-x-[26%] top-[9%] h-[24%] rounded-[50%] bg-linear-to-b from-white/55 to-white/0"
+              aria-hidden
+            />
             <NodeGlyph node={node} />
             {isBoss ? (
-              <span className="absolute -top-1 -right-1 grid size-7 place-items-center rounded-full bg-amber-300 text-amber-950 shadow-md ring-2 ring-white dark:ring-slate-900">
-                <Crown className="size-3.5" aria-hidden />
+              <span className="absolute -top-2 -right-2 grid size-8 place-items-center rounded-full bg-linear-to-b from-amber-200 to-amber-400 text-amber-950 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.7),0_3px_0_0_#b45309] ring-2 ring-white dark:ring-slate-900">
+                <Crown className="size-4" aria-hidden />
               </span>
             ) : null}
           </motion.button>
-          <p className="pointer-events-none absolute top-[calc(100%+0.45rem)] left-1/2 z-10 w-max max-w-40 -translate-x-1/2 text-center">
+          <p className="pointer-events-none absolute top-[calc(100%+1.4rem)] left-1/2 z-10 w-max max-w-40 -translate-x-1/2 text-center">
             <span
-              className={
-                node.status === "locked"
-                  ? "inline-block rounded-lg bg-white px-1.5 py-0.5 text-xs leading-tight font-bold text-zinc-800 ring-1 ring-zinc-900/10"
-                  : "inline-block rounded-lg bg-white px-1.5 py-0.5 text-xs leading-tight font-bold text-zinc-950 ring-1 ring-zinc-900/10"
-              }
+              className={`inline-block rounded-xl bg-white px-2 py-0.5 text-xs leading-tight font-extrabold shadow-[0_3px_0_0_#d6d3d1,0_6px_10px_-4px_rgba(0,0,0,0.25)] ring-1 ring-zinc-900/5 md:text-sm dark:bg-slate-800 dark:shadow-[0_3px_0_0_#020617] dark:ring-white/10 ${
+                node.status === "locked" ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-950 dark:text-zinc-50"
+              }`}
             >
               {node.title}
             </span>
-            <span className="mt-0.5 block text-[11px] font-bold text-amber-700 dark:text-amber-300">
+            <span className="mx-auto mt-1.5 block w-max rounded-full bg-amber-100 px-2 text-[11px] leading-5 font-black text-amber-800 ring-1 ring-amber-300/70 md:text-xs dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-700/60">
               {node.xp} XP
             </span>
           </p>
@@ -525,7 +598,7 @@ function HereBadge({ reduce }: { reduce: boolean }) {
 
   return (
     <motion.div
-      className="pointer-events-none absolute bottom-[calc(100%+0.4rem)] left-1/2 z-30 flex w-max -translate-x-1/2 flex-col items-center"
+      className="pointer-events-none absolute bottom-[calc(100%+1rem)] left-1/2 z-30 flex w-max -translate-x-1/2 flex-col items-center"
       animate={reduce ? undefined : { y: [0, -6, 0] }}
       transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
     >
@@ -552,23 +625,120 @@ function HereBadge({ reduce }: { reduce: boolean }) {
 }
 
 function NodeGlyph({ node }: { node: RoadmapNode }) {
-  const className = node.kind === "boss" ? "relative z-10 size-10" : "relative z-10 size-8";
-  if (node.status === "locked") return <Lock className={className} aria-hidden />;
-  if (node.status === "completed") return <Check className={className} strokeWidth={3} aria-hidden />;
-  if (node.kind === "boss") return <Swords className={className} aria-hidden />;
+  const className =
+    node.kind === "boss" ? "relative z-10 size-10 md:size-12" : "relative z-10 size-8 md:size-9";
+  const glyphShadow = "drop-shadow-[0_2px_0_rgba(0,0,0,0.18)]";
+  if (node.status === "locked") return <Lock className={className} strokeWidth={2.5} aria-hidden />;
+  if (node.status === "completed") {
+    return <Check className={`${className} ${glyphShadow}`} strokeWidth={3.5} aria-hidden />;
+  }
+  if (node.kind === "boss") return <Swords className={`${className} ${glyphShadow}`} aria-hidden />;
   return <Play className={`${className} fill-amber-950`} aria-hidden />;
 }
 
+/*
+ * 3D coin: gradient face, inner shade, white rim, coloured ring, a lip as thick
+ * as the ring (spread matches so it reads as one solid edge), then a ground shadow.
+ */
 function faceClass(node: RoadmapNode): string {
-  const size = node.kind === "boss" ? "size-28" : "size-[4.75rem]";
-  const base = `${size} relative grid place-items-center rounded-full border-0 touch-manipulation outline-hidden select-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-700`;
+  const size = node.kind === "boss" ? "size-28 md:size-32" : "size-[4.75rem] md:size-[5.5rem]";
+  const base = `${size} relative grid place-items-center rounded-full border-0 touch-manipulation outline-hidden select-none focus-visible:outline-2 focus-visible:outline-offset-[10px] focus-visible:outline-sky-700`;
   if (node.status === "completed") {
-    return `${base} cursor-pointer bg-linear-to-b from-emerald-300 to-emerald-600 text-white shadow-[inset_0_3px_0_rgba(255,255,255,0.55),0_7px_0_0_#166534,0_0_0_4px_#f6c445]`;
+    return `${base} cursor-pointer bg-linear-to-b from-emerald-300 via-emerald-400 to-emerald-600 text-white shadow-[inset_0_4px_0_rgba(255,255,255,0.5),inset_0_-7px_0_rgba(6,78,59,0.28),0_0_0_4px_#ffffff,0_0_0_7px_#fbbf24,0_9px_0_7px_#b45309,0_22px_18px_4px_rgba(120,53,15,0.28)]`;
   }
   if (node.status === "current") {
-    return `${base} cursor-pointer bg-linear-to-b from-amber-200 to-amber-500 text-amber-950 shadow-[inset_0_3px_0_rgba(255,255,255,0.75),0_7px_0_0_#b45309,0_0_0_4px_#fbbf24,0_0_22px_4px_rgba(251,191,36,0.55)]`;
+    return `${base} cursor-pointer bg-linear-to-b from-amber-200 via-amber-300 to-amber-500 text-amber-950 shadow-[inset_0_4px_0_rgba(255,255,255,0.75),inset_0_-7px_0_rgba(146,64,14,0.25),0_0_0_4px_#ffffff,0_0_0_7px_#fb923c,0_9px_0_7px_#c2410c,0_22px_18px_4px_rgba(154,52,18,0.3),0_0_36px_14px_rgba(251,191,36,0.45)]`;
   }
-  return `${base} cursor-not-allowed bg-linear-to-b from-white/75 to-zinc-400/90 text-zinc-500 grayscale shadow-[inset_0_3px_0_rgba(255,255,255,0.9),0_6px_0_0_#9ca3af] backdrop-blur-sm`;
+  return `${base} cursor-not-allowed bg-linear-to-b from-stone-50 via-stone-200 to-stone-300 text-stone-400 shadow-[inset_0_4px_0_rgba(255,255,255,0.9),inset_0_-7px_0_rgba(68,64,60,0.12),0_0_0_4px_#ffffff,0_0_0_7px_#d6d3d1,0_9px_0_7px_#a8a29e,0_20px_16px_3px_rgba(41,37,36,0.18)] dark:from-slate-500 dark:via-slate-600 dark:to-slate-700 dark:text-slate-300 dark:shadow-[inset_0_4px_0_rgba(255,255,255,0.25),inset_0_-7px_0_rgba(0,0,0,0.2),0_0_0_4px_#475569,0_0_0_7px_#334155,0_9px_0_7px_#1e293b,0_20px_16px_3px_rgba(0,0,0,0.45)]`;
+}
+
+function Island({ box, tint }: { box: IslandBox; tint: (typeof ISLAND_TINTS)[number] }) {
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const radius = Math.min(44, width / 6);
+  const face = { x: box.left, width, height, rx: radius };
+
+  return (
+    <g aria-hidden>
+      <rect {...face} y={box.top + box.depth + 14} className="fill-slate-900/10 dark:fill-black/40" />
+      <rect {...face} y={box.top + box.depth} className={tint.base} />
+      <rect {...face} y={box.top + box.depth / 2} className={tint.wall} />
+      <rect {...face} y={box.top} className={tint.top} />
+      <rect {...face} y={box.top} fill={`url(#${ISLAND_DOTS_ID})`} />
+      <rect
+        x={box.left + 1.5}
+        y={box.top + 1.5}
+        width={width - 3}
+        height={height - 3}
+        rx={radius - 1.5}
+        fill="none"
+        strokeWidth={3}
+        className={tint.rim}
+      />
+      <rect
+        x={box.left + radius * 0.7}
+        y={box.top + 7}
+        width={Math.max(0, width - radius * 1.4)}
+        height={6}
+        rx={3}
+        className="fill-white/70 dark:fill-white/10"
+      />
+    </g>
+  );
+}
+
+function IslandScenery({ box, seed }: { box: IslandBox; seed: number }) {
+  const height = box.bottom - box.top;
+  const leftX = box.left + box.margin / 2;
+  const rightX = box.right - box.margin / 2;
+  const kind = (offset: number) => SCENERY_KINDS[(seed + offset) % SCENERY_KINDS.length];
+  const props: { kind: SceneryKind; x: number; y: number }[] = [
+    { kind: kind(0), x: leftX, y: box.top + height * 0.34 },
+    { kind: kind(1), x: leftX - 6, y: box.top + height * 0.78 },
+    { kind: kind(2), x: rightX, y: box.top + height * 0.3 },
+    { kind: kind(0), x: rightX + 6, y: box.top + height * 0.74 },
+  ];
+
+  return (
+    <g aria-hidden>
+      {props.map((prop, index) => (
+        <SceneryProp key={index} {...prop} />
+      ))}
+    </g>
+  );
+}
+
+function SceneryProp({ kind, x, y }: { kind: SceneryKind; x: number; y: number }) {
+  return (
+    <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}>
+      <ellipse cx={0} cy={4} rx={kind === "tree" ? 26 : 24} ry={7} className="fill-slate-900/12 dark:fill-black/40" />
+      {kind === "tree" ? (
+        <>
+          <rect x={-5} y={-24} width={10} height={29} rx={4} className="fill-amber-700 dark:fill-amber-900" />
+          <circle cx={0} cy={-40} r={25} className="fill-emerald-600 dark:fill-emerald-800" />
+          <circle cx={-3} cy={-45} r={21} className="fill-emerald-400 dark:fill-emerald-600" />
+          <circle cx={-10} cy={-54} r={7} className="fill-white/45 dark:fill-white/15" />
+        </>
+      ) : null}
+      {kind === "bush" ? (
+        <>
+          <circle cx={-15} cy={-8} r={13} className="fill-emerald-600 dark:fill-emerald-800" />
+          <circle cx={13} cy={-8} r={12} className="fill-emerald-600 dark:fill-emerald-800" />
+          <circle cx={0} cy={-14} r={17} className="fill-emerald-500 dark:fill-emerald-700" />
+          <circle cx={-5} cy={-20} r={6} className="fill-white/40 dark:fill-white/15" />
+          <circle cx={9} cy={-12} r={3} className="fill-rose-400" />
+          <circle cx={-14} cy={-6} r={2.5} className="fill-amber-300" />
+        </>
+      ) : null}
+      {kind === "rock" ? (
+        <>
+          <path d="M-22 2 L-16 -16 L-2 -24 L14 -18 L22 2 Z" className="fill-stone-400 dark:fill-slate-600" />
+          <path d="M-16 -16 L-2 -24 L14 -18 L6 -8 L-10 -8 Z" className="fill-stone-300 dark:fill-slate-500" />
+          <path d="M-9 -15 L-2 -20 L5 -17" fill="none" strokeWidth={2.5} strokeLinecap="round" className="stroke-white/60 dark:stroke-white/20" />
+        </>
+      ) : null}
+    </g>
+  );
 }
 
 type LockTip = {

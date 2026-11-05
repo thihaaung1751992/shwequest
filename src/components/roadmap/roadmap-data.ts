@@ -220,14 +220,27 @@ export function unitIndexFor(index: number): number {
 }
 
 const PAD_TOP = 128;
-const PAD_BOTTOM = 196;
-const LESSON_STEP = 180;
-const BOSS_STEP = 210;
-const CLUSTER_STEP = 78;
+const PAD_BOTTOM = 176;
+const LESSON_STEP = 132;
+const BOSS_STEP = 156;
+// Gap between unit islands; the unit ribbon sits in it.
+const CLUSTER_STEP = 140;
+const LANE_MAX = 760;
+// Room left for a half label (max-w-40) beside the outermost node.
+const LABEL_GUTTER = 96;
+const WIDE_MIN = 768;
+const WIDE_SCALE = 1.15;
+const ISLAND_TOP = 60;
+// Boss label + XP line hang ~120px below the boss centre (before scale).
+const ISLAND_BOTTOM = 140;
+const ISLAND_DEPTH = 18;
+const ISLAND_MARGIN_MAX = 120;
+const CHIP_ABOVE_ISLAND = 24;
 
+// Neighbouring slots stay ~0.3 lane apart so the "You are here" badge clears the label above.
 const X_SLOTS = [
-  [0.32, 0.7, 0.36, 0.5],
-  [0.68, 0.3, 0.64, 0.5],
+  [0.28, 0.72, 0.3, 0.62],
+  [0.72, 0.28, 0.7, 0.38],
 ] as const;
 
 export type PathPoint = {
@@ -235,7 +248,26 @@ export type PathPoint = {
   y: number;
 };
 
-function riseTo(index: number): number {
+export type IslandBox = {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  depth: number;
+  margin: number;
+};
+
+/** Matches the `md:` node / label sizes in RoadmapView. */
+export function layoutScale(width: number): number {
+  return width >= WIDE_MIN ? WIDE_SCALE : 1;
+}
+
+export function laneBounds(width: number): { left: number; right: number } {
+  const lane = width >= WIDE_MIN ? Math.min(width - 2 * LABEL_GUTTER, LANE_MAX) : width;
+  return { left: (width - lane) / 2, right: (width + lane) / 2 };
+}
+
+function riseTo(index: number, scale: number): number {
   let distance = 0;
   for (let step = 1; step <= index; step += 1) {
     const arrivingBoss = step % NODES_PER_UNIT === VIDEOS_PER_UNIT;
@@ -243,29 +275,56 @@ function riseTo(index: number): number {
     distance += arrivingBoss ? BOSS_STEP : LESSON_STEP;
     if (newCluster) distance += CLUSTER_STEP;
   }
-  return distance;
+  return distance * scale;
 }
 
-export function roadmapHeight(count: number): number {
+function nodeY(index: number, scale: number): number {
+  return PAD_TOP * scale + riseTo(index, scale);
+}
+
+export function roadmapHeight(count: number, width: number): number {
   if (count <= 0) return 0;
-  return PAD_TOP + PAD_BOTTOM + riseTo(count - 1);
+  const scale = layoutScale(width);
+  return (PAD_TOP + PAD_BOTTOM) * scale + riseTo(count - 1, scale);
 }
 
 export function nodePoint(index: number, count: number, width: number): PathPoint {
   const cluster = Math.floor(index / NODES_PER_UNIT) % 2;
   const slot = index % NODES_PER_UNIT;
+  const { left, right } = laneBounds(width);
   return {
-    x: width * X_SLOTS[cluster][slot],
-    y: PAD_TOP + riseTo(index),
+    x: left + X_SLOTS[cluster][slot] * (right - left),
+    y: nodeY(index, layoutScale(width)),
   };
 }
 
-export function unitChipY(unitNumber: number, count: number): number {
-  if (unitNumber <= 1) return 40;
-  const previousBoss = (unitNumber - 1) * NODES_PER_UNIT - 1;
-  const bossY = PAD_TOP + riseTo(previousBoss);
-  // Boss labels hang below the node. 112px put the chip on that label.
-  return bossY + 132;
+export function unitIsland(unitIndex: number, count: number, width: number): IslandBox | null {
+  const first = unitIndex * NODES_PER_UNIT;
+  if (first >= count) return null;
+  const last = Math.min(first + NODES_PER_UNIT - 1, count - 1);
+  const scale = layoutScale(width);
+  const { left, right } = laneBounds(width);
+  const margin = Math.max(0, Math.min(ISLAND_MARGIN_MAX, left - 8));
+  return {
+    top: nodeY(first, scale) - ISLAND_TOP * scale,
+    bottom: nodeY(last, scale) + ISLAND_BOTTOM * scale,
+    left: left - margin,
+    right: right + margin,
+    depth: ISLAND_DEPTH * scale,
+    margin,
+  };
+}
+
+/** Ribbon centre: just above the first island, then midway across each gap between islands. */
+export function unitChipY(unitNumber: number, count: number, width: number): number {
+  const scale = layoutScale(width);
+  if (unitNumber <= 1) {
+    return Math.max(24, (PAD_TOP - ISLAND_TOP - CHIP_ABOVE_ISLAND) * scale);
+  }
+  const bossY = nodeY((unitNumber - 1) * NODES_PER_UNIT - 1, scale);
+  const gapTop = (ISLAND_BOTTOM + ISLAND_DEPTH) * scale;
+  const gapBottom = (LESSON_STEP + CLUSTER_STEP - ISLAND_TOP) * scale;
+  return bossY + (gapTop + gapBottom) / 2;
 }
 
 export function smoothPath(points: PathPoint[]): string {
