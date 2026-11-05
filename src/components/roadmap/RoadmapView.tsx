@@ -157,21 +157,32 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
           </div>
         </div>
         {teacher ? (
-          <div className="mx-auto mt-3 w-full max-w-page">
-            <div
-              className="h-2.5 overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200 dark:bg-white/10 dark:ring-white/10"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={nodes.length}
-              aria-valuenow={completed.length}
-              aria-label={copy.path.lessonsCompleted}
-            >
+          <div className="mx-auto mt-3 flex w-full max-w-page items-center gap-3">
+            <div className="relative min-w-0 flex-1">
               <div
-                className="h-full rounded-full bg-linear-to-r from-emerald-400 to-amber-400"
-                style={{ width: `${progress}%` }}
-              />
+                className="progress-track-3d h-5 overflow-hidden rounded-full p-0.5"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={nodes.length}
+                aria-valuenow={completed.length}
+                aria-label={copy.path.lessonsCompleted}
+              >
+                {progress > 0 ? (
+                  <div
+                    className="progress-fill-3d h-full rounded-full transition-[width] duration-700 ease-out motion-safe:animate-progress-stripes"
+                    style={{ width: `max(${progress}%, 1rem)` }}
+                  />
+                ) : null}
+              </div>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 grid size-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-linear-to-b from-white to-amber-100 shadow-[0_3px_0_var(--color-amber-500),0_6px_10px_-4px_rgb(180_83_9/0.6)] ring-2 ring-amber-400 transition-[left] duration-700 ease-out dark:from-slate-700 dark:to-slate-800"
+                style={{ left: `clamp(0.875rem, ${progress}%, 100% - 0.875rem)` }}
+              >
+                <span className="size-3 rounded-full bg-linear-to-b from-amber-300 to-amber-500 shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] motion-safe:animate-pulse" />
+              </span>
             </div>
-            <p className="mt-1 text-right text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+            <p className="stat-chip-3d pill-3d-amber shrink-0 rounded-full px-3 py-1 text-[11px] font-black text-amber-950 tabular-nums">
               {copy.path.complete(completed.length, nodes.length)}
             </p>
           </div>
