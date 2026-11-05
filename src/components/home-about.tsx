@@ -17,7 +17,7 @@ export default function HomeAbout() {
 
   return (
     <section aria-labelledby="home-about-title" className="bg-cream dark:bg-slate-950">
-      <div className="mx-auto flex w-full max-w-page flex-col items-center px-4 pt-8 pb-4 sm:pt-12 sm:pb-6">
+      <div className="mx-auto flex w-full max-w-page flex-col items-center px-4 pt-8 pb-12 sm:pt-12 sm:pb-16">
         <h2
           id="home-about-title"
           className="pill-3d pill-3d-emerald inline-flex -rotate-2 rounded-full px-3 py-1 text-sm font-bold text-white motion-reduce:rotate-none"
@@ -47,10 +47,6 @@ export default function HomeAbout() {
             </li>
           ))}
         </ul>
-        <div
-          aria-hidden
-          className="mt-16 h-0.5 w-full bg-zinc-300 [clip-path:ellipse(50%_50%_at_50%_50%)] sm:mt-24 dark:bg-white/25"
-        />
       </div>
     </section>
   );
