@@ -235,7 +235,6 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
                 <path d={fullPath} transform="translate(0 5)" strokeWidth={36} className="stroke-stone-300 dark:stroke-slate-900" />
                 <path d={fullPath} strokeWidth={36} className="stroke-white dark:stroke-slate-600" />
                 <path d={fullPath} strokeWidth={26} className="stroke-stone-200 dark:stroke-slate-700" />
-                <path d={fullPath} transform="translate(0 -4)" strokeWidth={8} className="stroke-white/70 dark:stroke-white/10" />
                 <path
                   d={fullPath}
                   strokeWidth={5}
@@ -248,7 +247,6 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
                     <path d={donePath} transform="translate(0 5)" strokeWidth={36} className="stroke-emerald-700" />
                     <path d={donePath} strokeWidth={36} className="stroke-emerald-50 dark:stroke-emerald-200" />
                     <path d={donePath} strokeWidth={26} stroke={`url(#${TRAIL_GRADIENT_ID})`} />
-                    <path d={donePath} transform="translate(0 -4)" strokeWidth={8} className="stroke-white/50" />
                     <path
                       d={donePath}
                       strokeWidth={5}
