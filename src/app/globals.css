@@ -28,6 +28,8 @@
   --animate-podium-press: podium-press 6s ease-in-out infinite;
   --animate-podium-star: podium-star 6s ease-in-out infinite;
   --animate-podium-twinkle: podium-twinkle 2.4s ease-in-out infinite;
+  /* Leaderboard pillars grow once on load. Delay is set per pillar. */
+  --animate-podium-rise: podium-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
   /* Plans A–Z: duration/delay set per letter; land angle via --land-rotate.
      both keeps the clipped start pose during the delay.
      Spin is its own transform so the click pop does not reset the land angle. */
@@ -157,6 +159,18 @@
     34%,
     86% {
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes podium-rise {
+    0% {
+      transform: scaleY(0.04);
+    }
+    70% {
+      transform: scaleY(1.05);
+    }
+    100% {
+      transform: scaleY(1);
     }
   }
 
@@ -756,6 +770,15 @@
   --card-edge: var(--color-sky-400);
   --card-stage-top: var(--color-sky-50);
   --card-stage-bottom: var(--color-sky-200);
+}
+
+/* Leaderboard rows with an orange avatar frame. */
+@utility teacher-tone-orange {
+  --card-glow: var(--color-orange-300);
+  --card-border: var(--color-orange-300);
+  --card-edge: var(--color-orange-400);
+  --card-stage-top: var(--color-orange-50);
+  --card-stage-bottom: var(--color-orange-200);
 }
 
 @utility teacher-tone-emerald {

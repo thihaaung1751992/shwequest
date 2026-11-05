@@ -86,7 +86,14 @@ export type Messages = {
     board: string;
     topLearners: string;
     topThree: string;
-    fullRanking: string;
+    restRanking: string;
+    boardTitle: string;
+    boardBody: string;
+    learners: (count: number) => string;
+    topXp: (xp: string) => string;
+    yourRank: (rank: number) => string;
+    you: string;
+    xpToNext: (xp: string, rank: number) => string;
   };
   teachers: {
     title: string;
@@ -248,7 +255,14 @@ const en: Messages = {
     board: "Leaderboard",
     topLearners: "Top learners",
     topThree: "Top three",
-    fullRanking: "Full ranking",
+    restRanking: "Rank 4 and below",
+    boardTitle: "Climb to the top",
+    boardBody: "Finish lessons and games to earn XP. The more you learn, the higher you climb.",
+    learners: (count) => `${count} learners`,
+    topXp: (xp) => `Top ${xp} XP`,
+    yourRank: (rank) => `You are #${rank}`,
+    you: "You",
+    xpToNext: (xp, rank) => `${xp} XP to reach #${rank}`,
   },
   teachers: {
     title: "Choose a teacher",
@@ -403,7 +417,14 @@ const my: Messages = {
     board: "ဦးဆောင်ဇယား",
     topLearners: "ထိပ်တန်း သင်ယူသူများ",
     topThree: "ထိပ်တန်း သုံးယောက်",
-    fullRanking: "အဆင့်စာရင်းအပြည့်",
+    restRanking: "အဆင့် ၄ နှင့် အောက်",
+    boardTitle: "ထိပ်ဆုံးကို တက်ကြစို့",
+    boardBody: "သင်ခန်းစာနဲ့ ဂိမ်းတွေ ပြီးအောင်လုပ်ပြီး XP စုပါ။ များများသင်လေ အဆင့်မြင့်လေပါ။",
+    learners: (count) => `သင်ယူသူ ${count} ယောက်`,
+    topXp: (xp) => `အမြင့်ဆုံး ${xp} XP`,
+    yourRank: (rank) => `သင့်အဆင့် #${rank}`,
+    you: "သင်",
+    xpToNext: (xp, rank) => `#${rank} ရောက်ဖို့ ${xp} XP လိုသေး`,
   },
   teachers: {
     title: "ဆရာရွေးပါ",
