@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Calculator, RotateCcw } from "lucide-react";
+import { ArrowRight, Calculator, RotateCcw, Sparkles } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -11,6 +11,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { CountUp, CountUpScope } from "@/components/count-up";
 import FrostGlass from "@/components/frost-glass";
 import PlanCalculator, { type CalcPlanMonths } from "@/components/plan-calculator";
 import { useMessages } from "@/i18n/locale-context";
@@ -37,9 +38,14 @@ const TONE: Record<
     card: string;
     kicker: string;
     meta: string;
-    total: string;
+    /** Sets --card-glow for the `price-card-face` layer. */
+    glow: string;
+    /** 3D Total due panel (`stat-chip-3d` colour helper + text). */
+    panel: string;
+    accent: string;
     chip: string;
     row: string;
+    access: string;
     cta: string;
     ctaGlass: string;
   }
@@ -48,9 +54,12 @@ const TONE: Record<
     card: "border-sky-200 border-b-sky-700 bg-sky-50/70 text-sky-950 shadow-[0_22px_40px_-28px_rgba(3,105,161,0.9)] dark:border-sky-800 dark:border-b-sky-400 dark:bg-sky-950/70 dark:text-sky-50",
     kicker: "bg-white/80 text-sky-800 dark:bg-sky-900 dark:text-sky-100",
     meta: "text-sky-800 dark:text-sky-200",
-    total: "text-sky-950 dark:text-sky-50",
+    glow: "[--card-glow:var(--color-sky-300)]",
+    panel: "pill-3d-sky text-sky-950",
+    accent: "text-sky-700 dark:text-sky-300",
     chip: "bg-sky-100 text-sky-950 dark:bg-sky-900 dark:text-sky-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-sky-100 dark:bg-sky-950/80 dark:text-sky-100 dark:ring-sky-800",
+    access: "bg-white text-zinc-800 ring-2 ring-sky-300 dark:bg-sky-900/70 dark:text-sky-50 dark:ring-sky-600",
     cta: "bg-sky-800 text-white",
     ctaGlass: "cta-3d-sky",
   },
@@ -58,9 +67,12 @@ const TONE: Record<
     card: "border-amber-200 border-b-amber-600 bg-amber-50/70 text-amber-950 shadow-[0_22px_40px_-28px_rgba(180,83,9,0.85)] dark:border-amber-800 dark:border-b-amber-400 dark:bg-amber-950/70 dark:text-amber-50",
     kicker: "bg-white/80 text-amber-900 dark:bg-amber-900 dark:text-amber-100",
     meta: "text-amber-900 dark:text-amber-200",
-    total: "text-amber-950 dark:text-amber-50",
+    glow: "[--card-glow:var(--color-amber-300)]",
+    panel: "pill-3d-amber text-amber-950",
+    accent: "text-amber-700 dark:text-amber-300",
     chip: "bg-amber-100 text-amber-950 dark:bg-amber-900 dark:text-amber-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-amber-100 dark:bg-amber-950/80 dark:text-amber-100 dark:ring-amber-800",
+    access: "bg-white text-zinc-800 ring-2 ring-amber-300 dark:bg-amber-900/70 dark:text-amber-50 dark:ring-amber-600",
     cta: "bg-amber-700 text-white",
     ctaGlass: "cta-3d-amber",
   },
@@ -68,9 +80,12 @@ const TONE: Record<
     card: "border-orange-200 border-b-orange-600 bg-orange-50/70 text-orange-950 shadow-[0_22px_40px_-28px_rgba(194,65,12,0.85)] dark:border-orange-800 dark:border-b-orange-400 dark:bg-orange-950/70 dark:text-orange-50",
     kicker: "bg-white/80 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
     meta: "text-orange-900 dark:text-orange-200",
-    total: "text-orange-950 dark:text-orange-50",
+    glow: "[--card-glow:var(--color-orange-300)]",
+    panel: "pill-3d-orange text-orange-950",
+    accent: "text-orange-700 dark:text-orange-300",
     chip: "bg-orange-100 text-orange-950 dark:bg-orange-900 dark:text-orange-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-orange-100 dark:bg-orange-950/80 dark:text-orange-100 dark:ring-orange-800",
+    access: "bg-white text-zinc-800 ring-2 ring-orange-300 dark:bg-orange-900/70 dark:text-orange-50 dark:ring-orange-600",
     cta: "bg-orange-700 text-white",
     ctaGlass: "cta-3d-orange",
   },
@@ -78,13 +93,19 @@ const TONE: Record<
     card: "border-emerald-200 border-b-emerald-600 bg-emerald-50/70 text-emerald-950 shadow-[0_22px_40px_-28px_rgba(5,150,105,0.85)] dark:border-emerald-800 dark:border-b-emerald-400 dark:bg-emerald-950/70 dark:text-emerald-50",
     kicker: "bg-white/80 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100",
     meta: "text-emerald-900 dark:text-emerald-200",
-    total: "text-emerald-950 dark:text-emerald-50",
+    glow: "[--card-glow:var(--color-emerald-300)]",
+    panel: "pill-3d-emerald text-white",
+    accent: "text-emerald-700 dark:text-emerald-300",
     chip: "bg-emerald-100 text-emerald-950 dark:bg-emerald-900 dark:text-emerald-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-100 dark:ring-emerald-800",
+    access: "bg-white text-zinc-800 ring-2 ring-emerald-300 dark:bg-emerald-900/70 dark:text-emerald-50 dark:ring-emerald-600",
     cta: "bg-emerald-700 text-white",
     ctaGlass: "cta-3d-emerald",
   },
 };
+
+/** Gap between cards starting their count-up. */
+const COUNT_STAGGER_MS = 120;
 
 /** Spelling fixed: FLUENT → FLUENTLY. Words wrap on small screens. */
 const PUZZLE_WORDS = ["LEARN", "ENGLISH", "FLUENTLY"] as const;
@@ -736,8 +757,16 @@ function seedLetters(): LetterDrop[] {
   });
 }
 
+function groupDigits(amount: number): string {
+  return amount.toLocaleString("en-US");
+}
+
 function kyat(amount: number): string {
-  return `Ks ${amount.toLocaleString("en-US")}`;
+  return `Ks ${groupDigits(amount)}`;
+}
+
+function plusCount(count: number): string {
+  return `+${count}`;
 }
 
 function isCalcPlan(months: PlanMonths): months is CalcPlanMonths {
@@ -760,6 +789,11 @@ export default function HomePricing({
   const celebratedRef = useRef(false);
   /** URL force-complete applies once per mount (Restart does not re-fire while param stays). */
   const forceCompleteAppliedRef = useRef(false);
+  /**
+   * After the first viewport fall (or Restart / ?result=true), keep the pile across
+   * scroll leave/re-enter. Only Restart reseeds a new fall.
+   */
+  const pileHeldRef = useRef(false);
   const [drops, setDrops] = useState<LetterDrop[]>([]);
   const dropsRef = useRef(drops);
   dropsRef.current = drops;
@@ -874,17 +908,9 @@ export default function HomePricing({
     }
   }, []);
 
-  /** True once a puzzle letter is matched (fill, consume, or in-flight fly). Drag-only does not count. */
-  const hasPuzzleProgress = useCallback(
-    () =>
-      Object.keys(filledRef.current).length > 0 ||
-      consumedRef.current.size > 0 ||
-      Object.keys(pendingFlyRef.current).length > 0,
-    [],
-  );
-
-  /** Clear fills / in-flight motion and drop a fresh floor bag (same as viewport re-enter when idle). */
+  /** Clear fills / in-flight motion and drop a fresh floor bag (Restart / first IO enter). */
   const restartPuzzle = useCallback(() => {
+    pileHeldRef.current = true;
     clearFlyTimers();
     clearDrag();
     setSettled(new Set());
@@ -1089,6 +1115,7 @@ export default function HomePricing({
   useEffect(() => {
     if (!forceComplete || forceCompleteAppliedRef.current) return;
     forceCompleteAppliedRef.current = true;
+    pileHeldRef.current = true;
 
     clearFlyTimers();
     clearDrag();
@@ -1661,33 +1688,18 @@ export default function HomePricing({
         if (!entry) return;
 
         // rootMargin shrinks the hit box so a tall Plans (cards + floor) does not
-        // stay "in view" forever from a floor sliver. Idle leave/re-enter reseeds;
-        // after any puzzle letter match, keep state (enter from above or below).
+        // stay "in view" forever from a floor sliver. First enter seeds once; leave
+        // / re-enter keep the pile until Restart puzzle (or ?result=true hold).
         if (entry.isIntersecting) {
           if (!wasInView) {
             measure();
-            if (!hasPuzzleProgress()) restartPuzzle();
+            if (!pileHeldRef.current) restartPuzzle();
           }
           wasInView = true;
           return;
         }
 
         wasInView = false;
-        if (hasPuzzleProgress()) return;
-
-        clearFlyTimers();
-        clearDrag();
-        setSettled(new Set());
-        celebratedRef.current = false;
-        filledRef.current = {};
-        setFilled({});
-        consumedRef.current = new Set();
-        setConsumed(new Set());
-        setFlies([]);
-        pendingFlyRef.current = {};
-        fillTintRef.current = {};
-        clearPileMotion();
-        setDrops([]);
       },
       { threshold: 0, rootMargin: "-18% 0px -18% 0px" },
     );
@@ -1699,7 +1711,7 @@ export default function HomePricing({
       clearFlyTimers();
       clearDrag();
     };
-  }, [clearDrag, clearFlyTimers, clearPileMotion, hasPuzzleProgress, restartPuzzle]);
+  }, [clearDrag, clearFlyTimers, restartPuzzle]);
 
   const howVisible = showHow;
 
@@ -1931,7 +1943,7 @@ export default function HomePricing({
           {copy.pricing.intro(kyat(MONTHLY_KYAT))}
         </p>
         <ul className="pointer-events-auto mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {PLANS.map(({ months, extraDays }) => {
+          {PLANS.map(({ months, extraDays }, planIndex) => {
             const tone = TONE[months];
             const lengthLabel = copy.pricing.months(months);
             const total = months * MONTHLY_KYAT;
@@ -1940,14 +1952,31 @@ export default function HomePricing({
             const canFlip = isCalcPlan(months);
             const flipped = canFlip && flippedPlan === months;
 
-            const front = (
+            const card = (
               <article
-                className={`flex h-full min-h-[28rem] flex-col rounded-[1.75rem] border-2 border-b-8 px-5 pt-5 pb-12 sm:px-6 sm:pt-6 sm:pb-14 ${tone.card}`}
+                className={`relative isolate flex h-full min-h-[28rem] flex-col rounded-[1.75rem] border-2 border-b-8 px-5 pt-5 pb-12 transition-[translate] duration-300 ease-out motion-safe:group-hover/price:-translate-y-1 sm:px-6 sm:pt-6 sm:pb-14 ${tone.card} ${tone.glow}`}
               >
+                <span
+                  aria-hidden
+                  className="price-card-face pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[calc(1.75rem-2px)]"
+                >
+                  <span className="absolute inset-y-0 -left-1/2 w-1/3 -skew-x-12 bg-linear-to-r from-transparent via-white/70 to-transparent opacity-0 motion-safe:group-hover/price:animate-price-shine dark:via-white/15" />
+                </span>
                 <div className="flex items-center justify-between gap-3">
-                  <span className={`w-fit rounded-full px-3 py-1 text-sm font-bold ${tone.kicker}`}>
-                    {lengthLabel}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`w-fit rounded-full px-3 py-1 text-sm font-bold ${tone.kicker}`}>
+                      {lengthLabel}
+                    </span>
+                    <span
+                      className={`stat-chip-3d pill-3d-emerald-deep inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black text-white ${
+                        months === 12 ? "" : "invisible"
+                      }`}
+                      aria-hidden={months !== 12}
+                    >
+                      <Sparkles aria-hidden className="size-3.5" />
+                      {copy.pricing.bestValue}
+                    </span>
+                  </div>
                   {canFlip ? (
                     <span className="relative inline-grid size-9 shrink-0 place-items-center">
                       {!flipped ? (
@@ -1966,21 +1995,24 @@ export default function HomePricing({
                         <Calculator aria-hidden className="size-3.5" />
                       </button>
                     </span>
-                  ) : null}
+                  ) : (
+                    <span aria-hidden className="size-9 shrink-0" />
+                  )}
                 </div>
                 <p className={`mt-3 text-sm font-semibold ${tone.meta}`}>
                   {kyat(MONTHLY_KYAT)} {copy.pricing.perMonth}
                 </p>
 
                 <div className="mt-4 grid flex-1 gap-2">
-                  <div className={`rounded-3xl px-3.5 py-3.5 ${tone.row}`}>
-                    <p className="text-[11px] font-bold tracking-[0.12em] text-zinc-500 uppercase dark:text-zinc-400">
+                  <div className={`stat-chip-3d rounded-3xl px-4 pt-3.5 pb-4 ${tone.panel}`}>
+                    <p className="text-[11px] font-bold tracking-[0.12em] uppercase opacity-80">
                       {copy.pricing.totalDue}
                     </p>
-                    <p
-                      className={`mt-1.5 text-[1.75rem] leading-none font-extrabold tracking-tight ${tone.total}`}
-                    >
-                      {kyat(total)}
+                    <p className="mt-2 flex items-baseline gap-1.5 leading-none font-black tracking-tight tabular-nums">
+                      <span className="text-base">Ks</span>
+                      <span className="inline-block origin-left text-[2rem] motion-safe:group-data-[count=done]/price:animate-count-pop sm:text-4xl lg:text-[2rem] xl:text-4xl">
+                        <CountUp value={total} format={groupDigits} />
+                      </span>
                     </p>
                   </div>
                   <div
@@ -1989,29 +2021,33 @@ export default function HomePricing({
                     <span>
                       {months} × {kyat(MONTHLY_KYAT)}
                     </span>
-                    <span className="font-bold tabular-nums">{kyat(total)}</span>
+                    <span className="font-bold tabular-nums">
+                      <CountUp value={total} format={kyat} />
+                    </span>
                   </div>
                   <div
                     className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold ${tone.row}`}
                   >
                     <span>{copy.pricing.billedDays}</span>
-                    <span className="font-bold tabular-nums">{copy.pricing.days(billedDays)}</span>
+                    <span className="font-bold tabular-nums">
+                      {copy.pricing.days(billedDays)}
+                    </span>
                   </div>
-                  {extraDays > 0 ? (
-                    <div
-                      className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold ${tone.row}`}
-                    >
-                      <span>{copy.pricing.extraDays}</span>
-                      <span className="font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
-                        +{extraDays}
-                      </span>
-                    </div>
-                  ) : null}
                   <div
                     className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-semibold ${tone.row}`}
                   >
+                    <span>{copy.pricing.extraDays}</span>
+                    <span className="stat-chip-3d pill-3d-emerald-deep inline-block rounded-full px-2.5 py-0.5 font-black text-white tabular-nums">
+                      {plusCount(extraDays)}
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-sm font-bold ${tone.access}`}
+                  >
                     <span>{copy.pricing.access}</span>
-                    <span className="font-bold tabular-nums">{copy.pricing.days(coveredDays)}</span>
+                    <span className={`font-black tabular-nums ${tone.accent}`}>
+                      {copy.pricing.days(coveredDays)}
+                    </span>
                   </div>
                 </div>
 
@@ -2025,24 +2061,29 @@ export default function HomePricing({
                 </Link>
               </article>
             );
+            const front = (
+              <CountUpScope delayMs={planIndex * COUNT_STAGGER_MS} className="group/price h-full">
+                {card}
+              </CountUpScope>
+            );
 
             if (!canFlip) {
               return (
-                <li key={months} className="min-w-0">
+                <li key={months} className="min-w-0 h-full">
                   {front}
                 </li>
               );
             }
 
             return (
-              <li key={months} className="min-w-0 [perspective:1200px]">
+              <li key={months} className="min-w-0 h-full [perspective:1200px]">
                 <div
-                  className={`relative min-h-[28rem] transition-transform duration-500 ease-out [transform-style:preserve-3d] motion-reduce:duration-0 ${
+                  className={`relative h-full min-h-[28rem] transition-transform duration-500 ease-out [transform-style:preserve-3d] motion-reduce:duration-0 ${
                     flipped ? "[transform:rotateY(180deg)]" : ""
                   }`}
                 >
                   <div
-                    className={`[backface-visibility:hidden] ${
+                    className={`h-full [backface-visibility:hidden] ${
                       flipped ? "pointer-events-none" : ""
                     }`}
                   >

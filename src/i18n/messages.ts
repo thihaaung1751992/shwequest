@@ -52,6 +52,7 @@ export type Messages = {
     extraDays: string;
     access: string;
     days: (count: number) => string;
+    bestValue: string;
     flip: (label: string) => string;
     puzzle: string;
     puzzleHint: string;
@@ -203,6 +204,7 @@ const en: Messages = {
     extraDays: "Extra days",
     access: "Access covers",
     days: (count) => (count === 1 ? "1 day" : `${count} days`),
+    bestValue: "Best value",
     flip: (label) => `Flip to calculator for ${label}`,
     puzzle: "Learn English fluently",
     puzzleHint: "Tap a letter to fill it, or drag it aside.",
@@ -347,6 +349,7 @@ const my: Messages = {
     extraDays: "အပိုရက်",
     access: "အသုံးပြုခွင့်",
     days: (count) => `${count} ရက်`,
+    bestValue: "အတန်ဆုံး",
     flip: (label) => `${label} အတွက် ဂဏန်းတွက်စက်`,
     puzzle: "အင်္ဂလိပ်စာ ကျွမ်းကျင်အောင်",
     puzzleHint: "အက္ခရာကို တို့ရင် ပြည့်မယ်၊ ဖုံးနေရင် ဆွဲဖယ်ပါ။",
