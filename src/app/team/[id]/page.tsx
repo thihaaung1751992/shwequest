@@ -34,7 +34,7 @@ export default function TeamMemberPage({ params }: { params: MemberParams }) {
     <PageShell title="Team">
       <Suspense
         fallback={
-          <div className="mx-auto h-48 w-full max-w-xl rounded-3xl bg-amber-100/60 dark:bg-white/5" />
+          <div className="mx-auto h-96 w-full max-w-2xl rounded-[2rem] bg-amber-100/60 dark:bg-white/5" />
         }
       >
         <TeamMemberFromParams params={params} />

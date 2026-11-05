@@ -124,6 +124,9 @@ export type Messages = {
     open: string;
     back: string;
     seeLessons: string;
+    kicker: string;
+    memberCount: (count: number) => string;
+    builderTagline: string;
   };
   path: {
     learning: string;
@@ -284,6 +287,9 @@ const en: Messages = {
     open: "Open",
     back: "Back to team",
     seeLessons: "See lessons",
+    kicker: "Meet the crew",
+    memberCount: (count) => `${count} ${count === 1 ? "person" : "people"}`,
+    builderTagline: "Builds Shwequest",
   },
   path: {
     learning: "Learning path",
@@ -435,6 +441,9 @@ const my: Messages = {
     open: "ဖွင့်ရန်",
     back: "အဖွဲ့သို့",
     seeLessons: "သင်ခန်းစာများ",
+    kicker: "အဖွဲ့ဝင်များ",
+    memberCount: (count) => `${count} ယောက်`,
+    builderTagline: "Shwequest ကို တည်ဆောက်သူ",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",

@@ -1,43 +1,66 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Code2, GraduationCap } from "lucide-react";
 import FrostGlass from "@/components/frost-glass";
+import TeamChips from "@/components/team/team-chips";
+import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
+import { resetTilt, tiltCard } from "@/components/teachers/teacher-tilt";
 import { useMessages } from "@/i18n/locale-context";
 import type { TeamPerson } from "@/data/team";
 
-const FOCUS =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
-
 export default function TeamCard({ person }: { person: TeamPerson }) {
   const copy = useMessages();
-  const role = person.kind === "builder" ? copy.team.builderRole : copy.team.teacherRole;
+  const accent = ACCENT_STYLES[person.accent];
+  const isBuilder = person.kind === "builder";
+  const role = isBuilder ? copy.team.builderRole : copy.team.teacherRole;
+  const RoleIcon = isBuilder ? Code2 : GraduationCap;
 
   return (
     <Link
       href={`/team/${person.id}`}
-      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-b-[6px] border-amber-300 bg-white/90 p-5 shadow-sm transition-transform motion-safe:hover:-translate-y-1 motion-safe:active:translate-y-0.5 motion-safe:active:border-b-2 dark:border-amber-500/40 dark:bg-slate-900/80 ${FOCUS}`}
+      onPointerMove={tiltCard}
+      onPointerLeave={resetTilt}
+      className={`teacher-card-3d group flex h-full flex-col overflow-hidden rounded-[1.75rem] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 ${accent.tone}`}
     >
-      <div className="relative flex items-center gap-4">
-        <span className="transition-transform motion-safe:group-hover:scale-105">
+      <span
+        aria-hidden
+        className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
+      />
+
+      <div className="teacher-stage relative h-28 px-4 pt-3.5">
+        <span
+          className={`stat-chip-3d inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.7rem] font-black tracking-wider uppercase ${accent.pill} ${accent.pillText}`}
+        >
+          <RoleIcon aria-hidden className="size-3.5" />
+          {role}
+        </span>
+      </div>
+
+      <div className="relative -mt-16 flex flex-1 flex-col items-center px-5 pb-5 text-center">
+        <span className="transition-transform duration-300 motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:scale-105">
           <TeacherPortrait src={person.image} size="card" />
         </span>
-        <div className="min-w-0">
-          <p className="text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-            {role}
-          </p>
-          <h3 className="truncate text-xl font-extrabold tracking-tight">{person.label}</h3>
-        </div>
+        <h3 className="mt-3 max-w-full truncate text-2xl font-black tracking-tight">
+          {person.label}
+        </h3>
+
+        <TeamChips person={person} className="mt-3 justify-center" />
+
+        <span className="mt-auto block w-full pt-6">
+          <span
+            className={`relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] motion-safe:group-hover:overflow-visible cta-3d ${accent.cta}`}
+          >
+            <FrostGlass />
+            <span className="relative z-10">{copy.team.open}</span>
+            <ArrowRight
+              aria-hidden
+              className="relative z-10 size-4 transition-transform motion-safe:group-hover:translate-x-1"
+            />
+          </span>
+        </span>
       </div>
-      <span className="relative mt-6 inline-flex min-h-11 items-center justify-center gap-2 self-stretch overflow-hidden rounded-2xl border-b-4 border-orange-700 bg-orange-500 px-4 py-2 font-extrabold text-white transition-[background-color,overflow] hover:bg-orange-400 motion-safe:group-hover:overflow-visible">
-        <FrostGlass />
-        <span className="relative z-10">{copy.team.open}</span>
-        <ArrowRight
-          aria-hidden
-          className="relative z-10 size-4 transition-transform motion-safe:group-hover:translate-x-1"
-        />
-      </span>
     </Link>
   );
 }
