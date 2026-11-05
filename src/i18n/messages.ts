@@ -8,6 +8,7 @@ export type Messages = {
   account: string;
   language: string;
   currentLanguage: (name: string) => string;
+  toggleTheme: (next: "light" | "dark") => string;
   seeTeachers: string;
   daysShort: (days: number) => string;
   daysFull: (days: number) => string;
@@ -144,6 +145,8 @@ const en: Messages = {
   account: "Account",
   language: "Language",
   currentLanguage: (name) => `Language, ${name}`,
+  toggleTheme: (next) =>
+    next === "dark" ? "Switch to dark mode" : "Switch to light mode",
   seeTeachers: "See teachers",
   daysShort: (days) => {
     if (days === 0) return "Today";
@@ -294,6 +297,8 @@ const my: Messages = {
   account: "အကောင့်",
   language: "ဘာသာစကား",
   currentLanguage: (name) => `ဘာသာစကား၊ ${name}`,
+  toggleTheme: (next) =>
+    next === "dark" ? "အမှောင်မုဒ်သို့ ပြောင်းရန်" : "အလင်းမုဒ်သို့ ပြောင်းရန်",
   seeTeachers: "ဆရာများကြည့်ရန်",
   daysShort: (days) => (days === 0 ? "ယနေ့" : `${days} ရက်`),
   daysFull: (days) => (days === 0 ? "ယနေ့ပြီး" : `${days} ရက်ကျန်`),

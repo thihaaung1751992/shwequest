@@ -3,6 +3,7 @@
 import AccountSummary from "@/components/account-summary";
 import LanguageMenu from "@/components/language-menu";
 import PlanDaysLeft from "@/components/plan-days-left";
+import ThemeToggle from "@/components/theme-toggle";
 import { useMessages } from "@/i18n/locale-context";
 import { LEARNER } from "@/data/learner";
 
@@ -32,6 +33,7 @@ export default function LearnerStrip({
           className="mx-0.5 h-4 w-px shrink-0 bg-amber-200/90 dark:bg-white/20"
         />
         <LanguageMenu />
+        <ThemeToggle />
         <div className="min-w-0 flex-1" />
         <AccountSummary xp={xp} />
       </div>
