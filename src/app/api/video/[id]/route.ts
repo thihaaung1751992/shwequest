@@ -3,7 +3,8 @@ import { openVideo, parseMessageId, streamVideo, videoFailureResponse } from "@/
 
 const STREAM_CACHE_CONTROL =
   "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400";
-const STREAM_CDN_CACHE_CONTROL = "max-age=604800";
+// A cache that stores this URL keeps one 2 MB window and can serve it as the whole file.
+const STREAM_CDN_CACHE_CONTROL = "no-store";
 
 function parseRange(
   header: string | null,
