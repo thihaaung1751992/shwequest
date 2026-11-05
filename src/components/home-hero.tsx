@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Play, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
@@ -8,7 +7,6 @@ import FrostGlass from "@/components/frost-glass";
 import { useMessages } from "@/i18n/locale-context";
 import { catalogTotals } from "@/data/teachers";
 
-const HERO_FIGURE = "/home/hero-figure.svg";
 const HOW_VIDEO = "/api/video/3";
 
 const TOTALS = catalogTotals();
@@ -581,74 +579,97 @@ export default function HomeHero() {
             <span className="absolute inset-0 rounded-full border border-orange-200/80 dark:border-orange-500/20" />
             {ringIds("inner").map((id) => showOrbit(id))}
           </span>
+          <span className="absolute bottom-10 left-1/2 h-40 w-64 -translate-x-1/2 rounded-full bg-amber-200/50 blur-3xl sm:bottom-16 sm:h-56 sm:w-96 dark:bg-emerald-400/15" />
           <svg
-            className="pointer-events-none absolute right-[-6%] bottom-0 h-[18.5rem] w-[17rem] overflow-visible sm:right-[-2%] sm:h-[29rem] sm:w-[26rem]"
-            viewBox="0 0 560 620"
+            className="absolute bottom-2 left-1/2 z-10 w-72 -translate-x-1/2 overflow-visible sm:bottom-4 sm:w-[26rem]"
+            viewBox="0 0 400 260"
             fill="none"
           >
             <defs>
-              <filter
-                id="hero-card-shadow"
-                x="-35%"
-                y="-25%"
-                width="170%"
-                height="170%"
-                colorInterpolationFilters="sRGB"
-              >
-                <feDropShadow
-                  dx="0"
-                  dy="18"
-                  stdDeviation="14"
-                  floodColor="#3a2a22"
-                  floodOpacity="0.24"
-                />
-              </filter>
+              <linearGradient id="hero-page-left" x1="30" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" className="[stop-color:#fffdf9] dark:[stop-color:#e4e4e7]" />
+                <stop offset="1" className="[stop-color:#eee3d5] dark:[stop-color:#a1a1aa]" />
+              </linearGradient>
+              <linearGradient id="hero-page-right" x1="370" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" className="[stop-color:#fffdf9] dark:[stop-color:#e4e4e7]" />
+                <stop offset="1" className="[stop-color:#eee3d5] dark:[stop-color:#a1a1aa]" />
+              </linearGradient>
             </defs>
+            <ellipse cx="200" cy="240" rx="176" ry="12" className="fill-zinc-900/10 dark:fill-black/40" />
             <path
-              filter="url(#hero-card-shadow)"
-              fill="#cc6840"
-              transform="translate(-120 4)"
-              d="M 59.8 511.5 L 203.2 229.2 Q 217.7 200.7 249.7 200.7 L 565.7 200.7 Q 597.7 200.7 583.2 229.2 L 439.8 511.5 Q 425.3 540 393.3 540 L 77.3 540 Q 45.3 540 59.8 511.5 Z"
+              className="fill-emerald-700 dark:fill-emerald-800"
+              d="M200 58 Q110 24 12 38 L12 210 Q110 198 200 230 Q290 198 388 210 L388 38 Q290 24 200 58 Z"
             />
             <path
-              filter="url(#hero-card-shadow)"
-              fill="#48a084"
-              transform="translate(-28 -8)"
-              d="M 58.6 483.1 L 243.6 118.8 Q 259 88.5 292.8 85 L 434 70.1 Q 467.8 66.6 452.4 96.9 L 267.4 461.2 Q 252 491.5 218.2 495 L 77 509.9 Q 43.2 513.4 58.6 483.1 Z"
+              className="fill-orange-500"
+              d="M232 190 L250 192 L250 252 L241 243 L232 252 Z"
             />
-            <text
-              x="300"
-              y="148"
-              textAnchor="middle"
-              fill="none"
-              stroke="#7dceb4"
-              strokeWidth="2.5"
-              transform="rotate(-16 300 148)"
-              style={{
-                fontFamily: "var(--font-geist-sans), Arial, sans-serif",
-                fontSize: 86,
-                fontWeight: 800,
-                letterSpacing: "-0.045em",
-              }}
-            >
-              Learn
-            </text>
+            <path
+              className="fill-[#e9dccb] dark:fill-zinc-400"
+              d="M200 52 Q120 20 24 34 L24 202 Q120 190 200 220 Q280 190 376 202 L376 34 Q280 20 200 52 Z"
+            />
+            <path
+              fill="url(#hero-page-left)"
+              d="M200 46 Q120 14 30 28 L30 194 Q120 182 200 214 Z"
+            />
+            <path
+              fill="url(#hero-page-right)"
+              d="M200 46 Q280 14 370 28 L370 194 Q280 182 200 214 Z"
+            />
+            <path d="M200 46 L200 214" className="stroke-[#d6c6b2] dark:stroke-zinc-500" strokeWidth="2" />
+            <g className="stroke-[#e2d5c4] dark:stroke-zinc-400" strokeWidth="5" strokeLinecap="round">
+              <path d="M56 70 Q120 58 178 80" />
+              <path d="M56 92 Q120 80 178 102" />
+              <path d="M56 114 Q120 102 178 124" />
+              <path d="M56 136 Q120 124 178 146" />
+              <path d="M56 158 Q100 150 140 160" />
+              <path d="M300 116 Q320 113 344 114" />
+              <path d="M222 140 Q280 126 344 136" />
+              <path d="M222 162 Q280 148 344 158" />
+            </g>
+            <rect x="222" y="66" width="62" height="62" rx="14" className="fill-emerald-100 dark:fill-emerald-200" />
+            <path
+              d="M241 112 L253 80 L265 112 M245 102 L261 102"
+              className="stroke-emerald-700"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path d="M300 84 Q320 80 344 82" className="stroke-orange-300" strokeWidth="5" strokeLinecap="round" />
+            <path d="M300 100 Q320 97 336 98" className="stroke-[#e2d5c4] dark:stroke-zinc-400" strokeWidth="5" strokeLinecap="round" />
+            <g className="fill-amber-400">
+              <path d="M120 -6 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 Z" />
+              <path d="M300 -24 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3 Z" className="fill-emerald-400" />
+              <path d="M330 4 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2 Z" />
+            </g>
           </svg>
-          <span className="absolute top-24 left-[6%] z-20 grid size-14 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-zinc-950/5 motion-safe:animate-hero-bob sm:left-[12%]">
+          <span
+            className="absolute bottom-40 left-1/2 z-20 grid h-24 w-20 -translate-x-1/2 place-items-center rounded-2xl bg-white/80 shadow-xl ring-1 ring-white/70 backdrop-blur-md motion-safe:animate-hero-bob sm:bottom-60 sm:h-28 sm:w-24 dark:bg-zinc-900/70 dark:ring-white/10"
+            style={{ animationDelay: "-0.9s" }}
+          >
+            <span className="flex flex-col items-center gap-1.5">
+              <span className="text-3xl leading-none font-extrabold tracking-tight text-emerald-700 sm:text-4xl dark:text-emerald-300">
+                Aa
+              </span>
+              <span className="h-1 w-8 rounded-full bg-orange-400" />
+            </span>
+          </span>
+          <span className="absolute top-24 left-[4%] z-20 grid size-14 place-items-center rounded-2xl bg-white/75 shadow-lg ring-1 ring-white/70 backdrop-blur-md motion-safe:animate-hero-bob sm:left-[10%] dark:bg-zinc-900/60 dark:ring-white/10">
             <span className="grid size-8 place-items-center rounded-full bg-amber-300 text-amber-950">
               <Check className="size-4" strokeWidth={3} />
             </span>
           </span>
-          <div className="absolute bottom-0 left-1/2 z-10 h-72 w-64 -translate-x-1/2 sm:h-[26rem] sm:w-80">
-            <Image
-              src={HERO_FIGURE}
-              alt=""
-              fill
-              sizes="(min-width: 640px) 320px, 256px"
-              className="object-contain object-bottom drop-shadow-md"
-              preload
-            />
-          </div>
+          <span
+            className="absolute top-16 right-[2%] z-20 flex items-center gap-2.5 rounded-2xl bg-white/75 p-2 pr-3.5 shadow-lg ring-1 ring-white/70 backdrop-blur-md motion-safe:animate-hero-bob sm:top-40 sm:right-[6%] dark:bg-zinc-900/60 dark:ring-white/10"
+            style={{ animationDelay: "-0.6s" }}
+          >
+            <span className="grid size-8 place-items-center rounded-full bg-emerald-500 text-white">
+              <Play className="ml-0.5 size-3.5 fill-current" />
+            </span>
+            <span className="h-1.5 w-14 overflow-hidden rounded-full bg-zinc-200 sm:w-16 dark:bg-white/15">
+              <span className="block h-full w-2/3 rounded-full bg-emerald-500" />
+            </span>
+          </span>
         </div>
       </div>
       </div>
