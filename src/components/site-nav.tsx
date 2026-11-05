@@ -82,12 +82,13 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
       setPill(null);
       return;
     }
-    // getBoundingClientRect vs list — offsetLeft breaks when <li> is position:relative
+    // getBoundingClientRect vs list — offsetLeft breaks when <li> is position:relative.
+    // clientLeft/Top: the absolute pill starts inside the track border.
     const listBox = list.getBoundingClientRect();
     const linkBox = el.getBoundingClientRect();
     setPill({
-      x: linkBox.left - listBox.left + list.scrollLeft,
-      y: linkBox.top - listBox.top + list.scrollTop,
+      x: linkBox.left - listBox.left - list.clientLeft + list.scrollLeft,
+      y: linkBox.top - listBox.top - list.clientTop + list.scrollTop,
       w: linkBox.width,
       h: linkBox.height,
     });
@@ -197,12 +198,12 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
         <ul
           ref={listRef}
           onPointerLeave={() => setHoverHref(null)}
-          className="relative flex items-center gap-0.5 rounded-full bg-amber-100/70 p-1 ring-1 ring-amber-200/80 sm:gap-1 dark:bg-white/10 dark:ring-white/15"
+          className="nav-track-3d relative flex items-center gap-0.5 rounded-full p-1.5 pb-2 sm:gap-1"
         >
           {pill ? (
             <span
               aria-hidden
-              className={`pointer-events-none absolute top-0 left-0 z-0 rounded-full bg-amber-400 shadow-[0_6px_14px_-8px_rgba(180,83,9,0.55)] dark:bg-amber-400 ${
+              className={`nav-pill-3d pill-3d-amber pointer-events-none absolute top-0 left-0 z-0 rounded-full ${
                 reducedMotion || !pillMotion
                   ? ""
                   : "transition-[transform,width,height] duration-300 ease-[cubic-bezier(0.34,1.2,0.64,1)]"
@@ -228,10 +229,10 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                   onPointerEnter={() => setHoverHref(link.href)}
                   onFocus={() => setHoverHref(link.href)}
                   onBlur={() => setHoverHref(null)}
-                  className={`relative z-10 inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold ${FOCUS} ${
+                  className={`relative z-10 inline-flex min-h-10 items-center rounded-full px-3.5 text-sm font-bold transition-colors duration-150 ${FOCUS} ${
                     lit
-                      ? "font-bold text-amber-950"
-                      : "text-zinc-900 dark:text-zinc-100"
+                      ? "text-amber-950 [text-shadow:0_1px_0_rgb(255_255_255/0.5)]"
+                      : "text-zinc-800 dark:text-zinc-100"
                   }`}
                 >
                   {linkLabel[link.href]}

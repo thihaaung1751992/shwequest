@@ -396,6 +396,50 @@
 }
 
 /*
+ * Raised nav track so the menu lifts off the cream header: light face, amber
+ * border, solid lip, soft amber ground shadow.
+ */
+@utility nav-track-3d {
+  background-image: linear-gradient(180deg, var(--color-white) 0%, var(--color-amber-50) 100%);
+  border: 2px solid var(--color-amber-300);
+  box-shadow:
+    inset 0 1.5px 0 rgb(255 255 255 / 0.9),
+    0 4px 0 var(--color-amber-300),
+    0 12px 22px -10px rgb(180 83 9 / 0.45);
+
+  &:where(.dark, .dark *) {
+    background-image: linear-gradient(180deg, var(--color-slate-800) 0%, var(--color-slate-900) 100%);
+    border-color: rgb(255 255 255 / 0.15);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 4px 0 rgb(255 255 255 / 0.1),
+      0 12px 24px -10px color-mix(in oklab, var(--color-amber-400) 35%, transparent);
+  }
+}
+
+/*
+ * Sliding nav pill. Same colour vars as pill-3d (use pill-3d-amber). Sets no
+ * position: the pill is absolutely placed and measured by SiteNav.
+ */
+@utility nav-pill-3d {
+  isolation: isolate;
+  background-image: linear-gradient(180deg, var(--pill-top) 0%, var(--pill-bottom) 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgb(255 255 255 / 0.6),
+    inset 0 -1.5px 0 rgb(0 0 0 / 0.1),
+    0 3px 0 var(--pill-edge),
+    0 8px 12px -6px rgb(0 0 0 / 0.3);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 2px 10px 55% 10px;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0));
+  }
+}
+
+/*
  * Cracked-glass CTA base (pairs with <FrostGlass />): saturated gradient face,
  * solid lip, ground shadow. Colour comes from a cta-3d-* helper. Callers keep
  * their own transition list (include box-shadow) so the lip eases on hover.
