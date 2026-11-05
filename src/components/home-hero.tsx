@@ -18,15 +18,24 @@ const FOCUS =
 const ORBIT_MS = 2600;
 const SLIP_STAGGER_MS = 200;
 /** Grow from orbit size while free; fade as soon as the letter slips off. */
-const TARGET_SCALE_MOBILE = 4;
-const TARGET_SCALE_DESKTOP = 9;
+const TARGET_SCALE_MOBILE = 2.6;
+const TARGET_SCALE_DESKTOP = 5.5;
 /** Tailwind `sm` — keep bounce glyphs smaller below this width. */
 const TARGET_SCALE_BREAKPOINT = 640;
+/** Per-letter share of the target scale; far (small) letters also fade more. */
+const DEPTH_STEPS = [1, 0.62, 0.82, 0.5, 0.9, 0.7] as const;
 const GROW_PER_SEC = 2.6;
 const FADE_PER_SEC = 0.55;
-const FADE_FLOOR = 0.18;
+const FADE_FLOOR_BASE = 0.14;
+const FADE_FLOOR_PER_DEPTH = 0.12;
 /** Release / bounce speed (px/s). */
 const SLIP_SPEED = 260;
+/** Lean toward travel at full slip speed (deg); eased so wall flips swing. */
+const MAX_TILT_DEG = 10;
+const TILT_EASE_PER_SEC = 5;
+/** Wall-hit squash: impulse decays to 0 over this many seconds. */
+const SQUASH_SEC = 0.22;
+const SQUASH_AMOUNT = 0.3;
 /** +1 = CSS clockwise (hero-orbit), −1 = reverse. */
 type OrbitSense = 1 | -1;
 
@@ -45,13 +54,13 @@ type OrbitSpec = {
 };
 
 const LETTER_TONES = [
-  "text-orange-500",
-  "text-emerald-600",
-  "text-amber-600",
-  "text-sky-600",
-  "text-orange-400",
-  "text-emerald-500",
+  "hero-glyph-orange",
+  "hero-glyph-emerald",
+  "hero-glyph-amber",
+  "hero-glyph-sky",
 ] as const;
+
+const GLYPH_CLASS = "hero-glyph text-base leading-none font-black sm:text-lg";
 
 const RING_MOTION: Record<
   OrbitRing,
@@ -116,7 +125,21 @@ type FreeBody = {
   vy: number;
   scale: number;
   opacity: number;
+  /** One of DEPTH_STEPS: 1 = nearest / largest. */
+  depth: number;
+  tiltDeg: number;
+  /** 1 right after a wall hit, eases to 0. */
+  squash: number;
+  squashAxis: "x" | "y";
 };
+
+/** Squash in screen axes, then lean, then grow. */
+function freeTransform({ scale, tiltDeg, squash, squashAxis }: FreeBody): string {
+  const flat = 1 - SQUASH_AMOUNT * squash;
+  const tall = 1 + SQUASH_AMOUNT * 0.6 * squash;
+  const [sx, sy] = squashAxis === "x" ? [flat, tall] : [tall, flat];
+  return `translate(-50%, -50%) scale(${sx}, ${sy}) rotate(${tiltDeg}deg) scale(${scale})`;
+}
 
 type OrbitSample = { x: number; y: number; t: number };
 
@@ -153,7 +176,8 @@ function OrbitLetter({
         <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <span
             ref={glyphRef}
-            className={`block text-sm leading-none font-extrabold sm:text-base ${counterClassName} ${toneClassName}`}
+            data-glyph={letter}
+            className={`${GLYPH_CLASS} ${counterClassName} ${toneClassName}`}
           >
             {letter}
           </span>
@@ -406,6 +430,10 @@ export default function HomeHero() {
           vy,
           scale: 1,
           opacity: 1,
+          depth: DEPTH_STEPS[index % DEPTH_STEPS.length]!,
+          tiltDeg: 0,
+          squash: 0,
+          squashAxis: "x",
         };
         bodiesRef.current = [...bodiesRef.current, body];
         setFreeLetters(bodiesRef.current);
@@ -434,10 +462,15 @@ export default function HomeHero() {
           w < TARGET_SCALE_BREAKPOINT ? TARGET_SCALE_MOBILE : TARGET_SCALE_DESKTOP;
 
         bodiesRef.current = bodiesRef.current.map((body) => {
-          let { x, y, vx, vy, scale, opacity } = body;
-          scale = Math.min(targetScale, scale + GROW_PER_SEC * dt);
-          opacity = Math.max(FADE_FLOOR, opacity - FADE_PER_SEC * dt);
-          const half = Math.max(14, 11 * scale);
+          let { x, y, vx, vy, scale, opacity, tiltDeg, squash, squashAxis } = body;
+          const { depth } = body;
+          scale = Math.min(Math.max(1, targetScale * depth), scale + GROW_PER_SEC * dt);
+          opacity = Math.max(
+            FADE_FLOOR_BASE + FADE_FLOOR_PER_DEPTH * depth,
+            opacity - FADE_PER_SEC * dt,
+          );
+          squash = Math.max(0, squash - dt / SQUASH_SEC);
+          const half = Math.max(14, 12 * scale);
 
           x += vx * dt;
           y += vy * dt;
@@ -445,27 +478,39 @@ export default function HomeHero() {
           if (x < half) {
             x = half;
             vx = Math.abs(vx) * 0.92;
+            squash = 1;
+            squashAxis = "x";
           } else if (x > w - half) {
             x = w - half;
             vx = -Math.abs(vx) * 0.92;
+            squash = 1;
+            squashAxis = "x";
           }
           if (y < half) {
             y = half;
             vy = Math.abs(vy) * 0.92;
+            squash = 1;
+            squashAxis = "y";
           } else if (y > h - half) {
             y = h - half;
             vy = -Math.abs(vy) * 0.92;
+            squash = 1;
+            squashAxis = "y";
           }
 
+          const tiltTarget = Math.max(-1, Math.min(1, vx / SLIP_SPEED)) * MAX_TILT_DEG;
+          tiltDeg += (tiltTarget - tiltDeg) * Math.min(1, TILT_EASE_PER_SEC * dt);
+
+          const next = { ...body, x, y, vx, vy, scale, opacity, tiltDeg, squash, squashAxis };
           const node = freeNodeRefs.current[body.id];
           if (node) {
             node.style.left = `${x}px`;
             node.style.top = `${y}px`;
             node.style.opacity = String(opacity);
-            node.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            node.style.transform = freeTransform(next);
           }
 
-          return { ...body, x, y, vx, vy, scale, opacity };
+          return next;
         });
       }
       raf = requestAnimationFrame(tick);
@@ -682,12 +727,13 @@ export default function HomeHero() {
             ref={(node) => {
               freeNodeRefs.current[body.id] = node;
             }}
-            className={`absolute text-sm leading-none font-extrabold sm:text-base ${body.toneClassName}`}
+            data-glyph={body.letter}
+            className={`absolute! ${GLYPH_CLASS} ${body.toneClassName}`}
             style={{
               left: body.x,
               top: body.y,
               opacity: body.opacity,
-              transform: `translate(-50%, -50%) scale(${body.scale})`,
+              transform: freeTransform(body),
             }}
           >
             {body.letter}
