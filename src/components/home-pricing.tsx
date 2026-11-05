@@ -33,7 +33,16 @@ const FOCUS =
 /** Soft site tints. Every length, including the year, stays a light wash. */
 const TONE: Record<
   PlanMonths,
-  { card: string; kicker: string; meta: string; total: string; chip: string; row: string; cta: string }
+  {
+    card: string;
+    kicker: string;
+    meta: string;
+    total: string;
+    chip: string;
+    row: string;
+    cta: string;
+    ctaGlass: string;
+  }
 > = {
   1: {
     card: "border-sky-200 border-b-sky-700 bg-sky-50/70 text-sky-950 shadow-[0_22px_40px_-28px_rgba(3,105,161,0.9)] dark:border-sky-800 dark:border-b-sky-400 dark:bg-sky-950/70 dark:text-sky-50",
@@ -43,6 +52,7 @@ const TONE: Record<
     chip: "bg-sky-100 text-sky-950 dark:bg-sky-900 dark:text-sky-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-sky-100 dark:bg-sky-950/80 dark:text-sky-100 dark:ring-sky-800",
     cta: "bg-sky-800 text-white",
+    ctaGlass: "cta-3d-sky",
   },
   3: {
     card: "border-amber-200 border-b-amber-600 bg-amber-50/70 text-amber-950 shadow-[0_22px_40px_-28px_rgba(180,83,9,0.85)] dark:border-amber-800 dark:border-b-amber-400 dark:bg-amber-950/70 dark:text-amber-50",
@@ -52,6 +62,7 @@ const TONE: Record<
     chip: "bg-amber-100 text-amber-950 dark:bg-amber-900 dark:text-amber-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-amber-100 dark:bg-amber-950/80 dark:text-amber-100 dark:ring-amber-800",
     cta: "bg-amber-700 text-white",
+    ctaGlass: "cta-3d-amber",
   },
   6: {
     card: "border-orange-200 border-b-orange-600 bg-orange-50/70 text-orange-950 shadow-[0_22px_40px_-28px_rgba(194,65,12,0.85)] dark:border-orange-800 dark:border-b-orange-400 dark:bg-orange-950/70 dark:text-orange-50",
@@ -61,6 +72,7 @@ const TONE: Record<
     chip: "bg-orange-100 text-orange-950 dark:bg-orange-900 dark:text-orange-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-orange-100 dark:bg-orange-950/80 dark:text-orange-100 dark:ring-orange-800",
     cta: "bg-orange-700 text-white",
+    ctaGlass: "cta-3d-orange",
   },
   12: {
     card: "border-emerald-200 border-b-emerald-600 bg-emerald-50/70 text-emerald-950 shadow-[0_22px_40px_-28px_rgba(5,150,105,0.85)] dark:border-emerald-800 dark:border-b-emerald-400 dark:bg-emerald-950/70 dark:text-emerald-50",
@@ -70,6 +82,7 @@ const TONE: Record<
     chip: "bg-emerald-100 text-emerald-950 dark:bg-emerald-900 dark:text-emerald-50",
     row: "bg-white/90 text-zinc-800 ring-1 ring-emerald-100 dark:bg-emerald-950/80 dark:text-emerald-100 dark:ring-emerald-800",
     cta: "bg-emerald-700 text-white",
+    ctaGlass: "cta-3d-emerald",
   },
 };
 
@@ -2007,7 +2020,7 @@ export default function HomePricing({
 
                 <Link
                   href="/teachers"
-                  className={`group relative mt-5 inline-flex min-h-12 w-fit items-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold transition-[transform,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${tone.cta} ${FOCUS}`}
+                  className={`group relative mt-5 inline-flex min-h-12 w-fit items-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold text-white transition-[translate,box-shadow,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible cta-3d ${tone.ctaGlass} ${FOCUS}`}
                 >
                   <FrostGlass />
                   <span className="relative z-10">{copy.seeTeachers}</span>

@@ -298,6 +298,63 @@
   --pill-text-shadow: rgb(0 0 0 / 0.25);
 }
 
+/*
+ * Cracked-glass CTA base (pairs with <FrostGlass />): saturated gradient face,
+ * solid lip, ground shadow. Colour comes from a cta-3d-* helper. Callers keep
+ * their own transition list (include box-shadow) so the lip eases on hover.
+ */
+@utility cta-3d {
+  background-image: linear-gradient(180deg, var(--cta-top) 0%, var(--cta-bottom) 100%);
+  --cta-lip: 3px;
+  box-shadow:
+    0 var(--cta-lip) 0 var(--cta-edge),
+    0 calc(var(--cta-lip) + 7px) 18px -8px color-mix(in oklab, var(--cta-edge) 70%, transparent);
+  text-shadow: 0 1px 1px var(--cta-text-shadow, rgb(0 0 0 / 0.35));
+
+  @media (prefers-reduced-motion: no-preference) {
+    &:hover {
+      --cta-lip: 5px;
+    }
+  }
+}
+
+@utility cta-3d-emerald {
+  --cta-top: var(--color-emerald-500);
+  --cta-bottom: var(--color-emerald-700);
+  --cta-edge: var(--color-emerald-800);
+}
+
+@utility cta-3d-sky {
+  --cta-top: var(--color-sky-600);
+  --cta-bottom: var(--color-sky-800);
+  --cta-edge: var(--color-sky-950);
+}
+
+@utility cta-3d-amber {
+  --cta-top: var(--color-amber-600);
+  --cta-bottom: var(--color-amber-800);
+  --cta-edge: var(--color-amber-950);
+}
+
+@utility cta-3d-orange {
+  --cta-top: var(--color-orange-500);
+  --cta-bottom: var(--color-orange-700);
+  --cta-edge: var(--color-orange-800);
+}
+
+@utility cta-3d-ink {
+  --cta-top: var(--color-zinc-700);
+  --cta-bottom: var(--color-zinc-950);
+  --cta-edge: var(--color-black);
+
+  &:where(.dark, .dark *) {
+    --cta-top: var(--color-white);
+    --cta-bottom: var(--color-zinc-200);
+    --cta-edge: var(--color-zinc-400);
+    --cta-text-shadow: transparent;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

@@ -164,7 +164,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
     }
   }
 
-  const ctaClass = `group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full bg-zinc-950 px-3.5 text-sm font-bold whitespace-nowrap text-white transition-[overflow] motion-safe:hover:overflow-visible sm:px-4 dark:bg-white dark:text-zinc-950 ${FOCUS}`;
+  const ctaClass = `group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-3.5 text-sm font-bold whitespace-nowrap text-white transition-[translate,box-shadow,overflow] motion-safe:hover:overflow-visible sm:px-4 dark:text-zinc-950 cta-3d cta-3d-ink ${FOCUS}`;
 
   return (
     <nav

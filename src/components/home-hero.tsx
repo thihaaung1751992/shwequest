@@ -531,7 +531,7 @@ export default function HomeHero() {
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link
               href="/teachers"
-              className={`group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full bg-emerald-500/90 px-5 text-sm font-bold text-white transition-[transform,background-color,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible hover:bg-emerald-500 ${FOCUS}`}
+              className={`group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-5 text-sm font-bold text-white transition-[translate,box-shadow,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible cta-3d cta-3d-emerald ${FOCUS}`}
             >
               <FrostGlass />
               <span className="relative z-10">{copy.seeTeachers}</span>
@@ -547,7 +547,7 @@ export default function HomeHero() {
                 setHowOpen(true);
               }}
             >
-              <span className="relative grid size-12 place-items-center overflow-hidden rounded-full bg-orange-500/90 text-white transition-[background-color,overflow] motion-safe:group-hover:overflow-visible group-hover:bg-orange-500">
+              <span className="relative grid size-12 place-items-center overflow-hidden rounded-full bg-linear-to-b from-orange-400 to-orange-600 text-white shadow-[0_3px_0_0_var(--color-orange-700),0_10px_18px_-8px_rgb(154_52_18/0.6)] transition-[transform,box-shadow,overflow] motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:overflow-visible group-hover:shadow-[0_5px_0_0_var(--color-orange-700),0_14px_22px_-8px_rgb(154_52_18/0.6)]">
                 <FrostGlass />
                 <Play aria-hidden className="relative z-10 size-5 fill-current" />
               </span>

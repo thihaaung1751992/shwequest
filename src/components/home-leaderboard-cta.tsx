@@ -218,7 +218,7 @@ export default function HomeLeaderboardCta() {
           </p>
           <Link
             href="/leaderboard"
-            className={`group relative mt-8 inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full bg-sky-700 px-6 text-sm font-bold text-white transition-[transform,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${FOCUS}`}
+            className={`group relative mt-8 inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full px-6 text-sm font-bold text-white transition-[translate,box-shadow,overflow] cta-3d cta-3d-sky motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible ${FOCUS}`}
           >
             <FrostGlass />
             <span className="relative z-10">{copy.ranks.cta}</span>

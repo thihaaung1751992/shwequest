@@ -152,7 +152,7 @@ export default function SiteFooter() {
           <p className="max-w-xs text-sm leading-6">{copy.footer.startBody}</p>
           <Link
             href="/teachers"
-            className={`group relative inline-flex min-h-11 w-fit items-center gap-2 overflow-hidden rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition-[background-color,overflow] hover:bg-orange-600 motion-safe:hover:overflow-visible ${FOCUS}`}
+            className={`group relative inline-flex min-h-11 w-fit items-center gap-2 overflow-hidden rounded-xl px-4 text-sm font-bold text-white transition-[translate,box-shadow,overflow] motion-safe:hover:-translate-y-0.5 motion-safe:hover:overflow-visible cta-3d cta-3d-orange ${FOCUS}`}
           >
             <FrostGlass />
             <span className="relative z-10">{copy.seeTeachers}</span>

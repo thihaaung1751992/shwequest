@@ -37,7 +37,7 @@ export default function TeamProfile({ person }: { person: TeamPerson }) {
       {person.kind === "teacher" ? (
         <Link
           href={`/map?teacher=${person.id}`}
-          className={`group relative inline-flex min-h-11 w-fit items-center gap-2 overflow-hidden rounded-full bg-zinc-950 px-4 text-sm font-bold text-white transition-[overflow] motion-safe:hover:overflow-visible dark:bg-white dark:text-zinc-950 ${FOCUS}`}
+          className={`group relative inline-flex min-h-11 w-fit items-center gap-2 overflow-hidden rounded-full px-4 text-sm font-bold text-white transition-[translate,box-shadow,overflow] motion-safe:hover:overflow-visible dark:text-zinc-950 cta-3d cta-3d-ink ${FOCUS}`}
         >
           <FrostGlass />
           <span className="relative z-10">{copy.team.seeLessons}</span>
