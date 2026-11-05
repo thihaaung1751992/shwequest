@@ -67,22 +67,30 @@ export default function LanguageMenu() {
 
   return (
     <div ref={rootRef} className="relative shrink-0">
-      <button
-        ref={buttonRef}
-        type="button"
-        className={`grid size-8 shrink-0 cursor-pointer place-items-center rounded-full border bg-white text-zinc-700 shadow-[0_3px_8px_-5px_rgba(24,24,27,0.4)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 sm:size-9 dark:bg-slate-800 dark:text-zinc-200 ${FOCUS} ${
-          open
-            ? "border-amber-400 bg-amber-50 text-amber-950 dark:border-amber-300 dark:bg-amber-400/15 dark:text-amber-100"
-            : "border-zinc-300 hover:-translate-y-px hover:border-amber-400 hover:bg-amber-50 hover:text-amber-950 hover:shadow-[0_6px_14px_-6px_rgba(180,83,9,0.45)] dark:border-white/25 dark:hover:border-amber-300 dark:hover:bg-amber-400/15 dark:hover:text-amber-100"
-        }`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={menuId}
-        aria-label={copy.currentLanguage(currentName)}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <Globe className="size-6 sm:size-7" strokeWidth={1.75} aria-hidden />
-      </button>
+      <span className="relative inline-grid size-8 shrink-0 place-items-center sm:size-9">
+        {!open ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-full bg-amber-200 motion-safe:animate-[ping_1.6s_linear_infinite] motion-reduce:hidden dark:bg-amber-400/40"
+          />
+        ) : null}
+        <button
+          ref={buttonRef}
+          type="button"
+          className={`pointer-events-auto relative z-10 grid size-8 shrink-0 cursor-pointer place-items-center rounded-full border bg-white text-zinc-700 shadow-[0_3px_8px_-5px_rgba(24,24,27,0.4)] transition-[background-color,border-color,color,box-shadow,transform] duration-150 sm:size-9 dark:bg-slate-800 dark:text-zinc-200 ${FOCUS} ${
+            open
+              ? "border-amber-400 bg-amber-50 text-amber-950 dark:border-amber-300 dark:bg-amber-400/15 dark:text-amber-100"
+              : "border-zinc-300 hover:-translate-y-px hover:border-amber-400 hover:bg-amber-50 hover:text-amber-950 hover:shadow-[0_6px_14px_-6px_rgba(180,83,9,0.45)] dark:border-white/25 dark:hover:border-amber-300 dark:hover:bg-amber-400/15 dark:hover:text-amber-100"
+          }`}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={menuId}
+          aria-label={copy.currentLanguage(currentName)}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <Globe className="size-6 sm:size-7" strokeWidth={1.75} aria-hidden />
+        </button>
+      </span>
       {open ? (
         <div
           id={menuId}
