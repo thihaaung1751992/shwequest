@@ -16,7 +16,7 @@ export default function HomeAbout() {
   const copy = useMessages();
 
   return (
-    <section aria-labelledby="home-about-title" className="bg-cream dark:bg-slate-950">
+    <section aria-labelledby="home-about-title" className="mb-20 bg-cream sm:mb-28 dark:bg-slate-950">
       <div className="mx-auto flex w-full max-w-page flex-col items-center px-4 pt-8 pb-12 sm:pt-12 sm:pb-16">
         <h2
           id="home-about-title"

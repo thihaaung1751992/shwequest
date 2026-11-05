@@ -189,7 +189,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
         ) : null}
       </header>
 
-      <main className="relative z-10 flex-1 bg-linear-to-b from-sky-100/80 via-sky-50/60 to-cream px-4 pt-6 pb-10 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950">
+      <main className="relative z-10 flex-1 bg-linear-to-b from-sky-100/80 via-sky-50/60 to-cream px-4 pt-6 pb-24 sm:pb-32 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950">
         {teacher ? (
         <div ref={columnRef} className="relative mx-auto w-full max-w-page">
           <div className="relative" style={{ height }}>

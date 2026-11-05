@@ -44,7 +44,7 @@ export default function TeachersPage({ searchParams }: { searchParams: SearchPar
         </div>
       </div>
       <p id="teacher-search-status" className="sr-only" aria-live="polite" />
-      <div id="teacher-results">
+      <div id="teacher-results" className="mb-16 sm:mb-24">
         <Suspense
           fallback={
             <TeacherResults view="card" teachers={TEACHERS} />
