@@ -170,6 +170,12 @@ export type Messages = {
     stopTurn: string;
     showTranslation: string;
     hideTranslation: string;
+    showMoreSections: string;
+    sectionSearchLabel: string;
+    sectionSearchPlaceholder: string;
+    sectionEmptyLead: string;
+    sectionEmptyTail: string;
+    sectionMatches: (count: number) => string;
   };
   path: {
     learning: string;
@@ -377,6 +383,13 @@ const en: Messages = {
     stopTurn: "Stop this line",
     showTranslation: "Show translation",
     hideTranslation: "Hide translation",
+    showMoreSections: "Scroll down 5 phrases",
+    sectionSearchLabel: "Search phrases",
+    sectionSearchPlaceholder: "Search phrases…",
+    sectionEmptyLead: "No phrases match “",
+    sectionEmptyTail: "”.",
+    sectionMatches: (count) =>
+      `${count} matching ${count === 1 ? "phrase" : "phrases"}`,
   },
   path: {
     learning: "Learning path",
@@ -574,6 +587,12 @@ const my: Messages = {
     stopTurn: "ဒီစာကြောင်း ရပ်ရန်",
     showTranslation: "ဘာသာပြန် ကြည့်ရန်",
     hideTranslation: "ဘာသာပြန် ပိတ်ရန်",
+    showMoreSections: "အောက်သို့ စကားစု ၅ ခု ရွှေ့ရန်",
+    sectionSearchLabel: "စကားစုရှာရန်",
+    sectionSearchPlaceholder: "စကားစုရှာရန်…",
+    sectionEmptyLead: "“",
+    sectionEmptyTail: "” နဲ့ ကိုက်ညီတဲ့ စကားစုမရှိပါ။",
+    sectionMatches: (count) => `ကိုက်ညီတဲ့ စကားစု ${count} ခု`,
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",

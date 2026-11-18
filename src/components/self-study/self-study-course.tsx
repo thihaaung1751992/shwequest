@@ -1,9 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Languages, Play, Square, Volume2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Languages,
+  Play,
+  Search,
+  Square,
+  Volume2,
+  X,
+} from "lucide-react";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import { useMessages } from "@/i18n/locale-context";
 import type {
@@ -41,6 +57,9 @@ const SPEAK_RATE = 0.88;
 const SPEAK_GAP_MS = 320;
 /** Fallback wait when `scrollend` is missing — keep short so speech isn’t delayed long. */
 const SCROLL_SETTLE_MS = 420;
+
+/** Sidebar: full list is scrollable; viewport shows ~10. Down-arrow scrolls +5 rows. */
+const SECTION_SCROLL_STEP = 5;
 
 /** Highlight teaching word any / anyone / anywhere / anytime in dialog lines. */
 const ANY_WORD = /\bany(?:one|where|time)?\b/gi;
@@ -280,13 +299,20 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
             type="button"
             onClick={playing ? stopDialog : () => void playDialog()}
             aria-pressed={playing}
-            className={`cta-3d cta-3d-emerald inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-bold text-white transition-[translate,box-shadow] ${FOCUS}`}
+            className={`inline-flex min-h-11 w-fit cursor-pointer items-center gap-2.5 rounded-full bg-zinc-950 py-1.5 pr-5 pl-1.5 text-sm font-bold text-white transition-colors hover:bg-zinc-800 active:scale-[0.98] dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 ${FOCUS}`}
           >
-            {playing ? (
-              <Square aria-hidden className="size-4 fill-current" />
-            ) : (
-              <Play aria-hidden className="size-4 fill-current" />
-            )}
+            <span
+              aria-hidden
+              className={`grid size-8 place-items-center rounded-full text-white transition-colors ${
+                playing ? "bg-orange-500" : "bg-emerald-500"
+              }`}
+            >
+              {playing ? (
+                <Square className="size-3.5 fill-current" />
+              ) : (
+                <Play className="size-3.5 translate-x-px fill-current" />
+              )}
+            </span>
             {playing ? copy.selfStudy.stopDialog : copy.selfStudy.playDialog}
           </button>
         ) : null}
@@ -295,7 +321,11 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
             type="button"
             onClick={() => setShowMy((open) => !open)}
             aria-pressed={showMy}
-            className={`cta-3d cta-3d-amber inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-bold text-white transition-[translate,box-shadow] ${FOCUS}`}
+            className={`inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full border-2 px-4 text-sm font-bold transition-colors active:scale-[0.98] ${FOCUS} ${
+              showMy
+                ? "border-amber-500 bg-amber-100 text-amber-950 dark:border-amber-400 dark:bg-amber-400/15 dark:text-amber-100"
+                : "border-zinc-900/15 bg-white/70 text-zinc-800 hover:border-zinc-900/30 hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-zinc-100 dark:hover:border-white/30"
+            }`}
           >
             <Languages aria-hidden className="size-4" />
             {showMy
@@ -317,7 +347,7 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
               }}
               aria-current={isActive ? "true" : undefined}
               className={`flex min-w-0 items-start gap-3 sm:gap-4 ${
-                isMike ? "justify-start pe-9 sm:pe-10" : "justify-end ps-9 sm:ps-10"
+                isMike ? "justify-start sm:pe-12" : "justify-end sm:ps-12"
               }`}
             >
               {isMike ? (
@@ -331,7 +361,7 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
                   />
                 </span>
               ) : null}
-              <div className="relative mt-2 min-w-0 max-w-[min(100%,26rem)] sm:mt-3 sm:max-w-xl">
+              <div className="relative mt-2 flex min-w-0 max-w-[min(100%,26rem)] flex-col gap-2 sm:mt-3 sm:block sm:max-w-xl sm:gap-0">
                 <div
                   className={`speech-bubble px-4 py-3.5 text-zinc-900 sm:px-6 sm:py-4 dark:text-zinc-50 ${
                     isMike
@@ -358,18 +388,26 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
                       isActive ? copy.selfStudy.stopTurn : copy.selfStudy.playTurn
                     }
                     aria-pressed={isActive}
-                    className={`absolute top-1 grid size-7 cursor-pointer place-items-center rounded-full text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${
-                      isMike ? "-end-8" : "-start-8"
+                    className={`relative grid size-9 shrink-0 cursor-pointer place-items-center rounded-full border-2 border-zinc-900 shadow-[2px_2px_0_var(--color-zinc-900)] transition-[translate,box-shadow,background-color] hover:-translate-px hover:shadow-[3px_3px_0_var(--color-zinc-900)] active:translate-px active:shadow-none dark:border-zinc-100 dark:shadow-[2px_2px_0_var(--color-zinc-100)] dark:hover:shadow-[3px_3px_0_var(--color-zinc-100)] sm:absolute sm:top-1 ${
+                      isMike
+                        ? "self-end sm:self-auto sm:-end-11"
+                        : "self-start sm:self-auto sm:-start-11"
                     } ${FOCUS} ${
                       isActive
-                        ? "bg-orange-500/15 text-orange-700 dark:bg-orange-400/20 dark:text-orange-300"
-                        : ""
+                        ? "bg-orange-500 text-white"
+                        : "bg-white text-zinc-900 hover:bg-amber-100 dark:bg-slate-800 dark:text-zinc-100 dark:hover:bg-slate-700"
                     }`}
                   >
                     {isActive ? (
-                      <Square aria-hidden className="size-3 fill-current" />
+                      <>
+                        <span
+                          aria-hidden
+                          className="absolute inset-0 animate-ping rounded-full bg-orange-400/60 motion-reduce:hidden"
+                        />
+                        <Square aria-hidden className="relative size-3 fill-current" />
+                      </>
                     ) : (
-                      <Volume2 aria-hidden className="size-3.5" />
+                      <Volume2 aria-hidden className="size-4" strokeWidth={2.5} />
                     )}
                   </button>
                 ) : null}
@@ -398,10 +436,127 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
   const accent = ACCENT_STYLES[lesson.accent];
   const firstSectionId = lesson.sections[0]?.id ?? "";
   const [activeId, setActiveId] = useState(firstSectionId);
+  const [sectionMenuOpen, setSectionMenuOpen] = useState(false);
+  const [sectionQuery, setSectionQuery] = useState("");
+  /** True while the nav can scroll further down (manual or via ChevronDown). */
+  const [canScrollMore, setCanScrollMore] = useState(
+    () => lesson.sections.length > SECTION_SCROLL_STEP,
+  );
+  const navRef = useRef<HTMLElement>(null);
+  const sectionMenuRef = useRef<HTMLDivElement>(null);
+  const sectionListRef = useRef<HTMLUListElement>(null);
+  const sectionSearchRef = useRef<HTMLInputElement>(null);
+  const sectionMenuId = useId();
+  const sectionSearchId = useId();
   const activeIndex = lesson.sections.findIndex((section) => section.id === activeId);
   const activeSection =
     activeIndex >= 0 ? lesson.sections[activeIndex] : lesson.sections[0];
   const activeNumber = activeIndex >= 0 ? activeIndex + 1 : 1;
+
+  const filteredSections = useMemo(() => {
+    const q = sectionQuery.trim().toLowerCase();
+    const indexed = lesson.sections.map((section, index) => ({ section, index }));
+    if (!q) return indexed;
+    return indexed.filter(({ section }) => {
+      const title = section.title.toLowerCase();
+      const bodyMy = section.bodyMy?.toLowerCase() ?? "";
+      return title.includes(q) || bodyMy.includes(q);
+    });
+  }, [lesson.sections, sectionQuery]);
+
+  const sectionSearching = sectionQuery.trim().length > 0;
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const syncCanScroll = () => {
+      setCanScrollMore(nav.scrollTop + nav.clientHeight < nav.scrollHeight - 2);
+    };
+
+    syncCanScroll();
+    nav.addEventListener("scroll", syncCanScroll, { passive: true });
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(syncCanScroll)
+        : null;
+    ro?.observe(nav);
+    return () => {
+      nav.removeEventListener("scroll", syncCanScroll);
+      ro?.disconnect();
+    };
+  }, [filteredSections.length]);
+
+  useEffect(() => {
+    if (!sectionMenuOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const root = sectionMenuRef.current;
+      if (
+        !root ||
+        !(event.target instanceof Node) ||
+        root.contains(event.target)
+      ) {
+        return;
+      }
+      setSectionMenuOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSectionMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    const frame = window.requestAnimationFrame(() => {
+      sectionListRef.current
+        ?.querySelector<HTMLElement>('[aria-current="true"]')
+        ?.scrollIntoView({ block: "nearest" });
+    });
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+      window.cancelAnimationFrame(frame);
+    };
+  }, [sectionMenuOpen]);
+
+  function scrollNextBatch() {
+    const nav = navRef.current;
+    if (!nav) return;
+    const rows = [
+      ...nav.querySelectorAll<HTMLElement>("[data-section-index]"),
+    ];
+    if (rows.length === 0) return;
+
+    const navTop = nav.getBoundingClientRect().top;
+    let topIndex = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row) continue;
+      if (row.getBoundingClientRect().top - navTop >= -2) {
+        topIndex = i;
+        break;
+      }
+      topIndex = i;
+    }
+
+    const targetIndex = Math.min(
+      topIndex + SECTION_SCROLL_STEP,
+      rows.length - 1,
+    );
+    const row = rows[targetIndex];
+    if (!row) return;
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const top =
+      nav.scrollTop +
+      (row.getBoundingClientRect().top - nav.getBoundingClientRect().top);
+    nav.scrollTo({
+      top,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }
 
   return (
     <div className="mb-16 flex flex-col gap-5 sm:mb-24">
@@ -416,7 +571,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
       <div className="grid gap-5 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] lg:items-start">
         <aside
           aria-label={copy.selfStudy.sections}
-          className={`teacher-card-3d teacher-card-static relative flex max-h-[min(70vh,42rem)] flex-col overflow-hidden rounded-[1.75rem] p-4 sm:p-5 lg:max-h-[calc(100vh-10rem)] ${accent.tone}`}
+          className={`teacher-card-3d teacher-card-static relative z-10 flex flex-col overflow-visible rounded-[1.75rem] p-4 sm:p-5 lg:z-auto lg:max-h-[calc(100vh-10rem)] lg:overflow-hidden ${accent.tone}`}
         >
           <span
             aria-hidden
@@ -430,44 +585,218 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
           <h2 className="mt-3 shrink-0 text-xl font-black tracking-tight sm:text-2xl">
             {lesson.title}
           </h2>
-          <nav
-            aria-label={copy.selfStudy.sections}
-            className="mt-5 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pe-1"
-          >
-            <ul className="flex min-w-0 flex-col gap-1.5">
-              {lesson.sections.map((section, index) => {
-                const current = section.id === activeId;
-                return (
-                  <li key={section.id} className="min-w-0">
-                    <button
-                      type="button"
-                      aria-current={current ? "true" : undefined}
-                      onClick={() => setActiveId(section.id)}
-                      className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
-                        current
-                          ? "bg-white text-zinc-950 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] dark:bg-slate-800 dark:text-white"
-                          : "text-zinc-700 hover:bg-white/70 dark:text-zinc-200 dark:hover:bg-white/10"
-                      }`}
+          <div ref={sectionMenuRef} className="mt-4 shrink-0">
+            <form
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                sectionSearchRef.current?.blur();
+              }}
+            >
+              <label htmlFor={sectionSearchId} className="sr-only">
+                {copy.selfStudy.sectionSearchLabel}
+              </label>
+              <div className="flex min-h-11 items-center gap-2 rounded-2xl border-2 border-zinc-900/10 bg-white py-1.5 pe-1.5 ps-3 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] dark:border-white/10 dark:bg-slate-800">
+                <Search
+                  aria-hidden
+                  className="size-4 shrink-0 text-zinc-400 dark:text-zinc-400"
+                  strokeWidth={2.5}
+                />
+                <input
+                  ref={sectionSearchRef}
+                  id={sectionSearchId}
+                  type="search"
+                  inputMode="search"
+                  value={sectionQuery}
+                  maxLength={80}
+                  placeholder={copy.selfStudy.sectionSearchPlaceholder}
+                  autoComplete="off"
+                  aria-controls={`${sectionMenuId} section-nav-list`}
+                  aria-describedby="section-search-status"
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setSectionQuery(next);
+                    if (next.trim()) setSectionMenuOpen(true);
+                  }}
+                  className={`min-w-0 flex-1 bg-transparent py-1.5 text-sm font-semibold text-zinc-950 outline-hidden placeholder:font-medium placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none ${FOCUS}`}
+                />
+                {sectionQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSectionQuery("");
+                      sectionSearchRef.current?.focus();
+                    }}
+                    aria-label={copy.selfStudy.clear}
+                    className={`grid size-9 shrink-0 place-items-center rounded-full text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-300 dark:hover:bg-white/10 ${FOCUS}`}
+                  >
+                    <X aria-hidden className="size-4" strokeWidth={2.75} />
+                  </button>
+                ) : null}
+              </div>
+            </form>
+            <p id="section-search-status" className="sr-only" aria-live="polite">
+              {sectionSearching
+                ? copy.selfStudy.sectionMatches(filteredSections.length)
+                : ""}
+            </p>
+            <div className="relative mt-3 lg:hidden">
+              <button
+                type="button"
+                id={`${sectionMenuId}-trigger`}
+                aria-expanded={sectionMenuOpen}
+                aria-controls={sectionMenuId}
+                aria-haspopup="listbox"
+                aria-label={copy.selfStudy.sections}
+                onClick={() => setSectionMenuOpen((open) => !open)}
+                className={`flex w-full min-h-11 cursor-pointer items-center gap-3 rounded-2xl border-2 border-zinc-900/10 bg-white py-2.5 pe-3 ps-3 text-left text-sm font-bold tracking-tight text-zinc-950 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] dark:border-white/10 dark:bg-slate-800 dark:text-white ${FOCUS}`}
+              >
+                <span
+                  aria-hidden
+                  className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${accent.badge}`}
+                >
+                  {activeNumber}
+                </span>
+                <span className="min-w-0 flex-1 wrap-break-word leading-snug">
+                  {activeSection?.title ?? copy.selfStudy.sections}
+                </span>
+                <ChevronDown
+                  aria-hidden
+                  className={`size-5 shrink-0 text-zinc-500 transition-transform dark:text-zinc-300 ${
+                    sectionMenuOpen ? "rotate-180" : ""
+                  }`}
+                  strokeWidth={2.5}
+                />
+              </button>
+              {sectionMenuOpen ? (
+                <ul
+                  ref={sectionListRef}
+                  id={sectionMenuId}
+                  role="listbox"
+                  aria-labelledby={`${sectionMenuId}-trigger`}
+                  className="absolute inset-x-0 top-[calc(100%+0.4rem)] z-30 flex max-h-[min(20rem,55dvh)] min-w-0 flex-col gap-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border-2 border-zinc-900/10 bg-white p-1.5 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] dark:border-white/10 dark:bg-slate-900"
+                >
+                  {filteredSections.length > 0 ? (
+                    filteredSections.map(({ section, index }) => {
+                      const current = section.id === activeId;
+                      return (
+                        <li key={section.id} className="min-w-0" role="none">
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={current}
+                            aria-current={current ? "true" : undefined}
+                            onClick={() => {
+                              setActiveId(section.id);
+                              setSectionMenuOpen(false);
+                            }}
+                            className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
+                              current
+                                ? "bg-zinc-100 text-zinc-950 dark:bg-slate-800 dark:text-white"
+                                : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-white/10"
+                            }`}
+                          >
+                            <span
+                              aria-hidden
+                              className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${
+                                current
+                                  ? accent.badge
+                                  : "bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
+                              }`}
+                            >
+                              {index + 1}
+                            </span>
+                            <span className="min-w-0 flex-1 wrap-break-word leading-snug">
+                              {section.title}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })
+                  ) : (
+                    <li
+                      role="option"
+                      aria-disabled="true"
+                      className="px-3 py-4 text-center text-sm font-bold text-zinc-500 dark:text-zinc-400"
                     >
-                      <span
-                        aria-hidden
-                        className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${
+                      {copy.selfStudy.sectionEmptyLead}
+                      {sectionQuery.trim()}
+                      {copy.selfStudy.sectionEmptyTail}
+                    </li>
+                  )}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+          <nav
+            ref={navRef}
+            aria-label={copy.selfStudy.sections}
+            className="relative z-0 mt-4 hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pe-1 lg:block"
+          >
+            {filteredSections.length > 0 ? (
+              <ul
+                id="section-nav-list"
+                className="flex min-w-0 flex-col gap-1.5"
+              >
+                {filteredSections.map(({ section, index }) => {
+                  const current = section.id === activeId;
+                  return (
+                    <li
+                      key={section.id}
+                      data-section-index={index}
+                      className="min-w-0"
+                    >
+                      <button
+                        type="button"
+                        aria-current={current ? "true" : undefined}
+                        onClick={() => setActiveId(section.id)}
+                        className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
                           current
-                            ? accent.badge
-                            : "bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
+                            ? "bg-white text-zinc-950 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] dark:bg-slate-800 dark:text-white"
+                            : "text-zinc-700 hover:bg-white/70 dark:text-zinc-200 dark:hover:bg-white/10"
                         }`}
                       >
-                        {index + 1}
-                      </span>
-                      <span className="min-w-0 flex-1 wrap-break-word leading-snug">
-                        {section.title}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+                        <span
+                          aria-hidden
+                          className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${
+                            current
+                              ? accent.badge
+                              : "bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 wrap-break-word leading-snug">
+                          {section.title}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p
+                id="section-nav-list"
+                className="rounded-2xl border-2 border-dashed border-zinc-900/15 px-3 py-6 text-center text-sm font-bold text-zinc-600 dark:border-white/15 dark:text-zinc-300"
+              >
+                {copy.selfStudy.sectionEmptyLead}
+                {sectionQuery.trim()}
+                {copy.selfStudy.sectionEmptyTail}
+              </p>
+            )}
           </nav>
+          {canScrollMore ? (
+            <div className="relative z-20 mt-3 hidden shrink-0 justify-center lg:flex">
+              <button
+                type="button"
+                aria-label={copy.selfStudy.showMoreSections}
+                onClick={scrollNextBatch}
+                className={`relative z-20 grid size-10 cursor-pointer place-items-center rounded-full bg-white/80 text-zinc-700 shadow-[0_4px_10px_-6px_rgba(15,23,42,0.35)] transition-[transform,background-color] pointer-events-auto hover:bg-white hover:text-zinc-950 motion-safe:hover:translate-y-0.5 active:translate-y-1 dark:bg-slate-800/90 dark:text-zinc-200 dark:hover:bg-slate-800 dark:hover:text-white ${FOCUS}`}
+              >
+                <ChevronDown aria-hidden className="size-5" strokeWidth={2.5} />
+              </button>
+            </div>
+          ) : null}
         </aside>
 
         <section
@@ -481,21 +810,45 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
           />
           {activeSection ? (
             <div className="flex min-w-0 flex-col">
-              <div className="teacher-stage relative min-w-0 overflow-hidden rounded-[1.35rem] px-5 py-6 sm:px-7 sm:py-8">
-                <p
-                  className={`stat-chip-3d inline-flex rounded-full px-2.5 py-0.5 text-[0.7rem] font-black tracking-wider tabular-nums ${accent.pill} ${accent.pillText}`}
-                >
-                  {activeNumber} / {lesson.sections.length}
-                </p>
-                <h3 className="mt-4 text-3xl font-black tracking-tight text-balance text-zinc-950 sm:text-4xl lg:text-5xl dark:text-white">
+              <header className="min-w-0 border-b-2 border-dashed border-zinc-900/15 pb-6 sm:pb-8 dark:border-white/15">
+                <div className="flex min-w-0 items-center gap-3">
+                  <p className="shrink-0 text-xs font-black tracking-wider text-zinc-600 tabular-nums dark:text-zinc-300">
+                    <span className="text-zinc-950 dark:text-white">
+                      {activeNumber}
+                    </span>{" "}
+                    / {lesson.sections.length}
+                  </p>
+                  <div
+                    aria-hidden
+                    className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-900/10 dark:bg-white/10"
+                  >
+                    <div
+                      className={`absolute inset-y-0 left-0 rounded-full bg-linear-to-r transition-[width] duration-300 ${accent.bar}`}
+                      style={{
+                        width: `max(0.375rem, ${(activeNumber / lesson.sections.length) * 100}%)`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <h3 className="mt-5 text-4xl leading-none font-black tracking-tight text-balance text-zinc-950 sm:mt-6 sm:text-5xl lg:text-6xl dark:text-white">
                   {activeSection.title}
                 </h3>
                 {activeSection.bodyMy ? (
-                  <p className="mt-3 min-w-0 text-lg leading-snug font-bold wrap-break-word text-balance text-zinc-700 sm:text-xl sm:leading-snug dark:text-zinc-200">
-                    ({activeSection.bodyMy})
+                  <p className="mt-4 flex min-w-0 items-baseline gap-2.5">
+                    <span
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[0.65rem] font-black tracking-wider ${accent.badge}`}
+                    >
+                      MY
+                    </span>
+                    <span
+                      lang="my"
+                      className="min-w-0 text-lg leading-relaxed font-semibold wrap-break-word text-zinc-700 sm:text-xl dark:text-zinc-200"
+                    >
+                      {activeSection.bodyMy}
+                    </span>
                   </p>
                 ) : null}
-              </div>
+              </header>
               {activeSection.dialog?.length ? (
                 <SectionDialog turns={activeSection.dialog} />
               ) : null}
