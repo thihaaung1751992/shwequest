@@ -17,6 +17,8 @@ export type FreeLesson = {
   image: string;
   duration: string;
   accent: TeacherAccent;
+  /** When true, listing links to the course. Omit/false → Coming Soon (not clickable). */
+  available?: boolean;
   /** Sidebar titles for the course detail shell (content pane later). */
   sections: FreeLessonSection[];
 };
@@ -47,9 +49,10 @@ export const FREE_LESSONS: FreeLesson[] = [
   {
     id: "free-1",
     title: "Everyday Basic English Speaking",
-    image: FREE_LESSON_PLACEHOLDER_IMAGE,
+    image: "/self-study/everyday-basic-english-speaking.webp",
     duration: "891",
     accent: "emerald",
+    available: true,
     sections: sectionsFromPhrases("free-1", EVERYDAY_BASIC_ENGLISH_PHRASES),
   },
   {

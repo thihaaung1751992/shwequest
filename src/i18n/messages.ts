@@ -152,6 +152,7 @@ export type Messages = {
     card: string;
     list: string;
     openLesson: string;
+    comingSoon: string;
     emptyLead: string;
     emptyTail: string;
     matches: (count: number) => string;
@@ -351,6 +352,7 @@ const en: Messages = {
     card: "Card",
     list: "List",
     openLesson: "Open lesson",
+    comingSoon: "Coming Soon",
     emptyLead: "No lessons match “",
     emptyTail: "”.",
     matches: (count) =>
@@ -542,6 +544,7 @@ const my: Messages = {
     card: "ကတ်",
     list: "စာရင်း",
     openLesson: "သင်ခန်းစာဖွင့်ရန်",
+    comingSoon: "မကြာမီ",
     emptyLead: "“",
     emptyTail: "” နဲ့ ကိုက်ညီတဲ့ သင်ခန်းစာမရှိပါ။",
     matches: (count) => `ကိုက်ညီတဲ့ သင်ခန်းစာ ${count} ခု`,

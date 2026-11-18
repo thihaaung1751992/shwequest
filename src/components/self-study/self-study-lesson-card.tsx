@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
 import FrostGlass from "@/components/frost-glass";
+import SelfStudyComingSoon from "@/components/self-study/self-study-coming-soon";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import { resetTilt, tiltCard } from "@/components/teachers/teacher-tilt";
 import { freeLessonHref, type FreeLesson } from "@/data/self-study";
@@ -12,26 +13,24 @@ import { freeLessonHref, type FreeLesson } from "@/data/self-study";
 export default function SelfStudyLessonCard({ lesson }: { lesson: FreeLesson }) {
   const copy = useMessages();
   const accent = ACCENT_STYLES[lesson.accent];
+  const available = lesson.available === true;
 
-  return (
-    <Link
-      href={freeLessonHref(lesson.id)}
-      onPointerMove={tiltCard}
-      onPointerLeave={resetTilt}
-      className={`teacher-card-3d group flex h-full flex-col overflow-hidden rounded-[1.75rem] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 ${accent.tone}`}
-    >
+  const shellClass = `teacher-card-3d group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 ${accent.tone}${available ? "" : " cursor-not-allowed"}`;
+
+  const body = (
+    <>
       <span
         aria-hidden
         className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
       />
 
-      <div className="teacher-stage relative aspect-[16/10] w-full overflow-hidden">
+      <div className="teacher-stage relative aspect-video w-full overflow-hidden">
         <Image
           src={lesson.image}
           alt=""
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-300 motion-safe:group-hover:scale-[1.04]"
+          className={`object-contain transition-transform duration-300${available ? " motion-safe:group-hover:scale-[1.04]" : " opacity-80"}`}
         />
         <span
           aria-hidden
@@ -53,16 +52,43 @@ export default function SelfStudyLessonCard({ lesson }: { lesson: FreeLesson }) 
         </p>
 
         <span
-          className={`relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] motion-safe:group-hover:overflow-visible cta-3d ${accent.cta}`}
+          className={`relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] cta-3d ${accent.cta}${available ? " motion-safe:group-hover:overflow-visible" : " opacity-40"}`}
         >
           <FrostGlass />
           <span className="relative z-10">{copy.selfStudy.openLesson}</span>
           <ArrowRight
             aria-hidden
-            className="relative z-10 size-4 transition-transform motion-safe:group-hover:translate-x-1"
+            className={`relative z-10 size-4 transition-transform${available ? " motion-safe:group-hover:translate-x-1" : ""}`}
           />
         </span>
       </div>
-    </Link>
+
+      {!available ? (
+        <SelfStudyComingSoon label={copy.selfStudy.comingSoon} />
+      ) : null}
+    </>
+  );
+
+  if (available) {
+    return (
+      <Link
+        href={freeLessonHref(lesson.id)}
+        onPointerMove={tiltCard}
+        onPointerLeave={resetTilt}
+        className={shellClass}
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={shellClass}
+      aria-disabled="true"
+      aria-label={`${lesson.title} — ${copy.selfStudy.comingSoon}`}
+    >
+      {body}
+    </div>
   );
 }
