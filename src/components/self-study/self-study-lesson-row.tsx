@@ -6,9 +6,7 @@ import { ArrowRight, Clock } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
 import FrostGlass from "@/components/frost-glass";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
-import type { FreeLesson } from "@/data/self-study";
-
-const LESSON_HREF = "/test-video";
+import { freeLessonHref, type FreeLesson } from "@/data/self-study";
 
 export default function SelfStudyLessonRow({ lesson }: { lesson: FreeLesson }) {
   const copy = useMessages();
@@ -16,7 +14,7 @@ export default function SelfStudyLessonRow({ lesson }: { lesson: FreeLesson }) {
 
   return (
     <Link
-      href={LESSON_HREF}
+      href={freeLessonHref(lesson.id)}
       className={`teacher-card-3d group flex min-h-24 items-center gap-3 overflow-hidden rounded-2xl px-3 py-3 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 sm:gap-4 sm:px-4 ${accent.tone}`}
     >
       <span className="teacher-stage relative h-20 w-28 shrink-0 overflow-hidden rounded-[0.9rem] sm:h-24 sm:w-36">

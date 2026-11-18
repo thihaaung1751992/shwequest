@@ -28,6 +28,9 @@ function isCurrent(href: LinkHref, pathname: string): boolean {
   if (href === "/team") {
     return pathname === "/team" || pathname.startsWith("/team/");
   }
+  if (href === "/self-study") {
+    return pathname === "/self-study" || pathname.startsWith("/self-study/");
+  }
   return pathname === href;
 }
 

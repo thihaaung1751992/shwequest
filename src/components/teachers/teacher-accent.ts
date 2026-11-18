@@ -6,6 +6,8 @@ type AccentStyle = {
   /** pill-3d-* helper for stat-chip-3d chips. */
   pill: string;
   pillText: string;
+  /** Solid index badge on a white/active row (no pill lip — avoids overflow). */
+  badge: string;
   /** cta-3d-* helper for the Open path button. */
   cta: string;
   /** Progress fill gradient stops. */
@@ -18,6 +20,7 @@ export const ACCENT_STYLES: Record<TeacherAccent, AccentStyle> = {
     tone: "teacher-tone-amber",
     pill: "pill-3d-amber",
     pillText: "text-amber-950",
+    badge: "bg-amber-400 text-amber-950",
     cta: "cta-3d-orange",
     bar: "from-amber-300 to-orange-500",
   },
@@ -25,6 +28,7 @@ export const ACCENT_STYLES: Record<TeacherAccent, AccentStyle> = {
     tone: "teacher-tone-sky",
     pill: "pill-3d-sky",
     pillText: "text-sky-950",
+    badge: "bg-sky-400 text-sky-950",
     cta: "cta-3d-sky",
     bar: "from-sky-300 to-sky-600",
   },
@@ -32,6 +36,7 @@ export const ACCENT_STYLES: Record<TeacherAccent, AccentStyle> = {
     tone: "teacher-tone-emerald",
     pill: "pill-3d-emerald",
     pillText: "text-white",
+    badge: "bg-emerald-500 text-white",
     cta: "cta-3d-emerald",
     bar: "from-emerald-300 to-emerald-600",
   },

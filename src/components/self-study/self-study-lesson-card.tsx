@@ -7,10 +7,7 @@ import { useMessages } from "@/i18n/locale-context";
 import FrostGlass from "@/components/frost-glass";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import { resetTilt, tiltCard } from "@/components/teachers/teacher-tilt";
-import type { FreeLesson } from "@/data/self-study";
-
-/** Interim player until each free lesson has its own watch route. */
-const LESSON_HREF = "/test-video";
+import { freeLessonHref, type FreeLesson } from "@/data/self-study";
 
 export default function SelfStudyLessonCard({ lesson }: { lesson: FreeLesson }) {
   const copy = useMessages();
@@ -18,7 +15,7 @@ export default function SelfStudyLessonCard({ lesson }: { lesson: FreeLesson }) 
 
   return (
     <Link
-      href={LESSON_HREF}
+      href={freeLessonHref(lesson.id)}
       onPointerMove={tiltCard}
       onPointerLeave={resetTilt}
       className={`teacher-card-3d group flex h-full flex-col overflow-hidden rounded-[1.75rem] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 ${accent.tone}`}

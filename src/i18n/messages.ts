@@ -160,6 +160,9 @@ export type Messages = {
     next: string;
     page: (n: number) => string;
     pageOf: (page: number, total: number) => string;
+    back: string;
+    sections: string;
+    content: string;
   };
   path: {
     learning: string;
@@ -357,6 +360,9 @@ const en: Messages = {
     next: "Next page",
     page: (n) => `Page ${n}`,
     pageOf: (page, total) => `Page ${page} of ${total}`,
+    back: "Back to self study",
+    sections: "Lesson sections",
+    content: "Lesson content",
   },
   path: {
     learning: "Learning path",
@@ -544,6 +550,9 @@ const my: Messages = {
     next: "နောက်စာမျက်နှာ",
     page: (n) => `စာမျက်နှာ ${n}`,
     pageOf: (page, total) => `စာမျက်နှာ ${page} / ${total}`,
+    back: "ကိုယ်တိုင်သင်သို့",
+    sections: "သင်ခန်းစာခေါင်းစဉ်များ",
+    content: "သင်ခန်းစာအကြောင်းအရာ",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",
