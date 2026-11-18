@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/teachers", label: "Teachers" },
   { href: "/team", label: "Team" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/self-study", label: "Self study" },
 ] as const;
 
 const STATS = [
@@ -75,6 +76,7 @@ export default function SiteFooter() {
     "/teachers": copy.nav.teachers,
     "/team": copy.nav.team,
     "/leaderboard": copy.nav.leaderboard,
+    "/self-study": copy.nav.selfStudy,
   } as const;
 
   const backToTop = () => {

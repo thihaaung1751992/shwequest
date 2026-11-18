@@ -27,7 +27,9 @@ export default function PageShell({
         ? copy.nav.leaderboard
         : title === "Team"
           ? copy.nav.team
-          : title;
+          : title === "Self study"
+            ? copy.nav.selfStudy
+            : title;
   const fullMain = isHome || bleed;
 
   return (

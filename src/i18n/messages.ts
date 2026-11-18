@@ -17,6 +17,7 @@ export type Messages = {
     teachers: string;
     team: string;
     leaderboard: string;
+    selfStudy: string;
     main: string;
     menu: string;
     openMenu: string;
@@ -136,6 +137,14 @@ export type Messages = {
     memberCount: (count: number) => string;
     builderTagline: string;
   };
+  selfStudy: {
+    kicker: string;
+    title: string;
+    body: string;
+    priceLabel: string;
+    free: string;
+    priceHint: string;
+  };
   path: {
     learning: string;
     now: (title: string) => string;
@@ -182,6 +191,7 @@ const en: Messages = {
     teachers: "Teachers",
     team: "Team",
     leaderboard: "Leaderboard",
+    selfStudy: "Self study",
     main: "Main",
     menu: "Menu",
     openMenu: "Open main menu",
@@ -307,6 +317,14 @@ const en: Messages = {
     memberCount: (count) => `${count} ${count === 1 ? "person" : "people"}`,
     builderTagline: "Builds Shwequest",
   },
+  selfStudy: {
+    kicker: "Open path",
+    title: "Self study for free",
+    body: "Learn on your own. No plan fee — this path stays free.",
+    priceLabel: "Price",
+    free: "Free",
+    priceHint: "Ks 0 · forever",
+  },
   path: {
     learning: "Learning path",
     now: (title) => `Now: ${title}`,
@@ -345,6 +363,7 @@ const my: Messages = {
     teachers: "ဆရာများ",
     team: "အဖွဲ့",
     leaderboard: "ဦးဆောင်ဇယား",
+    selfStudy: "ကိုယ်တိုင်သင်",
     main: "ပင်မ",
     menu: "မီနူး",
     openMenu: "ပင်မမီနူးဖွင့်ရန်",
@@ -468,6 +487,14 @@ const my: Messages = {
     kicker: "အဖွဲ့ဝင်များ",
     memberCount: (count) => `${count} ယောက်`,
     builderTagline: "Shwequest ကို တည်ဆောက်သူ",
+  },
+  selfStudy: {
+    kicker: "လမ်းကြောင်းဖွင့်",
+    title: "ကိုယ်တိုင်သင် — အခမဲ့",
+    body: "ကိုယ်တိုင်သင်ယူပါ။ အစီအစဉ်ကြေးမလို — ဒီလမ်းကြောင်း အခမဲ့ပါ။",
+    priceLabel: "ဈေးနှုန်း",
+    free: "အခမဲ့",
+    priceHint: "Ks 0 · အမြဲတမ်း",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",

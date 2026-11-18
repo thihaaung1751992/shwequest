@@ -19,6 +19,7 @@ const LINKS = [
   { href: "/teachers", label: "Teachers" },
   { href: "/team", label: "Team" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/self-study", label: "Self study" },
 ] as const;
 
 type LinkHref = (typeof LINKS)[number]["href"];
@@ -43,6 +44,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
     "/teachers": copy.nav.teachers,
     "/team": copy.nav.team,
     "/leaderboard": copy.nav.leaderboard,
+    "/self-study": copy.nav.selfStudy,
   };
   const spread = layout === "bar";
   const panelId = useId();
@@ -218,6 +220,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
           {LINKS.map((link) => {
             const current = isCurrent(link.href, pathname);
             const lit = targetHref === link.href;
+            const freeBadge = link.href === "/self-study";
             return (
               <li key={link.href}>
                 <Link
@@ -229,13 +232,18 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                   onPointerEnter={() => setHoverHref(link.href)}
                   onFocus={() => setHoverHref(link.href)}
                   onBlur={() => setHoverHref(null)}
-                  className={`relative z-10 inline-flex min-h-10 items-center rounded-full px-3.5 text-sm font-bold transition-colors duration-150 ${FOCUS} ${
+                  className={`relative z-10 inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold whitespace-nowrap transition-colors duration-150 ${FOCUS} ${
                     lit
                       ? "text-amber-950 [text-shadow:0_1px_0_rgb(255_255_255/0.5)]"
                       : "text-zinc-800 dark:text-zinc-100"
                   }`}
                 >
                   {linkLabel[link.href]}
+                  {freeBadge ? (
+                    <span className="stat-chip-3d pill-3d-emerald rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide text-white uppercase">
+                      {copy.selfStudy.free}
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             );
@@ -287,19 +295,25 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
             <ul className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
               {LINKS.map((link) => {
                 const current = isCurrent(link.href, pathname);
+                const freeBadge = link.href === "/self-study";
                 return (
                   <li key={link.href}>
                     <Link
                       href={link.href}
                       aria-current={current ? "page" : undefined}
                       onClick={closeMenu}
-                      className={`flex min-h-12 items-center rounded-2xl px-4 text-base font-bold tracking-tight ${FOCUS} ${
+                      className={`flex min-h-12 items-center gap-2 rounded-2xl px-4 text-base font-bold tracking-tight ${FOCUS} ${
                         current
                           ? "bg-amber-400 text-amber-950 shadow-[0_8px_18px_-12px_rgba(180,83,9,0.7)]"
                           : "bg-white/70 text-zinc-900 ring-1 ring-amber-100 hover:bg-amber-50 dark:bg-white/5 dark:text-zinc-50 dark:ring-white/10 dark:hover:bg-white/10"
                       }`}
                     >
                       {linkLabel[link.href]}
+                      {freeBadge ? (
+                        <span className="stat-chip-3d pill-3d-emerald ms-auto rounded-full px-2 py-0.5 text-[11px] font-black tracking-wide text-white uppercase">
+                          {copy.selfStudy.free}
+                        </span>
+                      ) : null}
                     </Link>
                   </li>
                 );
