@@ -571,7 +571,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
       <div className="grid gap-5 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] lg:items-start">
         <aside
           aria-label={copy.selfStudy.sections}
-          className={`teacher-card-3d teacher-card-static relative z-10 flex flex-col overflow-visible rounded-[1.75rem] p-4 sm:p-5 lg:z-auto lg:max-h-[calc(100vh-10rem)] lg:overflow-hidden ${accent.tone}`}
+          className={`teacher-card-3d teacher-card-static relative z-10 flex flex-col overflow-visible rounded-[1.75rem] p-4 sm:p-5 lg:sticky lg:top-6 lg:z-auto lg:max-h-[calc(100vh-10rem)] lg:overflow-hidden ${accent.tone}`}
         >
           <span
             aria-hidden
@@ -596,10 +596,10 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
               <label htmlFor={sectionSearchId} className="sr-only">
                 {copy.selfStudy.sectionSearchLabel}
               </label>
-              <div className="flex min-h-11 items-center gap-2 rounded-2xl border-2 border-zinc-900/10 bg-white py-1.5 pe-1.5 ps-3 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] dark:border-white/10 dark:bg-slate-800">
+              <div className="group/search flex min-h-11 items-center gap-2 rounded-2xl border-2 border-zinc-900/10 bg-white py-1.5 pe-1.5 ps-3 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] transition-[border-color,box-shadow] focus-within:border-zinc-900 focus-within:shadow-[3px_3px_0_var(--color-zinc-900)] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-sky-700 dark:border-white/10 dark:bg-slate-800 dark:focus-within:border-zinc-100 dark:focus-within:shadow-[3px_3px_0_var(--color-zinc-100)]">
                 <Search
                   aria-hidden
-                  className="size-4 shrink-0 text-zinc-400 dark:text-zinc-400"
+                  className="size-4 shrink-0 text-zinc-400 transition-colors group-focus-within/search:text-zinc-900 dark:text-zinc-400 dark:group-focus-within/search:text-zinc-100"
                   strokeWidth={2.5}
                 />
                 <input
@@ -618,7 +618,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
                     setSectionQuery(next);
                     if (next.trim()) setSectionMenuOpen(true);
                   }}
-                  className={`min-w-0 flex-1 bg-transparent py-1.5 text-sm font-semibold text-zinc-950 outline-hidden placeholder:font-medium placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none ${FOCUS}`}
+                  className="min-w-0 flex-1 bg-transparent py-1.5 text-sm font-semibold text-zinc-950 outline-hidden placeholder:font-medium placeholder:text-zinc-400 dark:text-white dark:placeholder:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                 />
                 {sectionQuery ? (
                   <button
@@ -728,10 +728,26 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
               ) : null}
             </div>
           </div>
+          <div
+            aria-hidden
+            className="mt-5 hidden shrink-0 items-center gap-2 px-1 lg:flex"
+          >
+            <span className="text-[0.7rem] font-black tracking-wider text-zinc-600 uppercase dark:text-zinc-300">
+              {copy.selfStudy.sections}
+            </span>
+            <span className="h-px min-w-0 flex-1 border-t-2 border-dashed border-zinc-900/15 dark:border-white/15" />
+            <span className="rounded-full border-2 border-zinc-900 bg-white px-2 py-px text-[0.7rem] font-black text-zinc-900 tabular-nums dark:border-zinc-100 dark:bg-slate-800 dark:text-zinc-100">
+              {sectionSearching
+                ? `${filteredSections.length} / ${lesson.sections.length}`
+                : lesson.sections.length}
+            </span>
+          </div>
           <nav
             ref={navRef}
             aria-label={copy.selfStudy.sections}
-            className="relative z-0 mt-4 hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pe-1 lg:block"
+            className={`relative z-0 mt-3 hidden min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain py-1 ps-0.5 pe-2 lg:block ${
+              canScrollMore ? "mask-b-from-80%" : ""
+            }`}
           >
             {filteredSections.length > 0 ? (
               <ul
@@ -750,18 +766,18 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
                         type="button"
                         aria-current={current ? "true" : undefined}
                         onClick={() => setActiveId(section.id)}
-                        className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
+                        className={`group/row flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left text-sm font-bold tracking-tight transition-[background-color,border-color,box-shadow,translate] ${FOCUS} ${
                           current
-                            ? "bg-white text-zinc-950 shadow-[0_6px_14px_-10px_rgba(15,23,42,0.35)] dark:bg-slate-800 dark:text-white"
-                            : "text-zinc-700 hover:bg-white/70 dark:text-zinc-200 dark:hover:bg-white/10"
+                            ? "border-zinc-900 bg-white text-zinc-950 shadow-[3px_3px_0_var(--color-zinc-900)] dark:border-zinc-100 dark:bg-slate-800 dark:text-white dark:shadow-[3px_3px_0_var(--color-zinc-100)]"
+                            : "border-transparent text-zinc-700 hover:border-zinc-900/10 hover:bg-white/70 motion-safe:hover:translate-x-0.5 dark:text-zinc-200 dark:hover:border-white/10 dark:hover:bg-white/10"
                         }`}
                       >
                         <span
                           aria-hidden
-                          className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${
+                          className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full border-2 px-1 text-xs font-black tabular-nums transition-colors ${
                             current
-                              ? accent.badge
-                              : "bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
+                              ? `border-zinc-900 dark:border-zinc-100 ${accent.badge}`
+                              : "border-zinc-900/10 bg-white/70 text-zinc-600 group-hover/row:border-zinc-900/25 group-hover/row:text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:group-hover/row:text-white"
                           }`}
                         >
                           {index + 1}
@@ -786,12 +802,12 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
             )}
           </nav>
           {canScrollMore ? (
-            <div className="relative z-20 mt-3 hidden shrink-0 justify-center lg:flex">
+            <div className="relative z-20 -mt-3 hidden shrink-0 justify-center pt-1 lg:flex">
               <button
                 type="button"
                 aria-label={copy.selfStudy.showMoreSections}
                 onClick={scrollNextBatch}
-                className={`relative z-20 grid size-10 cursor-pointer place-items-center rounded-full bg-white/80 text-zinc-700 shadow-[0_4px_10px_-6px_rgba(15,23,42,0.35)] transition-[transform,background-color] pointer-events-auto hover:bg-white hover:text-zinc-950 motion-safe:hover:translate-y-0.5 active:translate-y-1 dark:bg-slate-800/90 dark:text-zinc-200 dark:hover:bg-slate-800 dark:hover:text-white ${FOCUS}`}
+                className={`relative z-20 grid size-10 cursor-pointer place-items-center rounded-full border-2 border-zinc-900 bg-white text-zinc-900 shadow-[2px_2px_0_var(--color-zinc-900)] transition-[translate,box-shadow,background-color] pointer-events-auto hover:-translate-px hover:bg-amber-100 hover:shadow-[3px_3px_0_var(--color-zinc-900)] active:translate-px active:shadow-none dark:border-zinc-100 dark:bg-slate-800 dark:text-zinc-100 dark:shadow-[2px_2px_0_var(--color-zinc-100)] dark:hover:bg-slate-700 dark:hover:shadow-[3px_3px_0_var(--color-zinc-100)] ${FOCUS}`}
               >
                 <ChevronDown aria-hidden className="size-5" strokeWidth={2.5} />
               </button>
