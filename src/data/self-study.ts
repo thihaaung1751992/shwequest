@@ -2,7 +2,18 @@ import {
   EVERYDAY_BASIC_ENGLISH_PHRASES,
   type EverydayBasicEnglishPhrase,
 } from "@/data/everyday-basic-english";
+import {
+  FREE_1_ANY_GRAMMAR,
+  type FreeLessonGrammar,
+} from "@/data/any-grammar";
+import {
+  FREE_1_ANY_READING,
+  type FreeLessonReading,
+} from "@/data/any-reading";
 import type { TeacherAccent } from "@/data/teachers";
+
+export type { FreeLessonGrammar } from "@/data/any-grammar";
+export type { FreeLessonReading } from "@/data/any-reading";
 
 export type FreeLessonDialogSpeaker = "mike" | "sarah";
 
@@ -20,6 +31,10 @@ export type FreeLessonSection = {
   bodyMy?: string;
   /** EN speaking turns for the white pane under the title stage (optional). */
   dialog?: FreeLessonDialogTurn[];
+  /** Grammar notes under the dialog (optional; Any section first). */
+  grammar?: FreeLessonGrammar;
+  /** Levelled reading under grammar (optional; Any section A1/A2 tab). */
+  reading?: FreeLessonReading;
 };
 
 /** Dialog for free-1 section "Any" — EN + optional MY glosses. */
@@ -69,7 +84,12 @@ const FREE_1_ANY_DIALOG: FreeLessonDialogTurn[] = [
 function withFree1AnyDialog(sections: FreeLessonSection[]): FreeLessonSection[] {
   return sections.map((section) =>
     section.id === "free-1-s1"
-      ? { ...section, dialog: FREE_1_ANY_DIALOG }
+      ? {
+          ...section,
+          dialog: FREE_1_ANY_DIALOG,
+          grammar: FREE_1_ANY_GRAMMAR,
+          reading: FREE_1_ANY_READING,
+        }
       : section,
   );
 }

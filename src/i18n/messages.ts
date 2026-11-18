@@ -168,6 +168,12 @@ export type Messages = {
     stopDialog: string;
     playTurn: string;
     stopTurn: string;
+    playReading: string;
+    stopReading: string;
+    playParagraph: string;
+    stopParagraph: string;
+    playVocab: string;
+    stopVocab: string;
     showTranslation: string;
     hideTranslation: string;
     showMoreSections: string;
@@ -381,6 +387,12 @@ const en: Messages = {
     stopDialog: "Stop",
     playTurn: "Play this line",
     stopTurn: "Stop this line",
+    playReading: "Read aloud",
+    stopReading: "Stop reading",
+    playParagraph: "Play this paragraph",
+    stopParagraph: "Stop this paragraph",
+    playVocab: "Hear this word",
+    stopVocab: "Stop this word",
     showTranslation: "Show translation",
     hideTranslation: "Hide translation",
     showMoreSections: "Scroll down 5 phrases",
@@ -585,6 +597,12 @@ const my: Messages = {
     stopDialog: "ရပ်ရန်",
     playTurn: "ဒီစာကြောင်း နားထောင်ရန်",
     stopTurn: "ဒီစာကြောင်း ရပ်ရန်",
+    playReading: "စာပိုဒ် ဖတ်ပြရန်",
+    stopReading: "ဖတ်ပြမှု ရပ်ရန်",
+    playParagraph: "ဒီစာပိုဒ် နားထောင်ရန်",
+    stopParagraph: "ဒီစာပိုဒ် ရပ်ရန်",
+    playVocab: "ဒီစကားလုံး နားထောင်ရန်",
+    stopVocab: "ဒီစကားလုံး ရပ်ရန်",
     showTranslation: "ဘာသာပြန် ကြည့်ရန်",
     hideTranslation: "ဘာသာပြန် ပိတ်ရန်",
     showMoreSections: "အောက်သို့ စကားစု ၅ ခု ရွှေ့ရန်",

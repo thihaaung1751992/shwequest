@@ -20,6 +20,8 @@ import {
   Volume2,
   X,
 } from "lucide-react";
+import SectionGrammar from "@/components/self-study/self-study-grammar";
+import SectionReading from "@/components/self-study/self-study-reading";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import { useMessages } from "@/i18n/locale-context";
 import type {
@@ -815,62 +817,73 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
           ) : null}
         </aside>
 
-        <section
-          aria-label={copy.selfStudy.content}
-          aria-live="polite"
-          className={`teacher-card-3d teacher-card-static relative flex min-h-[18rem] flex-col overflow-hidden rounded-[1.75rem] p-5 sm:min-h-[24rem] sm:p-7 ${accent.tone}`}
-        >
-          <span
-            aria-hidden
-            className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
-          />
-          {activeSection ? (
-            <div className="flex min-w-0 flex-col">
-              <header className="min-w-0 border-b-2 border-dashed border-zinc-900/15 pb-6 sm:pb-8 dark:border-white/15">
-                <div className="flex min-w-0 items-center gap-3">
-                  <p className="shrink-0 text-xs font-black tracking-wider text-zinc-600 tabular-nums dark:text-zinc-300">
-                    <span className="text-zinc-950 dark:text-white">
-                      {activeNumber}
-                    </span>{" "}
-                    / {lesson.sections.length}
-                  </p>
-                  <div
-                    aria-hidden
-                    className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-900/10 dark:bg-white/10"
-                  >
+        <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
+          <section
+            aria-label={copy.selfStudy.content}
+            aria-live="polite"
+            className={`teacher-card-3d teacher-card-static relative flex min-h-[18rem] flex-col overflow-hidden rounded-[1.75rem] p-5 sm:min-h-[24rem] sm:p-7 ${accent.tone}`}
+          >
+            <span
+              aria-hidden
+              className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
+            />
+            {activeSection ? (
+              <div className="flex min-w-0 flex-col">
+                <header className="min-w-0 border-b-2 border-dashed border-zinc-900/15 pb-6 sm:pb-8 dark:border-white/15">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <p className="shrink-0 text-xs font-black tracking-wider text-zinc-600 tabular-nums dark:text-zinc-300">
+                      <span className="text-zinc-950 dark:text-white">
+                        {activeNumber}
+                      </span>{" "}
+                      / {lesson.sections.length}
+                    </p>
                     <div
-                      className={`absolute inset-y-0 left-0 rounded-full bg-linear-to-r transition-[width] duration-300 ${accent.bar}`}
-                      style={{
-                        width: `max(0.375rem, ${(activeNumber / lesson.sections.length) * 100}%)`,
-                      }}
-                    />
+                      aria-hidden
+                      className="relative h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-900/10 dark:bg-white/10"
+                    >
+                      <div
+                        className={`absolute inset-y-0 left-0 rounded-full bg-linear-to-r transition-[width] duration-300 ${accent.bar}`}
+                        style={{
+                          width: `max(0.375rem, ${(activeNumber / lesson.sections.length) * 100}%)`,
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-                <h3 className="mt-5 text-4xl leading-none font-black tracking-tight text-balance text-zinc-950 sm:mt-6 sm:text-5xl lg:text-6xl dark:text-white">
-                  {activeSection.title}
-                </h3>
-                {activeSection.bodyMy ? (
-                  <p className="mt-4 flex min-w-0 items-baseline gap-2.5">
-                    <span
-                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[0.65rem] font-black tracking-wider ${accent.badge}`}
-                    >
-                      MY
-                    </span>
-                    <span
-                      lang="my"
-                      className="min-w-0 text-lg leading-relaxed font-semibold wrap-break-word text-zinc-700 sm:text-xl dark:text-zinc-200"
-                    >
-                      {activeSection.bodyMy}
-                    </span>
-                  </p>
+                  <h3 className="mt-5 text-4xl leading-none font-black tracking-tight text-balance text-zinc-950 sm:mt-6 sm:text-5xl lg:text-6xl dark:text-white">
+                    {activeSection.title}
+                  </h3>
+                  {activeSection.bodyMy ? (
+                    <p className="mt-4 flex min-w-0 items-baseline gap-2.5">
+                      <span
+                        className={`shrink-0 rounded-md px-1.5 py-0.5 text-[0.65rem] font-black tracking-wider ${accent.badge}`}
+                      >
+                        MY
+                      </span>
+                      <span
+                        lang="my"
+                        className="min-w-0 text-lg leading-relaxed font-semibold wrap-break-word text-zinc-700 sm:text-xl dark:text-zinc-200"
+                      >
+                        {activeSection.bodyMy}
+                      </span>
+                    </p>
+                  ) : null}
+                </header>
+                {activeSection.dialog?.length ? (
+                  <SectionDialog turns={activeSection.dialog} />
                 ) : null}
-              </header>
-              {activeSection.dialog?.length ? (
-                <SectionDialog turns={activeSection.dialog} />
-              ) : null}
-            </div>
+              </div>
+            ) : null}
+          </section>
+          {activeSection?.grammar ? (
+            <SectionGrammar grammar={activeSection.grammar} />
           ) : null}
-        </section>
+          {activeSection?.reading ? (
+            <SectionReading
+              key={activeSection.id}
+              reading={activeSection.reading}
+            />
+          ) : null}
+        </div>
       </div>
     </div>
   );
