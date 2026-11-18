@@ -9,6 +9,8 @@ export type FreeLessonDialogSpeaker = "mike" | "sarah";
 export type FreeLessonDialogTurn = {
   speaker: FreeLessonDialogSpeaker;
   text: string;
+  /** Optional Myanmar gloss under the EN bubble (toggle in UI). */
+  textMy?: string;
 };
 
 export type FreeLessonSection = {
@@ -20,25 +22,48 @@ export type FreeLessonSection = {
   dialog?: FreeLessonDialogTurn[];
 };
 
-/** EN-only dialog for free-1 section "Any" (no Myanmar lines). */
+/** Dialog for free-1 section "Any" — EN + optional MY glosses. */
 const FREE_1_ANY_DIALOG: FreeLessonDialogTurn[] = [
-  { speaker: "mike", text: "Do we need any snacks for the trip?" },
+  {
+    speaker: "mike",
+    text: "Do we need any snacks for the trip?",
+    textMy: "ခရီးအတွက် snack တစ်ခုခု လိုသေးလား။",
+  },
   {
     speaker: "sarah",
     text: "Yes, but we don't have any chips left at home.",
+    textMy: "လိုတယ်၊ ဒါပေမယ့် အိမ်မှာ chips မကျန်တော့ဘူး။",
   },
-  { speaker: "mike", text: "Should I buy potato chips or corn chips?" },
+  {
+    speaker: "mike",
+    text: "Should I buy potato chips or corn chips?",
+    textMy: "အာလူး chips ဝယ်ရမလား၊ ပြောင်း chips ဝယ်ရမလား။",
+  },
   {
     speaker: "sarah",
     text: "Any kind is fine with me. Just get some water too.",
+    textMy: "ဘယ်အမျိုးအစားဖြစ်ဖြစ် ရပါတယ်။ ရေလည်း နည်းနည်းပါ ဝယ်ပေးပါ။",
   },
-  { speaker: "mike", text: "Is there anyone else coming with us?" },
+  {
+    speaker: "mike",
+    text: "Is there anyone else coming with us?",
+    textMy: "နောက်ထပ် ဘယ်သူမှ လိုက်လာမှာလား။",
+  },
   {
     speaker: "sarah",
     text: "No, I didn't invite anyone. We can go anywhere we want.",
+    textMy: "မရှိဘူး၊ ဘယ်သူ့ကိုမှ ဖိတ်မထားဘူး။ ငါတို့ သွားချင်တဲ့နေရာ ဘယ်နေရာမဆို သွားလို့ရတယ်။",
   },
-  { speaker: "mike", text: "Great! What time should I pick you up?" },
-  { speaker: "sarah", text: "Any time after 9 AM is perfect." },
+  {
+    speaker: "mike",
+    text: "Great! What time should I pick you up?",
+    textMy: "ကောင်းပြီ! မင်းကို ဘယ်အချိန် လာခေါ်ရမလဲ။",
+  },
+  {
+    speaker: "sarah",
+    text: "Any time after 9 AM is perfect.",
+    textMy: "မနက် ၉ နာရီနောက်ပိုင်း အချိန်မရွေး အဆင်ပြေပါတယ်။",
+  },
 ];
 
 function withFree1AnyDialog(sections: FreeLessonSection[]): FreeLessonSection[] {

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Play, Square, Volume2 } from "lucide-react";
+import { ArrowLeft, Languages, Play, Square, Volume2 } from "lucide-react";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import { useMessages } from "@/i18n/locale-context";
 import type {
@@ -194,8 +194,10 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
   const [playing, setPlaying] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [supported, setSupported] = useState(false);
+  const [showMy, setShowMy] = useState(false);
   const runIdRef = useRef(0);
   const turnRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const hasMy = turns.some((turn) => Boolean(turn.textMy));
 
   useEffect(() => {
     setSupported("speechSynthesis" in window);
@@ -272,21 +274,36 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
 
   return (
     <div className="mt-6 flex min-w-0 flex-col gap-5 sm:mt-8 sm:gap-6">
-      {supported ? (
-        <button
-          type="button"
-          onClick={playing ? stopDialog : () => void playDialog()}
-          aria-pressed={playing}
-          className={`cta-3d cta-3d-emerald inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-bold ${FOCUS}`}
-        >
-          {playing ? (
-            <Square aria-hidden className="size-4 fill-current" />
-          ) : (
-            <Play aria-hidden className="size-4 fill-current" />
-          )}
-          {playing ? copy.selfStudy.stopDialog : copy.selfStudy.playDialog}
-        </button>
-      ) : null}
+      <div className="flex min-w-0 flex-wrap items-center gap-2.5 sm:gap-3">
+        {supported ? (
+          <button
+            type="button"
+            onClick={playing ? stopDialog : () => void playDialog()}
+            aria-pressed={playing}
+            className={`cta-3d cta-3d-emerald inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-bold text-white transition-[translate,box-shadow] ${FOCUS}`}
+          >
+            {playing ? (
+              <Square aria-hidden className="size-4 fill-current" />
+            ) : (
+              <Play aria-hidden className="size-4 fill-current" />
+            )}
+            {playing ? copy.selfStudy.stopDialog : copy.selfStudy.playDialog}
+          </button>
+        ) : null}
+        {hasMy ? (
+          <button
+            type="button"
+            onClick={() => setShowMy((open) => !open)}
+            aria-pressed={showMy}
+            className={`cta-3d cta-3d-amber inline-flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-bold text-white transition-[translate,box-shadow] ${FOCUS}`}
+          >
+            <Languages aria-hidden className="size-4" />
+            {showMy
+              ? copy.selfStudy.hideTranslation
+              : copy.selfStudy.showTranslation}
+          </button>
+        ) : null}
+      </div>
       <ul className="flex min-w-0 flex-col gap-5 sm:gap-6">
         {turns.map((turn, index) => {
           const speaker = DIALOG_AVATAR[turn.speaker];
@@ -329,6 +346,17 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
                   <p className="min-w-0 text-lg leading-snug font-semibold wrap-break-word sm:text-2xl sm:leading-snug lg:text-3xl">
                     {highlightAnyWords(turn.text)}
                   </p>
+                  {showMy && turn.textMy ? (
+                    <p
+                      className={`mt-3 border-t pt-3 text-base leading-snug font-medium wrap-break-word text-zinc-600 sm:text-lg sm:leading-snug dark:text-zinc-300 ${
+                        isMike
+                          ? "border-emerald-200/80 dark:border-emerald-800/60"
+                          : "border-sky-200/80 dark:border-sky-800/60"
+                      }`}
+                    >
+                      {turn.textMy}
+                    </p>
+                  ) : null}
                 </div>
                 {supported ? (
                   <button
