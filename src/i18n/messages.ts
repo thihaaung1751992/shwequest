@@ -166,6 +166,8 @@ export type Messages = {
     content: string;
     playDialog: string;
     stopDialog: string;
+    playTurn: string;
+    stopTurn: string;
   };
   path: {
     learning: string;
@@ -369,6 +371,8 @@ const en: Messages = {
     content: "Lesson content",
     playDialog: "Play dialog",
     stopDialog: "Stop",
+    playTurn: "Play this line",
+    stopTurn: "Stop this line",
   },
   path: {
     learning: "Learning path",
@@ -562,6 +566,8 @@ const my: Messages = {
     content: "သင်ခန်းစာအကြောင်းအရာ",
     playDialog: "စကားပြော ဖွင့်ရန်",
     stopDialog: "ရပ်ရန်",
+    playTurn: "ဒီစာကြောင်း နားထောင်ရန်",
+    stopTurn: "ဒီစာကြောင်း ရပ်ရန်",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",

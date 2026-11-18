@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Play, Square } from "lucide-react";
+import { ArrowLeft, Play, Square, Volume2 } from "lucide-react";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import { useMessages } from "@/i18n/locale-context";
 import type {
@@ -18,11 +18,9 @@ const FOCUS =
 const DIALOG_AVATAR = {
   mike: {
     src: "/self-study/boy-see-right.webp",
-    name: "Mike",
   },
   sarah: {
     src: "/self-study/girl-see-left.webp",
-    name: "Sarah",
   },
 } as const;
 
@@ -41,6 +39,8 @@ const CLEAR_KNOWN =
 /** Slower + steadier reads clearer than default browser TTS. */
 const SPEAK_RATE = 0.88;
 const SPEAK_GAP_MS = 320;
+/** Fallback wait when `scrollend` is missing — keep short so speech isn’t delayed long. */
+const SCROLL_SETTLE_MS = 420;
 
 /** Highlight teaching word any / anyone / anywhere / anytime in dialog lines. */
 const ANY_WORD = /\bany(?:one|where|time)?\b/gi;
@@ -136,6 +136,32 @@ function pause(ms: number): Promise<void> {
   });
 }
 
+/** Scroll a turn to viewport center and wait until motion settles before TTS. */
+function scrollTurnToCenter(el: HTMLElement): Promise<void> {
+  return new Promise((resolve) => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      block: "center",
+      inline: "nearest",
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+    if (reduceMotion) {
+      resolve();
+      return;
+    }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("scrollend", finish);
+      window.clearTimeout(fallback);
+      resolve();
+    };
+    const fallback = window.setTimeout(finish, SCROLL_SETTLE_MS);
+    window.addEventListener("scrollend", finish, { once: true });
+  });
+}
+
 function speakTurn(
   text: string,
   speaker: FreeLessonDialogSpeaker,
@@ -169,6 +195,7 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [supported, setSupported] = useState(false);
   const runIdRef = useRef(0);
+  const turnRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     setSupported("speechSynthesis" in window);
@@ -196,6 +223,13 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
     setActiveIndex(null);
   };
 
+  const prepareTurn = async (index: number, runId: number) => {
+    setActiveIndex(index);
+    const el = turnRefs.current[index];
+    if (el) await scrollTurnToCenter(el);
+    return runIdRef.current === runId;
+  };
+
   const playDialog = async () => {
     if (!supported || playing) return;
     const runId = runIdRef.current + 1;
@@ -206,7 +240,7 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
     for (let index = 0; index < turns.length; index += 1) {
       if (runIdRef.current !== runId) return;
       const turn = turns[index];
-      setActiveIndex(index);
+      if (!(await prepareTurn(index, runId))) return;
       await speakTurn(turn.text, turn.speaker, voices[turn.speaker]);
       if (runIdRef.current !== runId) return;
       if (index < turns.length - 1) {
@@ -215,6 +249,24 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
     }
     if (runIdRef.current !== runId) return;
     setPlaying(false);
+    setActiveIndex(null);
+  };
+
+  const playTurnAt = async (index: number) => {
+    if (!supported) return;
+    if (activeIndex === index) {
+      stopDialog();
+      return;
+    }
+    const runId = runIdRef.current + 1;
+    runIdRef.current = runId;
+    window.speechSynthesis.cancel();
+    setPlaying(false);
+    if (!(await prepareTurn(index, runId))) return;
+    const voices = pickDialogVoices();
+    const turn = turns[index];
+    await speakTurn(turn.text, turn.speaker, voices[turn.speaker]);
+    if (runIdRef.current !== runId) return;
     setActiveIndex(null);
   };
 
@@ -243,9 +295,12 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
           return (
             <li
               key={`${turn.speaker}-${index}`}
+              ref={(node) => {
+                turnRefs.current[index] = node;
+              }}
               aria-current={isActive ? "true" : undefined}
               className={`flex min-w-0 items-start gap-3 sm:gap-4 ${
-                isMike ? "justify-start pe-4 sm:pe-10" : "justify-end ps-4 sm:ps-10"
+                isMike ? "justify-start pe-9 sm:pe-10" : "justify-end ps-9 sm:ps-10"
               }`}
             >
               {isMike ? (
@@ -259,23 +314,45 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
                   />
                 </span>
               ) : null}
-              <div
-                className={`mt-2 min-w-0 max-w-[min(100%,26rem)] rounded-2xl px-4 py-3.5 transition-[box-shadow,ring-color] sm:mt-3 sm:max-w-xl sm:rounded-3xl sm:px-5 sm:py-4 ${
-                  isMike
-                    ? "rounded-tl-md bg-emerald-50 text-zinc-900 dark:bg-emerald-950/50 dark:text-zinc-50"
-                    : "rounded-tr-md bg-sky-50 text-zinc-900 dark:bg-sky-950/45 dark:text-zinc-50"
-                } ${
-                  isActive
-                    ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-white dark:ring-orange-400 dark:ring-offset-slate-900"
-                    : ""
-                }`}
-              >
-                <p className="text-sm font-black tracking-wide text-zinc-500 uppercase sm:text-base dark:text-zinc-400">
-                  {speaker.name}
-                </p>
-                <p className="mt-2 text-lg leading-snug font-semibold wrap-break-word text-balance sm:text-xl sm:leading-snug">
-                  {highlightAnyWords(turn.text)}
-                </p>
+              <div className="relative mt-2 min-w-0 max-w-[min(100%,26rem)] sm:mt-3 sm:max-w-xl">
+                <div
+                  className={`rounded-2xl px-4 py-3.5 transition-[box-shadow,ring-color] sm:rounded-3xl sm:px-5 sm:py-4 ${
+                    isMike
+                      ? "rounded-tl-md bg-emerald-50 text-zinc-900 dark:bg-emerald-950/50 dark:text-zinc-50"
+                      : "rounded-tr-md bg-sky-50 text-zinc-900 dark:bg-sky-950/45 dark:text-zinc-50"
+                  } ${
+                    isActive
+                      ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-white dark:ring-orange-400 dark:ring-offset-slate-900"
+                      : ""
+                  }`}
+                >
+                  <p className="min-w-0 text-lg leading-snug font-semibold wrap-break-word sm:text-2xl sm:leading-snug lg:text-3xl">
+                    {highlightAnyWords(turn.text)}
+                  </p>
+                </div>
+                {supported ? (
+                  <button
+                    type="button"
+                    onClick={() => void playTurnAt(index)}
+                    aria-label={
+                      isActive ? copy.selfStudy.stopTurn : copy.selfStudy.playTurn
+                    }
+                    aria-pressed={isActive}
+                    className={`absolute top-1 grid size-7 cursor-pointer place-items-center rounded-full text-zinc-500 transition-colors hover:bg-black/5 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${
+                      isMike ? "-end-8" : "-start-8"
+                    } ${FOCUS} ${
+                      isActive
+                        ? "bg-orange-500/15 text-orange-700 dark:bg-orange-400/20 dark:text-orange-300"
+                        : ""
+                    }`}
+                  >
+                    {isActive ? (
+                      <Square aria-hidden className="size-3 fill-current" />
+                    ) : (
+                      <Volume2 aria-hidden className="size-3.5" />
+                    )}
+                  </button>
+                ) : null}
               </div>
               {!isMike ? (
                 <span className="relative h-44 w-24 shrink-0 sm:h-56 sm:w-32">
@@ -307,7 +384,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
   const activeNumber = activeIndex >= 0 ? activeIndex + 1 : 1;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="mb-16 flex flex-col gap-5 sm:mb-24">
       <Link
         href="/self-study"
         className={`pill-3d pill-3d-amber inline-flex min-h-11 w-fit items-center gap-2 rounded-full px-4 text-sm font-bold text-amber-950 ${FOCUS}`}
