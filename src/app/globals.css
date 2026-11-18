@@ -815,6 +815,62 @@
   }
 }
 
+/* Comic speech bubble: ink outline, flat offset shadow, tail toward the speaker. */
+@utility speech-bubble {
+  --bubble-ink: var(--color-zinc-900);
+  --bubble-shadow: var(--bubble-ink);
+  position: relative;
+  border: 3px solid var(--bubble-ink);
+  border-radius: 1.75rem;
+  background-color: var(--bubble-bg, var(--color-white));
+  box-shadow: 5px 5px 0 var(--bubble-shadow);
+  transition:
+    translate 150ms ease,
+    box-shadow 150ms ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    background-color: inherit;
+    border: inherit;
+    border-radius: 0 0 0 4px;
+    border-top-color: transparent;
+    border-right-color: transparent;
+  }
+
+  &:where(.dark, .dark *) {
+    --bubble-ink: var(--color-zinc-100);
+    --bubble-shadow: color-mix(in oklab, var(--color-zinc-100) 35%, transparent);
+  }
+}
+
+@utility speech-bubble-left {
+  &::before {
+    left: calc(-0.75rem - 1.5px);
+    rotate: 45deg;
+  }
+}
+
+@utility speech-bubble-right {
+  &::before {
+    right: calc(-0.75rem - 1.5px);
+    rotate: -135deg;
+  }
+}
+
+@utility speech-bubble-active {
+  --bubble-shadow: var(--color-orange-500);
+  translate: -2px -2px;
+  box-shadow: 7px 7px 0 var(--bubble-shadow);
+
+  &:where(.dark, .dark *) {
+    --bubble-shadow: var(--color-orange-400);
+  }
+}
+
 /* Dotted tone backdrop behind a portrait (teacher card stage, intro band). */
 @utility teacher-stage {
   background-image:

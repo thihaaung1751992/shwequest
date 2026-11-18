@@ -333,26 +333,18 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
               ) : null}
               <div className="relative mt-2 min-w-0 max-w-[min(100%,26rem)] sm:mt-3 sm:max-w-xl">
                 <div
-                  className={`rounded-2xl px-4 py-3.5 transition-[box-shadow,ring-color] sm:rounded-3xl sm:px-5 sm:py-4 ${
+                  className={`speech-bubble px-4 py-3.5 text-zinc-900 sm:px-6 sm:py-4 dark:text-zinc-50 ${
                     isMike
-                      ? "rounded-tl-md bg-emerald-50 text-zinc-900 dark:bg-emerald-950/50 dark:text-zinc-50"
-                      : "rounded-tr-md bg-sky-50 text-zinc-900 dark:bg-sky-950/45 dark:text-zinc-50"
-                  } ${
-                    isActive
-                      ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-white dark:ring-orange-400 dark:ring-offset-slate-900"
-                      : ""
-                  }`}
+                      ? "speech-bubble-left [--bubble-bg:var(--color-lime-100)] dark:[--bubble-bg:var(--color-emerald-950)]"
+                      : "speech-bubble-right [--bubble-bg:var(--color-sky-100)] dark:[--bubble-bg:var(--color-sky-950)]"
+                  } ${isActive ? "speech-bubble-active" : ""}`}
                 >
-                  <p className="min-w-0 text-lg leading-snug font-semibold wrap-break-word sm:text-2xl sm:leading-snug lg:text-3xl">
+                  <p className="min-w-0 text-lg leading-snug font-bold wrap-break-word sm:text-2xl sm:leading-snug lg:text-3xl">
                     {highlightAnyWords(turn.text)}
                   </p>
                   {showMy && turn.textMy ? (
                     <p
-                      className={`mt-3 border-t pt-3 text-base leading-snug font-medium wrap-break-word text-zinc-600 sm:text-lg sm:leading-snug dark:text-zinc-300 ${
-                        isMike
-                          ? "border-emerald-200/80 dark:border-emerald-800/60"
-                          : "border-sky-200/80 dark:border-sky-800/60"
-                      }`}
+                      className="mt-3 border-t-2 border-dashed border-zinc-900/25 pt-3 text-base leading-snug font-medium wrap-break-word text-zinc-700 sm:text-lg sm:leading-snug dark:border-zinc-100/25 dark:text-zinc-300"
                     >
                       {turn.textMy}
                     </p>
