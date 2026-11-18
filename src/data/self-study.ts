@@ -5,8 +5,18 @@ import {
 import {
   FREE_1_ANY_DIALOG_NOTE,
   FREE_1_ANYTIME_DIALOG_NOTE,
+  FREE_16_IM_AT_DIALOG_NOTE,
+  FREE_16_IM_AT_IN_SWAP_DIALOG_NOTE,
   FREE_16_IM_DESCRIPTIVE_DIALOG_NOTE,
   FREE_16_IM_DIALOG_NOTE,
+  FREE_16_IM_GETTING_DIALOG_NOTE,
+  FREE_16_IM_GOOD_AT_DIALOG_NOTE,
+  FREE_16_IM_IN_DIALOG_NOTE,
+  FREE_16_IM_ON_DIALOG_NOTE,
+  FREE_16_IM_GONNA_DIALOG_NOTE,
+  FREE_16_IM_TRYING_DIALOG_NOTE,
+  FREE_16_IM_TRYING_HARDSHIP_DIALOG_NOTE,
+  FREE_16_IM_VERB_DIALOG_NOTE,
   type FreeLessonDialogNote,
 } from "@/data/any-dialog-note";
 import {
@@ -212,6 +222,443 @@ const FREE_16_IM_DESCRIPTIVE_DIALOG: FreeLessonDialogTurn[] = [
   },
 ];
 
+/** Dialogs for free-16 "Variations of 'I'm in/at/on'". */
+const FREE_16_IM_IN_DIALOG_TITLE = "Being inside a place";
+const FREE_16_IM_IN_DIALOG_TITLE_MY = "နေရာတစ်ခုရဲ့ အတွင်းမှာ ရှိနေခြင်း";
+
+const FREE_16_IM_IN_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "mike",
+    text: "I'm in the shower.",
+    textMy: "ငါ ရေချိုးခန်းထဲမှာ ရှိနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm in the lobby.",
+    textMy: "ငါ lobby ထဲမှာ ရှိနေတယ်။",
+  },
+  { speaker: "mike", text: "I'm in a car.", textMy: "ငါ ကားထဲမှာ ရှိနေတယ်။" },
+  {
+    speaker: "mike",
+    text: "I'm in a house.",
+    textMy: "ငါ အိမ်ထဲမှာ ရှိနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm in a school.",
+    textMy: "ငါ ကျောင်းထဲမှာ ရှိနေတယ်။",
+  },
+];
+
+const FREE_16_IM_AT_DIALOG_TITLE = "Saying where you are";
+const FREE_16_IM_AT_DIALOG_TITLE_MY = "ဘယ်နေရာ ရောက်နေတယ်ဆိုတာ ပြောခြင်း";
+
+const FREE_16_IM_AT_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "sarah",
+    text: "I'm at the grocery.",
+    textMy: "ငါ ကုန်စုံဆိုင်မှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm at the mall.",
+    textMy: "ငါ mall မှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm at the doctor's office.",
+    textMy: "ငါ ဆရာဝန်ရုံးမှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm at the park.",
+    textMy: "ငါ ပန်းခြံမှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm at the airport.",
+    textMy: "ငါ လေဆိပ်မှာ ရောက်နေတယ်။",
+  },
+];
+
+const FREE_16_IM_AT_IN_SWAP_DIALOG_TITLE = "Same place, either word";
+const FREE_16_IM_AT_IN_SWAP_DIALOG_TITLE_MY =
+  "တူညီတဲ့နေရာ — at / in နှစ်ခုလုံး သုံးနိုင်ခြင်း";
+
+const FREE_16_IM_AT_IN_SWAP_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "mike",
+    text: "I'm at the mall.",
+    textMy: "ငါ mall မှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm in the mall.",
+    textMy: "ငါ mall ထဲမှာ ရှိနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm at the park.",
+    textMy: "ငါ ပန်းခြံမှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm in the park.",
+    textMy: "ငါ ပန်းခြံထဲမှာ ရှိနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm at the grocery.",
+    textMy: "ငါ ကုန်စုံဆိုင်မှာ ရောက်နေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm in the grocery.",
+    textMy: "ငါ ကုန်စုံဆိုင်ထဲမှာ ရှိနေတယ်။",
+  },
+];
+
+const FREE_16_IM_ON_DIALOG_TITLE = "Busy with something";
+const FREE_16_IM_ON_DIALOG_TITLE_MY = "တစ်ခုခုမှာ အချိန်ပေးနေခြင်း";
+
+const FREE_16_IM_ON_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "sarah",
+    text: "I'm on the phone.",
+    textMy: "ငါ ဖုန်းပြောနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm on my computer.",
+    textMy: "ငါ ကွန်ပျူတာ သုံးနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm on a bus.",
+    textMy: "ငါ ဘတ်စ်ကားပေါ်မှာ ရှိနေတယ်။",
+  },
+];
+
+/** Dialog for free-16 "I'm good at" — Mike (boy). */
+const FREE_16_IM_GOOD_AT_DIALOG_TITLE = "Talking about skills";
+const FREE_16_IM_GOOD_AT_DIALOG_TITLE_MY = "ကျွမ်းကျင်မှုတွေအကြောင်း ပြောခြင်း";
+
+const FREE_16_IM_GOOD_AT_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "mike",
+    text: "I'm good at drawing.",
+    textMy: "ငါ ပုံဆွဲတာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at video games.",
+    textMy: "ငါ ဗီဒီယိုဂိမ်း ကစားတာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at swimming.",
+    textMy: "ငါ ရေကူးတာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at driving.",
+    textMy: "ငါ ကားမောင်းတာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at reading.",
+    textMy: "ငါ စာဖတ်တာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at sports.",
+    textMy: "ငါ အားကစားမှာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at writing.",
+    textMy: "ငါ စာရေးတာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at math.",
+    textMy: "ငါ သင်္ချာမှာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at dancing.",
+    textMy: "ငါ ကခုန်တာ ကျွမ်းကျင်တယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm good at chess.",
+    textMy: "ငါ စစ်တုရင် ကစားတာ ကျွမ်းကျင်တယ်။",
+  },
+];
+
+/** Dialog for free-16 "I'm + (verb)" — Sarah (girl). */
+const FREE_16_IM_VERB_DIALOG_TITLE = "Saying what I'm doing";
+const FREE_16_IM_VERB_DIALOG_TITLE_MY = "လက်ရှိလုပ်နေတာ / ဖြစ်နေတာကို ပြောခြင်း";
+
+const FREE_16_IM_VERB_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "sarah",
+    text: "I'm eating lunch.",
+    textMy: "ငါ နေ့လယ်စာ စားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm brushing my teeth.",
+    textMy: "ငါ သွားတိုက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm scared.",
+    textMy: "ငါ ကြောက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm driving to work.",
+    textMy: "ငါ အလုပ်ကို ကားမောင်းသွားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm crying.",
+    textMy: "ငါ ငိုနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm typing an email.",
+    textMy: "ငါ email ရိုက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm cooking dinner.",
+    textMy: "ငါ ညစာ ချက်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm combing my hair.",
+    textMy: "ငါ ဆံပင် ဖြီးနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm hanging a picture.",
+    textMy: "ငါ ပုံတစ်ပုံ ချိတ်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am texting.",
+    textMy: "ငါ စာပို့နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am dancing.",
+    textMy: "ငါ ကခုန်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am interested in the job.",
+    textMy: "ငါ အဲဒီအလုပ်ကို စိတ်ဝင်စားတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am exercising.",
+    textMy: "ငါ လေ့ကျင့်ခန်း လုပ်နေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am sad.",
+    textMy: "ငါ ဝမ်းနည်းနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am learning.",
+    textMy: "ငါ သင်ယူနေတယ်။",
+  },
+];
+
+/** Dialog for free-16 "I'm getting" — Mike (boy). */
+const FREE_16_IM_GETTING_DIALOG_TITLE = "Saying what I'm getting";
+const FREE_16_IM_GETTING_DIALOG_TITLE_MY =
+  "ဖြစ်လာနေတာ / ရရှိတော့မယ်ဆိုတာ ပြောခြင်း";
+
+const FREE_16_IM_GETTING_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "mike",
+    text: "I'm getting better.",
+    textMy: "ငါ ပိုကောင်းလာနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting ready for bed.",
+    textMy: "ငါ အိပ်ဖို့ ပြင်ဆင်နေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting a tooth ache.",
+    textMy: "ငါ သွားကိုက်လာနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting a cold.",
+    textMy: "ငါ အအေးမိလာနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting married.",
+    textMy: "ငါ လက်ထပ်တော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting tired.",
+    textMy: "ငါ ပင်ပန်းလာနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting good at reading.",
+    textMy: "ငါ စာဖတ်တာ ပိုကျွမ်းကျင်လာနေတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting a new car.",
+    textMy: "ငါ ကားအသစ် ရတော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting a job.",
+    textMy: "ငါ အလုပ်ရတော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm getting a puppy.",
+    textMy: "ငါ ခွေးကလေး ရတော့မယ်။",
+  },
+];
+
+/** Dialog for free-16 "I'm trying + (verb)" — Sarah (girl), effort. */
+const FREE_16_IM_TRYING_DIALOG_TITLE = "Saying what I'm trying";
+const FREE_16_IM_TRYING_DIALOG_TITLE_MY = "ကြိုးစားလုပ်နေတာကို ပြောခြင်း";
+
+const FREE_16_IM_TRYING_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "sarah",
+    text: "I'm trying to get a job.",
+    textMy: "ငါ အလုပ်ရဖို့ ကြိုးစားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying to call my family.",
+    textMy: "ငါ မိသားစုကို ဖုန်းဆက်ဖို့ ကြိုးစားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying to enjoy my dinner.",
+    textMy: "ငါ ညစာကို ပျော်ပျော်ရွှင်ရွှင် စားဖို့ ကြိုးစားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying to educate myself.",
+    textMy: "ငါ ကိုယ့်ကိုယ်ကို ပညာတတ်အောင် ကြိုးစားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying to explain myself.",
+    textMy: "ငါ ကိုယ့်အကြောင်းကို ရှင်းပြဖို့ ကြိုးစားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying new food.",
+    textMy: "ငါ အစားအသောက်အသစ် စမ်းသုံးနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying to eat healthy.",
+    textMy: "ငါ ကျန်းမာရေးနဲ့ညီအောင် စားဖို့ ကြိုးစားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm trying to understand.",
+    textMy: "ငါ နားလည်အောင် ကြိုးစားနေတယ်။",
+  },
+];
+
+/** Dialog for free-16 "trying" as hardship — Mike (boy). */
+const FREE_16_IM_TRYING_HARDSHIP_DIALOG_TITLE = "When something is trying";
+const FREE_16_IM_TRYING_HARDSHIP_DIALOG_TITLE_MY =
+  "ပင်ပန်း / စိတ်ဖိစီးစရာ ဖြစ်ခြင်း";
+
+const FREE_16_IM_TRYING_HARDSHIP_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "mike",
+    text: "Learning new things can be trying on you.",
+    textMy:
+      "အသစ်အဆန်းတွေ သင်ယူရတာက သင့်အတွက် ပင်ပန်း / စိတ်ဖိစီးစရာ ဖြစ်နိုင်ပါတယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "That marathon was very trying on me.",
+    textMy: "အဲဒီ marathon က ငါ့အတွက် အရမ်းပင်ပန်း / စိတ်ဖိစီးစရာ ဖြစ်ခဲ့တယ်။",
+  },
+];
+
+/** Dialog for free-16 "I'm gonna + (verb)" — Mike (boy). */
+const FREE_16_IM_GONNA_DIALOG_TITLE = "Saying what I'm gonna do";
+const FREE_16_IM_GONNA_DIALOG_TITLE_MY = "လုပ်ဖို့ အစီအစဉ်ရှိတာကို ပြောခြင်း";
+
+const FREE_16_IM_GONNA_DIALOG: FreeLessonDialogTurn[] = [
+  {
+    speaker: "mike",
+    text: "I'm gonna have some coffee.",
+    textMy: "ငါ ကော်ဖီ သောက်တော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna go to work.",
+    textMy: "ငါ အလုပ် သွားတော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna eat some cake.",
+    textMy: "ငါ ကိတ်မုန့် စားတော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna send out my resume.",
+    textMy: "ငါ ငါ့ resume ပို့တော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna run a marathon.",
+    textMy: "ငါ marathon ပြေးတော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna ask her out for dinner.",
+    textMy: "ငါ သူမကို ညစာ စားဖို့ ဖိတ်တော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna stop smoking.",
+    textMy: "ငါ ဆေးလိပ် ဖြတ်တော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna help my friends.",
+    textMy: "ငါ သူငယ်ချင်းတွေကို ကူညီတော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna take swim lessons.",
+    textMy: "ငါ ရေကူး သင်တန်း တက်တော့မယ်။",
+  },
+  {
+    speaker: "mike",
+    text: "I'm gonna read a book.",
+    textMy: "ငါ စာအုပ် ဖတ်တော့မယ်။",
+  },
+];
+
 function withFree1AnyDialog(sections: FreeLessonSection[]): FreeLessonSection[] {
   return sections.map((section) => {
     if (section.id === "free-1-s1") {
@@ -259,6 +706,118 @@ function withFree16ImDialog(sections: FreeLessonSection[]): FreeLessonSection[] 
             dialog: FREE_16_IM_DESCRIPTIVE_DIALOG,
             dialogTitle: FREE_16_IM_DESCRIPTIVE_DIALOG_TITLE,
             dialogTitleMy: FREE_16_IM_DESCRIPTIVE_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    if (section.id === "free-16-s2") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_IN_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_IN_DIALOG,
+            dialogTitle: FREE_16_IM_IN_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_IN_DIALOG_TITLE_MY,
+          },
+          { type: "dialogNote", note: FREE_16_IM_AT_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_AT_DIALOG,
+            dialogTitle: FREE_16_IM_AT_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_AT_DIALOG_TITLE_MY,
+          },
+          { type: "dialogNote", note: FREE_16_IM_AT_IN_SWAP_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_AT_IN_SWAP_DIALOG,
+            dialogTitle: FREE_16_IM_AT_IN_SWAP_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_AT_IN_SWAP_DIALOG_TITLE_MY,
+          },
+          { type: "dialogNote", note: FREE_16_IM_ON_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_ON_DIALOG,
+            dialogTitle: FREE_16_IM_ON_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_ON_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    if (section.id === "free-16-s3") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_GOOD_AT_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_GOOD_AT_DIALOG,
+            dialogTitle: FREE_16_IM_GOOD_AT_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_GOOD_AT_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    if (section.id === "free-16-s4") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_VERB_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_VERB_DIALOG,
+            dialogTitle: FREE_16_IM_VERB_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_VERB_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    if (section.id === "free-16-s5") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_GETTING_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_GETTING_DIALOG,
+            dialogTitle: FREE_16_IM_GETTING_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_GETTING_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    if (section.id === "free-16-s6") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_TRYING_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_TRYING_DIALOG,
+            dialogTitle: FREE_16_IM_TRYING_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_TRYING_DIALOG_TITLE_MY,
+          },
+          { type: "dialogNote", note: FREE_16_IM_TRYING_HARDSHIP_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_TRYING_HARDSHIP_DIALOG,
+            dialogTitle: FREE_16_IM_TRYING_HARDSHIP_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_TRYING_HARDSHIP_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    if (section.id === "free-16-s7") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_GONNA_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_GONNA_DIALOG,
+            dialogTitle: FREE_16_IM_GONNA_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_GONNA_DIALOG_TITLE_MY,
           },
         ],
       };
@@ -609,6 +1168,19 @@ export function freeLessonStaticParams(): { id: string }[] {
   return FREE_LESSONS.map((lesson) => ({ id: lesson.id }));
 }
 
-export function freeLessonHref(id: string): string {
-  return `/self-study/${id}`;
+export function freeLessonHref(id: string, sectionId?: string): string {
+  if (!sectionId) return `/self-study/${id}`;
+  return `/self-study/${id}?section=${encodeURIComponent(sectionId)}`;
+}
+
+/** Pick a valid section id from `?section=`; fall back to the first section. */
+export function resolveFreeLessonSectionId(
+  sections: readonly { id: string }[],
+  requested: string | null | undefined,
+): string {
+  const first = sections[0]?.id ?? "";
+  if (!requested) return first;
+  return sections.some((section) => section.id === requested)
+    ? requested
+    : first;
 }

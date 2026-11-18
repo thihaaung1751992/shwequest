@@ -6,9 +6,16 @@ import SelfStudyCourse from "@/components/self-study/self-study-course";
 import {
   freeLessonById,
   freeLessonStaticParams,
+  resolveFreeLessonSectionId,
 } from "@/data/self-study";
 
 type LessonParams = Promise<{ id: string }>;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+function firstParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
 
 export function generateStaticParams() {
   return freeLessonStaticParams();
@@ -25,17 +32,32 @@ export async function generateMetadata({
   return { title: `${lesson.title} · Shwequest` };
 }
 
-async function SelfStudyCourseFromParams({ params }: { params: LessonParams }) {
+async function SelfStudyCourseFromParams({
+  params,
+  searchParams,
+}: {
+  params: LessonParams;
+  searchParams: SearchParams;
+}) {
   const { id } = await params;
   const lesson = freeLessonById(id);
   if (!lesson) notFound();
-  return <SelfStudyCourse lesson={lesson} />;
+  const sectionParam = firstParam((await searchParams).section);
+  const initialSectionId = resolveFreeLessonSectionId(
+    lesson.sections,
+    sectionParam,
+  );
+  return (
+    <SelfStudyCourse lesson={lesson} initialSectionId={initialSectionId} />
+  );
 }
 
 export default function SelfStudyCoursePage({
   params,
+  searchParams,
 }: {
   params: LessonParams;
+  searchParams: SearchParams;
 }) {
   return (
     <PageShell title="Self study">
@@ -47,7 +69,10 @@ export default function SelfStudyCoursePage({
           </div>
         }
       >
-        <SelfStudyCourseFromParams params={params} />
+        <SelfStudyCourseFromParams
+          params={params}
+          searchParams={searchParams}
+        />
       </Suspense>
     </PageShell>
   );

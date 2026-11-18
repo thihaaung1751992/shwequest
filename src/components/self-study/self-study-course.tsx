@@ -34,6 +34,13 @@ import type {
 const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
 
+/** Map Myanmar digits ၀–၉ → 0–9 so sidebar number search works either way. */
+function normalizeMyanmarDigits(value: string): string {
+  return value.replace(/[\u1040-\u1049]/g, (ch) =>
+    String(ch.charCodeAt(0) - 0x1040),
+  );
+}
+
 const DIALOG_AVATAR = {
   mike: {
     src: "/self-study/boy-see-right.webp",
@@ -158,31 +165,49 @@ function pause(ms: number): Promise<void> {
   });
 }
 
-/** Scroll a turn to viewport center and wait until motion settles before TTS. */
-function scrollTurnToCenter(el: HTMLElement): Promise<void> {
-  return new Promise((resolve) => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({
-      block: "center",
-      inline: "nearest",
-      behavior: reduceMotion ? "auto" : "smooth",
+  /** Scroll `row` to the vertical middle of `container` without scrolling the page. */
+  function centerRowInContainer(container: HTMLElement, row: HTMLElement) {
+    const containerRect = container.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const delta =
+      rowRect.top -
+      containerRect.top -
+      (container.clientHeight - rowRect.height) / 2;
+    container.scrollTop += delta;
+  }
+
+  function centerActiveRow(container: HTMLElement | null) {
+    if (!container) return;
+    const row = container.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!row) return;
+    centerRowInContainer(container, row);
+  }
+
+  /** Scroll a turn to viewport center and wait until motion settles before TTS. */
+  function scrollTurnToCenter(el: HTMLElement): Promise<void> {
+    return new Promise((resolve) => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({
+        block: "center",
+        inline: "nearest",
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+      if (reduceMotion) {
+        resolve();
+        return;
+      }
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener("scrollend", finish);
+        window.clearTimeout(fallback);
+        resolve();
+      };
+      const fallback = window.setTimeout(finish, SCROLL_SETTLE_MS);
+      window.addEventListener("scrollend", finish, { once: true });
     });
-    if (reduceMotion) {
-      resolve();
-      return;
-    }
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      window.removeEventListener("scrollend", finish);
-      window.clearTimeout(fallback);
-      resolve();
-    };
-    const fallback = window.setTimeout(finish, SCROLL_SETTLE_MS);
-    window.addEventListener("scrollend", finish, { once: true });
-  });
-}
+  }
 
 function speakTurn(
   text: string,
@@ -463,11 +488,23 @@ function SectionDialog({
   );
 }
 
-export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
+export default function SelfStudyCourse({
+  lesson,
+  initialSectionId,
+}: {
+  lesson: FreeLesson;
+  /** From `?section=` — keeps the open lesson selected across reload. */
+  initialSectionId?: string;
+}) {
   const copy = useMessages();
   const accent = ACCENT_STYLES[lesson.accent];
   const firstSectionId = lesson.sections[0]?.id ?? "";
-  const [activeId, setActiveId] = useState(firstSectionId);
+  const resolvedInitial =
+    initialSectionId &&
+    lesson.sections.some((section) => section.id === initialSectionId)
+      ? initialSectionId
+      : firstSectionId;
+  const [activeId, setActiveId] = useState(resolvedInitial);
   const [sectionMenuOpen, setSectionMenuOpen] = useState(false);
   const [sectionQuery, setSectionQuery] = useState("");
   /** True while the nav can scroll further down (manual or via ChevronDown). */
@@ -485,14 +522,29 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
     activeIndex >= 0 ? lesson.sections[activeIndex] : lesson.sections[0];
   const activeNumber = activeIndex >= 0 ? activeIndex + 1 : 1;
 
+  function selectSection(sectionId: string) {
+    setActiveId(sectionId);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (sectionId === firstSectionId) {
+      url.searchParams.delete("section");
+    } else {
+      url.searchParams.set("section", sectionId);
+    }
+    const next = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(window.history.state, "", next);
+  }
+
   const filteredSections = useMemo(() => {
     const q = sectionQuery.trim().toLowerCase();
     const indexed = lesson.sections.map((section, index) => ({ section, index }));
     if (!q) return indexed;
-    return indexed.filter(({ section }) => {
+    const qDigits = normalizeMyanmarDigits(q);
+    return indexed.filter(({ section, index }) => {
       const title = section.title.toLowerCase();
       const bodyMy = section.bodyMy?.toLowerCase() ?? "";
-      return title.includes(q) || bodyMy.includes(q);
+      const number = String(index + 1);
+      return title.includes(q) || bodyMy.includes(q) || number === qDigits;
     });
   }, [lesson.sections, sectionQuery]);
 
@@ -519,6 +571,16 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
     };
   }, [filteredSections.length]);
 
+  /** Center active row once on load/reload — not when the user clicks a section. */
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const frame = window.requestAnimationFrame(() => {
+      centerActiveRow(nav);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   useEffect(() => {
     if (!sectionMenuOpen) return;
 
@@ -542,7 +604,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
     const frame = window.requestAnimationFrame(() => {
       sectionListRef.current
         ?.querySelector<HTMLElement>('[aria-current="true"]')
-        ?.scrollIntoView({ block: "nearest" });
+        ?.scrollIntoView({ block: "nearest", inline: "nearest" });
     });
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
@@ -727,7 +789,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
                             aria-selected={current}
                             aria-current={current ? "true" : undefined}
                             onClick={() => {
-                              setActiveId(section.id);
+                              selectSection(section.id);
                               setSectionMenuOpen(false);
                             }}
                             className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
@@ -805,7 +867,7 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
                       <button
                         type="button"
                         aria-current={current ? "true" : undefined}
-                        onClick={() => setActiveId(section.id)}
+                        onClick={() => selectSection(section.id)}
                         className={`group/row flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left text-sm font-bold tracking-tight transition-[background-color,border-color,box-shadow,translate] ${FOCUS} ${
                           current
                             ? "border-zinc-900 bg-white text-zinc-950 shadow-[3px_3px_0_var(--color-zinc-900)] dark:border-zinc-100 dark:bg-slate-800 dark:text-white dark:shadow-[3px_3px_0_var(--color-zinc-100)]"
