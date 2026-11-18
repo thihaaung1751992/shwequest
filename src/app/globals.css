@@ -786,6 +786,35 @@
   }
 }
 
+/* Reading panes: keep lip face, no tilt / glare wash / lift (self-study dialog). */
+@utility teacher-card-static {
+  transform: none;
+  transition: box-shadow 200ms ease;
+
+  &::after {
+    content: none;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    transform: none;
+
+    &:hover {
+      --card-lip: 6px;
+      translate: none;
+      transition: box-shadow 200ms ease;
+    }
+
+    &:hover::after {
+      opacity: 0;
+    }
+
+    &:active {
+      --card-lip: 6px;
+      translate: none;
+    }
+  }
+}
+
 /* Dotted tone backdrop behind a portrait (teacher card stage, intro band). */
 @utility teacher-stage {
   background-image:

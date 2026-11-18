@@ -4,12 +4,50 @@ import {
 } from "@/data/everyday-basic-english";
 import type { TeacherAccent } from "@/data/teachers";
 
+export type FreeLessonDialogSpeaker = "mike" | "sarah";
+
+export type FreeLessonDialogTurn = {
+  speaker: FreeLessonDialogSpeaker;
+  text: string;
+};
+
 export type FreeLessonSection = {
   id: string;
   title: string;
   /** Myanmar gloss for the right content pane (optional). */
   bodyMy?: string;
+  /** EN speaking turns for the white pane under the title stage (optional). */
+  dialog?: FreeLessonDialogTurn[];
 };
+
+/** EN-only dialog for free-1 section "Any" (no Myanmar lines). */
+const FREE_1_ANY_DIALOG: FreeLessonDialogTurn[] = [
+  { speaker: "mike", text: "Do we need any snacks for the trip?" },
+  {
+    speaker: "sarah",
+    text: "Yes, but we don't have any chips left at home.",
+  },
+  { speaker: "mike", text: "Should I buy potato chips or corn chips?" },
+  {
+    speaker: "sarah",
+    text: "Any kind is fine with me. Just get some water too.",
+  },
+  { speaker: "mike", text: "Is there anyone else coming with us?" },
+  {
+    speaker: "sarah",
+    text: "No, I didn't invite anyone. We can go anywhere we want.",
+  },
+  { speaker: "mike", text: "Great! What time should I pick you up?" },
+  { speaker: "sarah", text: "Any time after 9 AM is perfect." },
+];
+
+function withFree1AnyDialog(sections: FreeLessonSection[]): FreeLessonSection[] {
+  return sections.map((section) =>
+    section.id === "free-1-s1"
+      ? { ...section, dialog: FREE_1_ANY_DIALOG }
+      : section,
+  );
+}
 
 export type FreeLesson = {
   id: string;
@@ -53,7 +91,9 @@ export const FREE_LESSONS: FreeLesson[] = [
     duration: "891",
     accent: "emerald",
     available: true,
-    sections: sectionsFromPhrases("free-1", EVERYDAY_BASIC_ENGLISH_PHRASES),
+    sections: withFree1AnyDialog(
+      sectionsFromPhrases("free-1", EVERYDAY_BASIC_ENGLISH_PHRASES),
+    ),
   },
   {
     id: "free-2",

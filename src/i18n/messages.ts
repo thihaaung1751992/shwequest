@@ -164,6 +164,8 @@ export type Messages = {
     back: string;
     sections: string;
     content: string;
+    playDialog: string;
+    stopDialog: string;
   };
   path: {
     learning: string;
@@ -365,6 +367,8 @@ const en: Messages = {
     back: "Back to self study",
     sections: "Lesson sections",
     content: "Lesson content",
+    playDialog: "Play dialog",
+    stopDialog: "Stop",
   },
   path: {
     learning: "Learning path",
@@ -556,6 +560,8 @@ const my: Messages = {
     back: "ကိုယ်တိုင်သင်သို့",
     sections: "သင်ခန်းစာခေါင်းစဉ်များ",
     content: "သင်ခန်းစာအကြောင်းအရာ",
+    playDialog: "စကားပြော ဖွင့်ရန်",
+    stopDialog: "ရပ်ရန်",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",
