@@ -20,6 +20,7 @@ import {
   Volume2,
   X,
 } from "lucide-react";
+import SectionDialogNote from "@/components/self-study/self-study-dialog-note";
 import SectionGrammar from "@/components/self-study/self-study-grammar";
 import SectionReading from "@/components/self-study/self-study-reading";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
@@ -210,7 +211,15 @@ function speakTurn(
   });
 }
 
-function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
+function SectionDialog({
+  turns,
+  title,
+  titleMy,
+}: {
+  turns: FreeLessonDialogTurn[];
+  title?: string;
+  titleMy?: string;
+}) {
   const copy = useMessages();
   const [playing, setPlaying] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -295,6 +304,27 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
 
   return (
     <div className="mt-6 flex min-w-0 flex-col gap-5 sm:mt-8 sm:gap-6">
+      {title ? (
+        <header className="min-w-0">
+          <p className="text-[0.7rem] font-black tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
+            Dialog
+          </p>
+          <h4 className="mt-1.5 text-2xl leading-snug font-black tracking-tight text-zinc-950 sm:text-3xl dark:text-white">
+            {title}
+            {titleMy ? (
+              <>
+                {" "}
+                <span
+                  lang="my"
+                  className="font-bold text-zinc-600 dark:text-zinc-300"
+                >
+                  ({titleMy})
+                </span>
+              </>
+            ) : null}
+          </h4>
+        </header>
+      ) : null}
       <div className="flex min-w-0 flex-wrap items-center gap-2.5 sm:gap-3">
         {supported ? (
           <button
@@ -353,12 +383,12 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
               }`}
             >
               {isMike ? (
-                <span className="relative h-44 w-24 shrink-0 sm:h-56 sm:w-32">
+                <span className="relative h-28 w-16 shrink-0 sm:h-36 sm:w-20">
                   <Image
                     src={speaker.src}
                     alt=""
                     fill
-                    sizes="128px"
+                    sizes="80px"
                     className="object-contain object-bottom"
                   />
                 </span>
@@ -415,12 +445,12 @@ function SectionDialog({ turns }: { turns: FreeLessonDialogTurn[] }) {
                 ) : null}
               </div>
               {!isMike ? (
-                <span className="relative h-44 w-24 shrink-0 sm:h-56 sm:w-32">
+                <span className="relative h-28 w-16 shrink-0 sm:h-36 sm:w-20">
                   <Image
                     src={speaker.src}
                     alt=""
                     fill
-                    sizes="128px"
+                    sizes="80px"
                     className="object-contain object-bottom"
                   />
                 </span>
@@ -587,6 +617,14 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
           <h2 className="mt-3 shrink-0 text-xl font-black tracking-tight sm:text-2xl">
             {lesson.title}
           </h2>
+          {lesson.titleMy ? (
+            <p
+              lang="my"
+              className="mt-1 shrink-0 text-sm font-bold text-zinc-600 dark:text-zinc-300"
+            >
+              {lesson.titleMy}
+            </p>
+          ) : null}
           <div ref={sectionMenuRef} className="mt-4 shrink-0">
             <form
               role="search"
@@ -868,9 +906,36 @@ export default function SelfStudyCourse({ lesson }: { lesson: FreeLesson }) {
                     </p>
                   ) : null}
                 </header>
-                {activeSection.dialog?.length ? (
-                  <SectionDialog turns={activeSection.dialog} />
-                ) : null}
+                {activeSection.blocks?.length ? (
+                  activeSection.blocks.map((block, blockIndex) =>
+                    block.type === "dialogNote" ? (
+                      <SectionDialogNote
+                        key={`note-${blockIndex}`}
+                        note={block.note}
+                      />
+                    ) : (
+                      <SectionDialog
+                        key={`dialog-${blockIndex}`}
+                        turns={block.dialog}
+                        title={block.dialogTitle}
+                        titleMy={block.dialogTitleMy}
+                      />
+                    ),
+                  )
+                ) : (
+                  <>
+                    {activeSection.dialog?.length ? (
+                      <SectionDialog
+                        turns={activeSection.dialog}
+                        title={activeSection.dialogTitle}
+                        titleMy={activeSection.dialogTitleMy}
+                      />
+                    ) : null}
+                    {activeSection.dialogNote ? (
+                      <SectionDialogNote note={activeSection.dialogNote} />
+                    ) : null}
+                  </>
+                )}
               </div>
             ) : null}
           </section>

@@ -30,7 +30,11 @@ export default function SelfStudyBrowse({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return lessons;
-    return lessons.filter((lesson) => lesson.title.toLowerCase().includes(q));
+    return lessons.filter((lesson) => {
+      const title = lesson.title.toLowerCase();
+      const titleMy = lesson.titleMy?.toLowerCase() ?? "";
+      return title.includes(q) || titleMy.includes(q);
+    });
   }, [lessons, query]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / SELF_STUDY_PAGE_SIZE));

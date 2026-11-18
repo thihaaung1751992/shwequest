@@ -44,6 +44,14 @@ export default function SelfStudyLessonCard({ lesson }: { lesson: FreeLesson }) 
         <h3 className="line-clamp-2 text-xl font-black tracking-tight sm:text-2xl">
           {lesson.title}
         </h3>
+        {lesson.titleMy ? (
+          <p
+            lang="my"
+            className="mt-1.5 line-clamp-2 text-sm font-bold text-zinc-600 dark:text-zinc-300"
+          >
+            {lesson.titleMy}
+          </p>
+        ) : null}
         <p
           className={`mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold stat-chip-3d ${accent.pill} ${accent.pillText}`}
         >

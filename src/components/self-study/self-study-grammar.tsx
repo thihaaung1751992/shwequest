@@ -64,7 +64,7 @@ export default function SectionGrammar({
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border-2 border-dashed border-zinc-900/25 bg-white/70 px-2.5 py-1 text-[0.65rem] font-bold tracking-wide text-zinc-600 dark:border-white/20 dark:bg-white/5 dark:text-zinc-300">
                 <Sparkles aria-hidden className="size-3" />
-                Any
+                {grammar.badge ?? "Any"}
               </span>
             </div>
             <h4

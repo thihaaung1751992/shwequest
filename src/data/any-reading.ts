@@ -1,4 +1,4 @@
-/** Levelled reading for free-1 section "Any" (A1/A2 + B1/B2 + C1/C2 tabs). */
+/** Levelled reading for free-1 sections "Any" and "Anytime" (A1/A2 + optional higher tabs). */
 
 export type FreeLessonReadingLevelId = "a1-a2" | "b1-b2" | "c1-c2";
 
@@ -349,6 +349,323 @@ export const FREE_1_ANY_READING: FreeLessonReading = {
               {
                 en: "In any case, we are not making any concessions.",
                 my: "ဘယ်လိုပဲဖြစ်ဖြစ် / ဘာပဲဖြစ်နေဖြစ်နေ လို့ ပြောချင်တဲ့အခါ သုံးပါတယ်။",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+};
+
+/** Levelled reading for free-1 section "Anytime." (A1/A2 + B1/B2 + C1/C2). */
+export const FREE_1_ANYTIME_READING: FreeLessonReading = {
+  kicker: "Reading",
+  levels: [
+    {
+      id: "a1-a2",
+      label: "A1/A2",
+      bandLabel: "A1 / A2 Level Reading",
+      title: "Going to the Library",
+      titleMy: "စာကြည့်တိုက်သို့ သွားခြင်း",
+      paragraphs: [
+        "Anna and Ben are good friends. Today, Anna wants to read a book.",
+        '"I am going to the new library," Anna says. "Do you want to come with me?"',
+        '"I am sorry," Ben answers. "I am very busy today. I don\'t have any time."',
+        'Anna smiles. "That\'s okay, Ben. The library is open every day. We can go anytime this week."',
+        '"Great!" Ben says. "Can we go on Friday? I am free on Friday."',
+        '"Yes," Anna says. "You can call me anytime on Friday morning. I will wait for you."',
+        '"Thank you, Anna!" Ben says.',
+        '"Anytime!" Anna replies.',
+      ],
+      vocabulary: {
+        heading: "Vocabulary Check",
+        headingMy: "ဝေါဟာရ",
+        items: [
+          {
+            term: "Busy",
+            meaning: "အလုပ်များသော",
+          },
+          {
+            term: "Free",
+            meaning: "အားလပ်သော (အလုပ်မရှိသော)",
+          },
+          {
+            term: "Wait",
+            meaning: "စောင့်ဆိုင်းသည်",
+          },
+        ],
+      },
+      anyFocus: {
+        heading: 'Focus on "Anytime"',
+        headingMy: "ဒီစာပိုဒ်ထဲက Anytime အသုံးအနှုန်းများ",
+        introMy:
+          "ဒီစာပိုဒ်လေးထဲမှာ စောစောက သင်ခဲ့တဲ့ Grammar စည်းမျဉ်း (၃) မျိုးလုံးကို သုံးပြထားပါတယ်။ အသံထွက်ဖတ်ကြည့်ပြီး any time (အချိန်မရှိဘူး) နဲ့ anytime (ဘယ်အချိန်ဖြစ်ဖြစ်) ရဲ့ အဓိပ္ပာယ် ကွာခြားသွားပုံကို လေ့ကျင့်ကြည့်နိုင်ပါတယ်။",
+        groups: [
+          {
+            title: "Any time (two words)",
+            titleMy: "Any time (ခွဲရေးခြင်း - အချိန်ပမာဏ)",
+            items: [
+              {
+                en: "I don't have any time.",
+                my: "ငါ့မှာ အချိန် ဘာမှမရှိဘူး / လုံးဝ မအားဘူး။ — ဒီနေရာမှာ time က နာမ် (Noun) ဖြစ်ပြီး၊ any က အချိန်မရှိဘူးဆိုတဲ့ ပမာဏကို ပြပါတယ်။",
+              },
+            ],
+          },
+          {
+            title: "Anytime (one word)",
+            titleMy: "Anytime (တစ်ဆက်တည်းရေးခြင်း - ဘယ်အချိန်ဖြစ်ဖြစ်)",
+            items: [
+              {
+                en: "We can go anytime this week.",
+                my: "ဒီအပတ်ထဲ ဘယ်အချိန်ဖြစ်ဖြစ် ငါတို့ သွားလို့ရတယ်။",
+              },
+              {
+                en: "You can call me anytime on Friday morning.",
+                my: "ဘယ်အချိန်ဖြစ်ဖြစ် ဖုန်းဆက်လို့ရတယ်။",
+              },
+            ],
+          },
+          {
+            title: "Anytime! (conversation)",
+            titleMy: "Anytime! (စကားပြောအသုံးအနှုန်း - ရပါတယ်)",
+            items: [
+              {
+                en: "Anytime!",
+                my: "ရပါတယ်၊ အချိန်မရွေး ကူညီဖို့ အသင့်ပါပဲ — Ben က Thank you လို့ ပြောတဲ့အခါ Anna က You're welcome အစား သုံးသွားတာ ဖြစ်ပါတယ်။",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      id: "b1-b2",
+      label: "B1/B2",
+      bandLabel: "B1 / B2 Level Reading",
+      title: "A Flexible Workplace",
+      titleMy: "ပြောင်းလွယ်ပြင်လွယ်ရှိသော လုပ်ငန်းခွင်",
+      paragraphs: [
+        "Elena was feeling very stressed about the upcoming marketing presentation. Her manager, David, noticed she was staying late in the office.",
+        '"If you need help with the slides, you can come to my office anytime," David offered. "My door is always open."',
+        '"Thanks, David," Elena sighed, "but I really don\'t have any time to take a break today. The deadline is tomorrow, and I still have a lot of data to analyze."',
+        '"I understand," David replied. "Just remember that our new company policy allows you to work from home at any time if you need a quieter environment. You don\'t have to stay here until midnight."',
+        'Elena smiled slightly. "That\'s good to know. I might work from home tomorrow morning so I can focus better."',
+        '"Perfect," David said. "Even if you are working remotely, feel free to send me a message anytime. I\'ll keep my phone nearby."',
+        '"Thanks for being so supportive, David. I really appreciate it," Elena said.',
+        '"Anytime, Elena! We are a team," David smiled and walked back to his desk.',
+      ],
+      vocabulary: {
+        heading: "Vocabulary Check",
+        headingMy: "B1/B2 ဝေါဟာရများ",
+        items: [
+          {
+            term: "Upcoming",
+            meaning: "မကြာမီ ရောက်လာတော့မည့်",
+          },
+          {
+            term: "Deadline",
+            meaning: "နောက်ဆုံးထား လုပ်ဆောင်ရမည့်အချိန် (သတ်မှတ်ရက်)",
+          },
+          {
+            term: "Analyze",
+            meaning: "ခွဲခြမ်းစိတ်ဖြာသည်",
+          },
+          {
+            term: "Policy",
+            meaning: "မူဝါဒ",
+          },
+          {
+            term: "Environment",
+            meaning: "ပတ်ဝန်းကျင်",
+          },
+          {
+            term: "Remotely",
+            meaning:
+              "အဝေးမှ (ဥပမာ - ရုံးမှမဟုတ်ဘဲ အိမ်မှ အလုပ်လုပ်ခြင်း)",
+          },
+          {
+            term: "Supportive",
+            meaning: "ကူညီအားပေးသော",
+          },
+        ],
+      },
+      anyFocus: {
+        heading: 'Focus on "Anytime"',
+        headingMy: "ဒီစာပိုဒ်ထဲက Anytime အသုံးအနှုန်းများကို လေ့လာရန်",
+        introMy:
+          "ဒီစာပိုဒ်ထဲမှာ စောစောက Grammar သင်ခန်းစာမှာ ပြောခဲ့တဲ့ ပုံစံ (၄) မျိုးလုံးကို နေရာတကျ သုံးပြထားပါတယ်။",
+        groups: [
+          {
+            title: "Anytime (Adverb)",
+            titleMy: "Anytime (Adverb - ဘယ်အချိန်ဖြစ်ဖြစ်)",
+            items: [
+              {
+                en: "You can come to my office anytime.",
+                my: "ငါ့ရုံးခန်းကို ဘယ်အချိန်ဖြစ်ဖြစ် လာခဲ့လို့ရတယ်။",
+              },
+              {
+                en: "Send me a message anytime.",
+                my: "ဘယ်အချိန်ဖြစ်ဖြစ် မက်ဆေ့ချ်ပို့လိုက်ပါ။",
+              },
+            ],
+          },
+          {
+            title: "Any time (Noun Phrase)",
+            titleMy: "Any time (Noun Phrase - အချိန်ပမာဏ)",
+            items: [
+              {
+                en: "I really don't have any time to take a break.",
+                my: "ငါ့မှာ အနားယူဖို့ အချိန် ဘာမှ/နည်းနည်းမှ မရှိဘူး။ — ဒီနေရာမှာ အချိန်ဘယ်လောက်ရှိလဲဆိုတဲ့ ပမာဏကို ရည်ညွှန်းတာပါ။",
+              },
+            ],
+          },
+          {
+            title: "At any time",
+            titleMy: "At any time (Preposition ပါသော အသုံးအနှုန်း)",
+            items: [
+              {
+                en: "Allows you to work from home at any time.",
+                my: "သင့်ကို အချိန်မရွေး အိမ်ကနေ အလုပ်လုပ်ခွင့် ပေးထားတယ်။ — ရှေ့မှာ 'at' ပါလာတဲ့အတွက် 'at anytime' လို့ တစ်ဆက်တည်း ရေးလို့မရတော့ဘဲ 'at any time' လို့ ခွဲရေးရပါတယ်။",
+              },
+            ],
+          },
+          {
+            title: "Anytime! (Reply)",
+            titleMy: "Anytime! (Reply - ရပါတယ် / အချိန်မရွေးပါပဲ)",
+            items: [
+              {
+                en: "Anytime, Elena!",
+                my: "ကျေးဇူးတင်စရာ မလိုပါဘူး၊ အချိန်မရွေး ကူညီဖို့ အသင့်ပါပဲ — Elena က Thanks လို့ ပြောတဲ့အခါ David က ပြန်ဖြေတာ။",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      id: "c1-c2",
+      label: "C1/C2",
+      bandLabel: "C1 / C2 Level Reading",
+      title: "The Paradox of Hyper-Connectivity",
+      paragraphs: [
+        "The modern era of ubiquitous connectivity has ostensibly granted us the freedom to work from anywhere and at any time. Yet, this dissolution of traditional boundaries has birthed a paradoxical predicament: because we can be reached anytime, society increasingly expects us to be perpetually available.",
+        'Dr. Aris Thorne, a prominent sociologist, argues that professionals today rarely have any time to truly disconnect from their occupational obligations. "In previous decades, stepping out of the office meant you were physically and digitally unreachable," Thorne explains. "Now, a corporate crisis can unfold at any time, and the implicit expectation is immediate mitigation, regardless of the hour."',
+        "During a recent symposium on occupational burnout, Thorne engaged in a rigorous debate with a tech executive who championed their firm's flexible policies.",
+        '"Our employees are not tethered to a desk. They have the autonomy to complete their tasks anytime they prefer," the executive stated proudly.',
+        '"But do they have any time for psychological detachment?" Thorne countered sharply. "If a junior analyst receives an urgent directive at midnight, the theoretical freedom to work anytime rapidly morphs into an unspoken obligation to be on call at any time."',
+        'Following the session, the executive approached Thorne. "I appreciate your candid critique, Doctor. It has given our board much to reconsider regarding our communication protocols."',
+        '"Anytime," Thorne replied with a polite nod, utilizing the colloquial pleasantry, yet keenly aware of the profound irony embedded in that single word.',
+      ],
+      vocabulary: {
+        heading: "Advanced Vocabulary Check",
+        headingMy: "C1/C2 ဝေါဟာရများ",
+        items: [
+          {
+            term: "Ubiquitous",
+            meaning:
+              "နေရာတိုင်းမှာ ရှိနေသော (အထူးသဖြင့် အင်တာနက်/နည်းပညာ)",
+          },
+          {
+            term: "Ostensibly",
+            meaning: "အပေါ်ယံကြည့်လျှင် (သို့) ထင်ရသည်မှာ",
+          },
+          {
+            term: "Dissolution",
+            meaning:
+              "ပျက်ပြယ်ခြင်း / ရောယှက်ပျောက်ကွယ်သွားခြင်း (Boundaries - နယ်နိမိတ်များ ပျောက်ကွယ်သွားခြင်း)",
+          },
+          {
+            term: "Paradoxical predicament",
+            meaning: "ဆန့်ကျင်ဘက်ဖြစ်နေသော အကျပ်အတည်း",
+          },
+          {
+            term: "Perpetually",
+            meaning: "အမြဲတမ်း / အဆက်မပြတ်",
+          },
+          {
+            term: "Mitigation",
+            meaning: "သက်သာလျော့ပါးအောင် ဖြေရှင်းခြင်း",
+          },
+          {
+            term: "Symposium",
+            meaning: "ပညာရပ်ဆိုင်ရာ ဆွေးနွေးပွဲ",
+          },
+          {
+            term: "Psychological detachment",
+            meaning:
+              "စိတ်ပိုင်းဆိုင်ရာ အနားပေးခြင်း / အလုပ်မှ စိတ်ကို ခွဲထုတ်ထားခြင်း",
+          },
+          {
+            term: "Morphs into",
+            meaning: "(အခြားတစ်ခုအဖြစ်သို့) ပြောင်းလဲသွားသည်",
+          },
+          {
+            term: "Colloquial pleasantry",
+            meaning:
+              'နေ့စဉ်သုံး ယဉ်ကျေးဖွယ်ရာ စကား (ဒီနေရာမှာ Anytime ကို ဆိုလိုသည်)',
+          },
+        ],
+      },
+      anyFocus: {
+        heading: 'Focus on Advanced "Anytime"',
+        headingMy: "C1/C2 အဆင့် Anytime အသုံးအနှုန်းများ",
+        introMy:
+          "ဒီအဆင့်မှာတော့ Grammar သက်သက်သာမကဘဲ၊ စာရေးသူက စကားလုံးတွေရဲ့ အဓိပ္ပာယ်ကို ဘယ်လို ကစားသွားလဲ (Wordplay) ဆိုတာကိုပါ တွေ့ရမှာပါ။",
+        groups: [
+          {
+            title: "At any time (Prepositional Phrase)",
+            titleMy: "At any time (Prepositional Phrase - အချိန်မရွေး)",
+            items: [
+              {
+                en: "Work from anywhere and at any time.",
+                my: "ဘယ်နေရာကမဆို၊ ဘယ်အချိန်မှာမဆို အလုပ်လုပ်နိုင်ခွင့် — Formal စာပေတွေမှာ anytime (တစ်ဆက်တည်း) ထက် at any time (ခွဲရေးပြီး at ထည့်ခြင်း) ကို ပိုပြီး အလေးထား သုံးလေ့ရှိပါတယ်။",
+              },
+              {
+                en: "A corporate crisis can unfold at any time.",
+                my: "ပြဿနာက အချိန်မရွေး ပေါ်လာနိုင်တယ်။",
+              },
+              {
+                en: "An unspoken obligation to be on call at any time.",
+                my: "အချိန်မရွေး အသင့်ရှိနေရမယ့် တာဝန်။",
+              },
+            ],
+          },
+          {
+            title: "Anytime (Adverb)",
+            titleMy: "Anytime (Adverb - ဘယ်အချိန်ဖြစ်ဖြစ်)",
+            items: [
+              {
+                en: "Because we can be reached anytime.",
+                my: "ငါတို့ကို ဘယ်အချိန်ဖြစ်ဖြစ် ဆက်သွယ်လို့ရနေတဲ့အတွက်။",
+              },
+              {
+                en: "They have the autonomy to complete their tasks anytime they prefer.",
+                my: "သူတို့သဘောကျတဲ့ ဘယ်အချိန်ဖြစ်ဖြစ် အလုပ်ပြီးအောင်လုပ်နိုင်တယ်။",
+              },
+            ],
+          },
+          {
+            title: "Any time (Noun Phrase)",
+            titleMy: "Any time (Noun Phrase - အချိန်ပမာဏ)",
+            items: [
+              {
+                en: "Professionals today rarely have any time to truly disconnect.",
+                my: "တကယ်တမ်း အဆက်အသွယ်ဖြတ် အနားယူဖို့ အချိန် မရှိသလောက်ပါပဲ။",
+              },
+              {
+                en: "But do they have any time for psychological detachment?",
+                my: "ဒါပေမယ့် စိတ်အနားပေးဖို့ရော သူတို့မှာ အချိန် နည်းနည်းပါးပါး ရှိရဲ့လား။",
+              },
+            ],
+          },
+          {
+            title: "Anytime (Idiomatic Response & Irony)",
+            titleMy: "Anytime (Idiomatic Response & Irony)",
+            items: [
+              {
+                en: "Anytime,",
+                my: 'Thank you ကို ပြန်ဖြေသေးတဲ့အနေနဲ့ Anytime လို့ ဆရာဝန်က ပြန်ပြောလိုက်ပါတယ်။ တစ်ခန်းလုံး Hyper-connectivity ကို ဆွေးနွေးနေပြီးမှ၊ နောက်ဆုံး နှုတ်ဆက်တဲ့အခါ "Anytime (အချိန်မရွေးပါပဲ)" ကို ပြန်သုံးလိုက်လို့ irony (ရွဲ့တဲ့သဘော) ဖြစ်နေပါတယ်။',
               },
             ],
           },

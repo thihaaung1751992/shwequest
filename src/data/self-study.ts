@@ -3,15 +3,25 @@ import {
   type EverydayBasicEnglishPhrase,
 } from "@/data/everyday-basic-english";
 import {
+  FREE_1_ANY_DIALOG_NOTE,
+  FREE_1_ANYTIME_DIALOG_NOTE,
+  FREE_16_IM_DESCRIPTIVE_DIALOG_NOTE,
+  FREE_16_IM_DIALOG_NOTE,
+  type FreeLessonDialogNote,
+} from "@/data/any-dialog-note";
+import {
   FREE_1_ANY_GRAMMAR,
+  FREE_1_ANYTIME_GRAMMAR,
   type FreeLessonGrammar,
 } from "@/data/any-grammar";
 import {
   FREE_1_ANY_READING,
+  FREE_1_ANYTIME_READING,
   type FreeLessonReading,
 } from "@/data/any-reading";
 import type { TeacherAccent } from "@/data/teachers";
 
+export type { FreeLessonDialogNote } from "@/data/any-dialog-note";
 export type { FreeLessonGrammar } from "@/data/any-grammar";
 export type { FreeLessonReading } from "@/data/any-reading";
 
@@ -24,18 +34,40 @@ export type FreeLessonDialogTurn = {
   textMy?: string;
 };
 
+/** Ordered right-pane blocks (note → dialog → note → dialog). When set, prefer over single dialog/dialogNote. */
+export type FreeLessonContentBlock =
+  | { type: "dialogNote"; note: FreeLessonDialogNote }
+  | {
+      type: "dialog";
+      dialog: FreeLessonDialogTurn[];
+      dialogTitle?: string;
+      dialogTitleMy?: string;
+    };
+
 export type FreeLessonSection = {
   id: string;
   title: string;
   /** Myanmar gloss for the right content pane (optional). */
   bodyMy?: string;
+  /** Scenario title above the speaking dialog (optional). */
+  dialogTitle?: string;
+  /** Myanmar gloss for the dialog scenario title (optional). */
+  dialogTitleMy?: string;
   /** EN speaking turns for the white pane under the title stage (optional). */
   dialog?: FreeLessonDialogTurn[];
+  /** Dialog-tied lesson note directly under the speaking dialog (optional). */
+  dialogNote?: FreeLessonDialogNote;
+  /** Interleaved note/dialog blocks (optional; free-16 I'm). Overrides dialog + dialogNote when set. */
+  blocks?: FreeLessonContentBlock[];
   /** Grammar notes under the dialog (optional; Any section first). */
   grammar?: FreeLessonGrammar;
   /** Levelled reading under grammar (optional; Any section A1/A2 tab). */
   reading?: FreeLessonReading;
 };
+
+/** Dialog for free-1 section "Any" — Planning a Trip. */
+const FREE_1_ANY_DIALOG_TITLE = "Planning a Trip";
+const FREE_1_ANY_DIALOG_TITLE_MY = "ခရီးသွားဖို့ တိုင်ပင်ခြင်း";
 
 /** Dialog for free-1 section "Any" — EN + optional MY glosses. */
 const FREE_1_ANY_DIALOG: FreeLessonDialogTurn[] = [
@@ -74,29 +106,172 @@ const FREE_1_ANY_DIALOG: FreeLessonDialogTurn[] = [
     text: "Great! What time should I pick you up?",
     textMy: "ကောင်းပြီ! မင်းကို ဘယ်အချိန် လာခေါ်ရမလဲ။",
   },
+	{
+		speaker: "sarah",
+		text: "Any time after 9 AM is perfect.",
+		textMy: "မနက် ၉ နာရီနောက်ပိုင်း အချိန်မရွေး အဆင်ပြေပါတယ်။",
+	},
+];
+
+	/** Dialog for free-1 section "Anytime." — Helping a Friend. */
+	const FREE_1_ANYTIME_DIALOG_TITLE = "Helping a Friend";
+	const FREE_1_ANYTIME_DIALOG_TITLE_MY = "သူငယ်ချင်းကို ကူညီပေးခြင်း";
+
+	const FREE_1_ANYTIME_DIALOG: FreeLessonDialogTurn[] = [
+	{
+		speaker: "mike",
+		text: "Thanks so much for helping me fix my computer, Sarah.",
+		textMy: "ငါ့ကွန်ပျူတာကို ပြင်ပေးတဲ့အတွက် ကျေးဇူးအများကြီးတင်ပါတယ် ဆာရာ။",
+	},
+	{
+		speaker: "sarah",
+		text: "Anytime, Mike! It was an easy fix.",
+		textMy: "ရပါတယ် မိုက်ခ်ရာ ဘယ်အချိန်ဖြစ်ဖြစ် ကူညီပေးပါ့မယ်။ ပြင်ရတာ လွယ်လွယ်လေးပါ။",
+	},
+	{
+		speaker: "mike",
+		text: "If it breaks down again, when can I bring it to you?",
+		textMy: "အကယ်၍ ထပ်ပျက်သွားရင် မင်းဆီကို ဘယ်အချိန် ယူလာလို့ရမလဲ။",
+	},
+	{
+		speaker: "sarah",
+		text: "You can drop by my house anytime tomorrow. I'll be home all day.",
+		textMy: "မနက်ဖြန် ဘယ်အချိန်ဖြစ်ဖြစ် ငါ့အိမ်ကို ဝင်ခဲ့လို့ရတယ်။ ငါ တစ်နေကုန် အိမ်မှာရှိမယ်။",
+	},
+	{
+		speaker: "mike",
+		text: "Great! I will come anytime after lunch.",
+		textMy: "ကောင်းပြီလေ။ နေ့လယ်စာစားပြီး ကြိုက်တဲ့အချိန် လာခဲ့မယ်။",
+	},
+	{
+		speaker: "sarah",
+		text: "Sounds good. Call me anytime if you have more problems.",
+		textMy: "အဆင်ပြေပါတယ်။ နောက်ထပ် အခက်အခဲရှိရင်လည်း ဘယ်အချိန်ဖြစ်ဖြစ် ဖုန်းဆက်လိုက်ပါ။",
+	},
+];
+
+/** Dialog for free-16 "Basic usage of 'I'm'" — Mike (boy) basic lines. */
+const FREE_16_IM_DIALOG_TITLE = "Talking about myself";
+const FREE_16_IM_DIALOG_TITLE_MY = "ကိုယ့်အကြောင်း ပြောပြခြင်း";
+
+const FREE_16_IM_DIALOG: FreeLessonDialogTurn[] = [
+  { speaker: "mike", text: "I'm so tired.", textMy: "ငါ အရမ်းပင်ပန်းနေတယ်။" },
+  {
+    speaker: "mike",
+    text: "I'm confused.",
+    textMy: "ငါ ရှုပ်နေတယ် / နားမလည်ဖြစ်နေတယ်။",
+  },
+  { speaker: "mike", text: "I'm happy.", textMy: "ငါ ပျော်နေတယ်။" },
+  {
+    speaker: "mike",
+    text: "I'm twenty three years old.",
+    textMy: "ငါ အသက် ၂၃ နှစ်ရှိပြီ။",
+  },
+  { speaker: "mike", text: "I'm hungry.", textMy: "ငါ ဗိုက်ဆာနေတယ်။" },
+  {
+    speaker: "mike",
+    text: "I'm nervous.",
+    textMy: "ငါ တုန်လှုပ် / စိုးရိမ်နေတယ်။",
+  },
+  { speaker: "mike", text: "I'm excited.", textMy: "ငါ စိတ်လှုပ်ရှားနေတယ်။" },
+  {
+    speaker: "mike",
+    text: "I'm leaving work.",
+    textMy: "ငါ အလုပ်က ထွက်လာတော့မယ်။",
+  },
+  { speaker: "mike", text: "I'm thirsty.", textMy: "ငါ ရေဆာနေတယ်။" },
+  { speaker: "mike", text: "I'm from Seattle.", textMy: "ငါ Seattle ကပါ။" },
+];
+
+/** Dialog for free-16 descriptive intensifiers — Sarah (girl). */
+const FREE_16_IM_DESCRIPTIVE_DIALOG_TITLE = "Making feelings stronger";
+const FREE_16_IM_DESCRIPTIVE_DIALOG_TITLE_MY =
+  "ခံစားချက်ကို ပိုပြင်းထန်အောင် ပြောခြင်း";
+
+const FREE_16_IM_DESCRIPTIVE_DIALOG: FreeLessonDialogTurn[] = [
   {
     speaker: "sarah",
-    text: "Any time after 9 AM is perfect.",
-    textMy: "မနက် ၉ နာရီနောက်ပိုင်း အချိန်မရွေး အဆင်ပြေပါတယ်။",
+    text: "I'm extremely tired.",
+    textMy: "ငါ အလွန်ပင်ပန်းနေတယ်။",
+  },
+  { speaker: "sarah", text: "I'm very happy.", textMy: "ငါ အရမ်းပျော်နေတယ်။" },
+  {
+    speaker: "sarah",
+    text: "I'm terribly hungry.",
+    textMy: "ငါ အရမ်းဗိုက်ဆာနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I am super excited.",
+    textMy: "ငါ အရမ်းစိတ်လှုပ်ရှားနေတယ်။",
+  },
+  {
+    speaker: "sarah",
+    text: "I'm very nervous.",
+    textMy: "ငါ အရမ်းတုန်လှုပ် / စိုးရိမ်နေတယ်။",
   },
 ];
 
 function withFree1AnyDialog(sections: FreeLessonSection[]): FreeLessonSection[] {
-  return sections.map((section) =>
-    section.id === "free-1-s1"
-      ? {
-          ...section,
-          dialog: FREE_1_ANY_DIALOG,
-          grammar: FREE_1_ANY_GRAMMAR,
-          reading: FREE_1_ANY_READING,
-        }
-      : section,
-  );
+  return sections.map((section) => {
+    if (section.id === "free-1-s1") {
+      return {
+        ...section,
+        dialogTitle: FREE_1_ANY_DIALOG_TITLE,
+        dialogTitleMy: FREE_1_ANY_DIALOG_TITLE_MY,
+        dialog: FREE_1_ANY_DIALOG,
+        dialogNote: FREE_1_ANY_DIALOG_NOTE,
+        grammar: FREE_1_ANY_GRAMMAR,
+        reading: FREE_1_ANY_READING,
+      };
+    }
+    if (section.id === "free-1-s2") {
+      return {
+        ...section,
+        dialogTitle: FREE_1_ANYTIME_DIALOG_TITLE,
+        dialogTitleMy: FREE_1_ANYTIME_DIALOG_TITLE_MY,
+        dialog: FREE_1_ANYTIME_DIALOG,
+        dialogNote: FREE_1_ANYTIME_DIALOG_NOTE,
+        grammar: FREE_1_ANYTIME_GRAMMAR,
+        reading: FREE_1_ANYTIME_READING,
+      };
+    }
+    return section;
+  });
+}
+
+function withFree16ImDialog(sections: FreeLessonSection[]): FreeLessonSection[] {
+  return sections.map((section) => {
+    if (section.id === "free-16-s1") {
+      return {
+        ...section,
+        blocks: [
+          { type: "dialogNote", note: FREE_16_IM_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_DIALOG,
+            dialogTitle: FREE_16_IM_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_DIALOG_TITLE_MY,
+          },
+          { type: "dialogNote", note: FREE_16_IM_DESCRIPTIVE_DIALOG_NOTE },
+          {
+            type: "dialog",
+            dialog: FREE_16_IM_DESCRIPTIVE_DIALOG,
+            dialogTitle: FREE_16_IM_DESCRIPTIVE_DIALOG_TITLE,
+            dialogTitleMy: FREE_16_IM_DESCRIPTIVE_DIALOG_TITLE_MY,
+          },
+        ],
+      };
+    }
+    return section;
+  });
 }
 
 export type FreeLesson = {
   id: string;
   title: string;
+  /** Myanmar gloss under the listing / course title (optional). */
+  titleMy?: string;
   image: string;
   duration: string;
   accent: TeacherAccent;
@@ -138,6 +313,108 @@ export const FREE_LESSONS: FreeLesson[] = [
     available: true,
     sections: withFree1AnyDialog(
       sectionsFromPhrases("free-1", EVERYDAY_BASIC_ENGLISH_PHRASES),
+    ),
+  },
+  {
+    id: "free-16",
+    title: "Essential Spoken English Patterns",
+    titleMy: "မသိမဖြစ် အင်္ဂလိပ်စကားပြော ပုံစံများ",
+    image: "/self-study/essential-spoken-english-patterns.webp",
+    duration: "89",
+    accent: "sky",
+    available: true,
+    sections: withFree16ImDialog(
+      sections("free-16", [
+      "Basic usage of 'I'm'",
+      "Variations of 'I'm in/at/on'",
+      "I'm good at",
+      "I'm + (verb)",
+      "I'm getting",
+      "I'm trying + (verb)",
+      "I'm gonna + (verb)",
+      "I have + (noun)",
+      "I have + (past participle)",
+      "I used to + (verb)",
+      "I have to + (verb)",
+      "I wanna + (verb)",
+      "I gotta + (verb)",
+      "I would like to + (verb)",
+      "I plan to + (verb)",
+      "I've decided to + (verb)",
+      "I was about to + (verb)",
+      "I didn't mean to + (verb)",
+      "I don't have time to + (verb)",
+      "I promise not to + (verb)",
+      "I'd rather + (verb)",
+      "I feel like + (verb-ing)",
+      "I can't help + (verb-ing)",
+      "I was busy + (verb-ing)",
+      "I'm not used to + (verb-ing)",
+      "I want you to + (verb)",
+      "I'm here to + (verb)",
+      "I have something + (verb)",
+      "I'm looking forward to",
+      "I'm calling to + (verb)",
+      "I'm working on + (noun)",
+      "I'm sorry to + (verb)",
+      "I'm thinking of + (verb-ing)",
+      "I'll help you + (verb)",
+      "I'm dying to + (verb)",
+      "It's my turn to + (verb)",
+      "It's hard for me to + (verb)",
+      "I'm having a hard time + (verb-ing)",
+      "I think I should + (verb)",
+      "I've heard that + (subject + verb)",
+      "It occurred to me that (subject + verb)",
+      "Let me + (verb)",
+      "Thank you for",
+      "Can I + (verb)",
+      "Can I get + (noun)",
+      "I'm not sure if (subject + verb)",
+      "Do you mind if I + (verb)",
+      "I don't know what to + (verb)",
+      "I should have + (past participle)",
+      "I wish I could + (verb)",
+      "You should + (verb)",
+      "You're supposed to + (verb)",
+      "You seem + (adjective)",
+      "You'd better + (verb)",
+      "Are you into + (noun)",
+      "Are you trying to + (verb)",
+      "Please + (verb)",
+      "Don't + (verb)",
+      "Do you like",
+      "How often do you",
+      "Do you want me to + (verb)",
+      "What do you think about (verb-ing)",
+      "Why don't we + (verb)",
+      "It's too bad that",
+      "You could have + (past participle)",
+      "If I were you, I would + (verb)",
+      "It's gonna be + (adjective)",
+      "It looks like + (noun)",
+      "That's why + (subject + verb)",
+      "It's time to + (verb)",
+      "The point is that + (subject + verb)",
+      "How was + (noun)",
+      "How about + (verb-ing)",
+      "What if + (subject + verb)",
+      "How much does it cost to + (verb)",
+      "How come + (subject + verb)",
+      "What are the chances of + (verb-ing)",
+      "There is something wrong with + (noun)",
+      "Let's not + (verb)",
+      "Let's say that + (subject + verb)",
+      "There's no need to + (verb)",
+      "It takes + (time) + to + (verb)",
+      "Please make sure that + (subject + verb)",
+      "Here's to + (noun)",
+      "It's no use + (verb-ing)",
+      "There's no way + (subject + verb)",
+      "It's very kind of you to + (verb)",
+      "There's nothing + (subject) + can + (verb)",
+      "Rumor has it that + (subject + verb)",
+      ]),
     ),
   },
   {

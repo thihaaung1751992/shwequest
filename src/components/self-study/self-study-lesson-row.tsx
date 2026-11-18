@@ -29,15 +29,23 @@ export default function SelfStudyLessonRow({ lesson }: { lesson: FreeLesson }) {
           className={`object-contain${available ? "" : " opacity-80"}`}
         />
       </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-base font-black tracking-tight sm:text-lg">
-          {lesson.title}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-base font-black tracking-tight sm:text-lg">
+            {lesson.title}
+          </span>
+          {lesson.titleMy ? (
+            <span
+              lang="my"
+              className="mt-0.5 block truncate text-sm font-bold text-zinc-600 dark:text-zinc-300"
+            >
+              {lesson.titleMy}
+            </span>
+          ) : null}
+          <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-300">
+            <Clock aria-hidden className="size-3.5" />
+            {lesson.duration}
+          </span>
         </span>
-        <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-300">
-          <Clock aria-hidden className="size-3.5" />
-          {lesson.duration}
-        </span>
-      </span>
       {available ? (
         <span
           className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-extrabold text-white transition-[box-shadow,overflow] cta-3d motion-safe:group-hover:overflow-visible ${accent.cta}`}

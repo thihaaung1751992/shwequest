@@ -24,6 +24,8 @@ export type FreeLessonGrammarRule = {
 
 export type FreeLessonGrammar = {
   kicker: string;
+  /** Phrase chip next to the Grammar kicker (e.g. Any / Anytime). */
+  badge?: string;
   title: string;
   intro: string;
   rules: FreeLessonGrammarRule[];
@@ -31,6 +33,7 @@ export type FreeLessonGrammar = {
 
 export const FREE_1_ANY_GRAMMAR: FreeLessonGrammar = {
   kicker: "Grammar",
+  badge: "Any",
   title: "“Any” နှင့် ပတ်သက်သော အခြေခံ Grammar စည်းမျဉ်းများ",
   intro:
     "“Any” ကို အဓိကအားဖြင့် အခြေအနေ (၃) မျိုးမှာ အများဆုံး သုံးလေ့ရှိပြီး၊ ရေတွက်လို့ရသော နာမ်အများကိန်း (Plural Countable Nouns) များနှင့် ရေတွက်လို့မရသော နာမ်များ (Uncountable Nouns) နှစ်မျိုးလုံးနှင့် တွဲသုံးနိုင်ပါတယ်။",
@@ -135,6 +138,89 @@ export const FREE_1_ANY_GRAMMAR: FreeLessonGrammar = {
           ],
         },
       ],
+    },
+  ],
+};
+
+/** Grammar notes for free-1 section "Anytime." (MY explanations + EN examples). */
+export const FREE_1_ANYTIME_GRAMMAR: FreeLessonGrammar = {
+  kicker: "Grammar",
+  badge: "Anytime",
+  title: "“Anytime” နှင့် ပတ်သက်သော အရေးကြီးသည့် Grammar စည်းမျဉ်းများ",
+  intro:
+    '"Anytime" ကို အဓိကအားဖြင့် အချိန်ပြပုဒ် (Adverb) အဖြစ် သုံးပါတယ်။ Grammar အရ အရေးအကြီးဆုံး မှတ်ထားရမယ့် အချက်ကတော့ “Anytime” (တစ်လုံးတည်းရေးခြင်း) နဲ့ “Any time” (နှစ်လုံးခွဲရေးခြင်း) တို့ရဲ့ ကွာခြားချက်ပဲ ဖြစ်ပါတယ်။',
+  rules: [
+    {
+      n: 1,
+      title: "Anytime (တစ်လုံးတည်းရေးခြင်း)",
+      titleEn: "Adverb",
+      body: '"Anytime" (တစ်ဆက်တည်း) ကို "မည်သည့်အချိန်မဆို / အချိန်မရွေး / ဘယ်အချိန်ဖြစ်ဖြစ်" (whenever) ဆိုတဲ့ အဓိပ္ပာယ်နဲ့ သုံးပါတယ်။ သူက ဝါကျထဲမှာ အချိန်ကိုပြတဲ့ Adverb အနေနဲ့ အလုပ်လုပ်ပါတယ်။',
+      examples: [
+        {
+          en: "You can call me anytime.",
+          my: "ငါ့ကို ဘယ်အချိန်ဖြစ်ဖြစ် ဖုန်းဆက်လို့ရတယ်။",
+        },
+        {
+          en: "Our online store is open anytime.",
+          my: "ကျွန်တော်တို့ရဲ့ အွန်လိုင်းစတိုးကို အချိန်မရွေး ဖွင့်ထားပါတယ်။",
+        },
+      ],
+    },
+    {
+      n: 2,
+      title: "Any time (နှစ်လုံးခွဲရေးခြင်း)",
+      titleEn: "Adjective + Noun",
+      body: '"Any time" (ခွဲရေးခြင်း) ကျတော့ Adjective "any" နဲ့ Noun "time" ကို ပေါင်းထားတာပါ။ သူ့ကို "အချိန်(အနည်းငယ်) / အချိန်(တစ်ခုခု)" ဆိုတဲ့ ပမာဏကို ရည်ညွှန်းတဲ့အခါ သုံးပါတယ်။ (ဥပမာ- ငါ့ကို ကူညီဖို့ မင်းမှာ အချိန်ရှိလား လို့မေးတဲ့အခါမျိုးပါ။)',
+      examples: [
+        {
+          en: "Do you have any time to help me today?",
+          my: "ဒီနေ့ ငါ့ကိုကူညီဖို့ မင်းမှာ အချိန် နည်းနည်းပါးပါး ရှိလား။",
+        },
+        {
+          en: "I don't have any time for a holiday.",
+          my: "ငါ့မှာ အားလပ်ရက်ထွက်ဖို့ အချိန် ဘာမှမရှိဘူး။",
+        },
+      ],
+      note: 'ဒီနေရာမှာ Do you have anytime လို့ သုံးလို့ မရပါ။',
+    },
+    {
+      n: 3,
+      title: "Preposition များနှင့် တွဲသုံးသည့်အခါ",
+      titleEn: "The Preposition Rule",
+      body: '"Anytime" ကို at ကဲ့သို့သော Preposition နဲ့ တွဲသုံးလို့ လုံးဝ မရပါဘူး။ အကယ်၍ "at" ထည့်သုံးချင်ရင် "any time" လို့ နှစ်လုံးခွဲပြီး ရေးရ/ပြောရပါမယ်။',
+      examples: [
+        {
+          en: "You can leave at any time.",
+          my: "မင်း ဘယ်အချိန်ဖြစ်ဖြစ် ထွက်သွားလို့ရတယ်။",
+        },
+        {
+          en: "You can leave anytime.",
+          my: "at မပါရင် တစ်လုံးတည်း သုံးလို့ရပါတယ်။",
+        },
+      ],
+      note: "အမှား — You can leave at anytime. (at + anytime မရပါ)",
+    },
+    {
+      n: 4,
+      title: "ကျေးဇူးတင်စကားကို တုံ့ပြန်ခြင်း",
+      titleEn: "Conversation",
+      body: 'Grammar စည်းမျဉ်းမဟုတ်ပေမယ့် စကားပြောရာမှာ "You\'re welcome" (ရပါတယ်) လို့ ပြောမယ့်အစား "Anytime" (အချိန်မရွေး ကူညီဖို့ အသင့်ပါပဲ) လို့ Idiom တစ်ခုလို သုံးလေ့ရှိပါတယ်။',
+      examples: [
+        {
+          en: "A: Thanks for the ride!",
+          my: "ကားကြုံတင်ခေါ်ပေးလို့ ကျေးဇူးပဲ။",
+        },
+        {
+          en: "B: Anytime!",
+          my: "ရပါတယ် / အချိန်မရွေးပါပဲ။",
+        },
+      ],
+    },
+    {
+      n: 5,
+      title: "အချုပ်မှတ်ရန်",
+      titleEn: "Quick Summary",
+      body: '"ဘယ်အချိန်ဖြစ်ဖြစ်" ဆိုရင် → anytime · "အချိန် (နည်းနည်းပါးပါး)" ဆိုရင် → any time · ရှေ့မှာ "at" ပါလာရင် → at any time လို့ပဲ သုံးရပါမယ်။',
     },
   ],
 };
