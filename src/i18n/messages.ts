@@ -144,6 +144,22 @@ export type Messages = {
     priceLabel: string;
     free: string;
     priceHint: string;
+    searchLabel: string;
+    searchPlaceholder: string;
+    clear: string;
+    search: string;
+    layout: string;
+    card: string;
+    list: string;
+    openLesson: string;
+    emptyLead: string;
+    emptyTail: string;
+    matches: (count: number) => string;
+    pagination: string;
+    prev: string;
+    next: string;
+    page: (n: number) => string;
+    pageOf: (page: number, total: number) => string;
   };
   path: {
     learning: string;
@@ -324,6 +340,23 @@ const en: Messages = {
     priceLabel: "Price",
     free: "Free",
     priceHint: "Ks 0 · forever",
+    searchLabel: "Search lessons",
+    searchPlaceholder: "Search lessons",
+    clear: "Clear search",
+    search: "Search",
+    layout: "Lesson layout",
+    card: "Card",
+    list: "List",
+    openLesson: "Open lesson",
+    emptyLead: "No lessons match “",
+    emptyTail: "”.",
+    matches: (count) =>
+      `${count} matching ${count === 1 ? "lesson" : "lessons"}`,
+    pagination: "Lesson pages",
+    prev: "Previous page",
+    next: "Next page",
+    page: (n) => `Page ${n}`,
+    pageOf: (page, total) => `Page ${page} of ${total}`,
   },
   path: {
     learning: "Learning path",
@@ -495,6 +528,22 @@ const my: Messages = {
     priceLabel: "ဈေးနှုန်း",
     free: "အခမဲ့",
     priceHint: "Ks 0 · အမြဲတမ်း",
+    searchLabel: "သင်ခန်းစာရှာရန်",
+    searchPlaceholder: "သင်ခန်းစာရှာရန်",
+    clear: "ရှာဖွေမှုဖျက်ရန်",
+    search: "ရှာရန်",
+    layout: "သင်ခန်းစာပြသပုံ",
+    card: "ကတ်",
+    list: "စာရင်း",
+    openLesson: "သင်ခန်းစာဖွင့်ရန်",
+    emptyLead: "“",
+    emptyTail: "” နဲ့ ကိုက်ညီတဲ့ သင်ခန်းစာမရှိပါ။",
+    matches: (count) => `ကိုက်ညီတဲ့ သင်ခန်းစာ ${count} ခု`,
+    pagination: "သင်ခန်းစာစာမျက်နှာများ",
+    prev: "ယခင်စာမျက်နှာ",
+    next: "နောက်စာမျက်နှာ",
+    page: (n) => `စာမျက်နှာ ${n}`,
+    pageOf: (page, total) => `စာမျက်နှာ ${page} / ${total}`,
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",
