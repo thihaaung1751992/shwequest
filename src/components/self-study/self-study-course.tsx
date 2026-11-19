@@ -71,6 +71,150 @@ const SCROLL_SETTLE_MS = 420;
 /** Sidebar: full list is scrollable; viewport shows ~10. Down-arrow scrolls +5 rows. */
 const SECTION_SCROLL_STEP = 5;
 
+/** Long courses split into study days (10 phrases each) instead of one flat pile. */
+const SECTIONS_PER_DAY = 10;
+
+function SectionNavItem({
+  variant,
+  index,
+  title,
+  current,
+  badge,
+  onSelect,
+}: {
+  variant: "nav" | "menu";
+  index: number;
+  title: string;
+  current: boolean;
+  badge: string;
+  onSelect: () => void;
+}) {
+  const number = (
+    <span
+      aria-hidden
+      className={
+        variant === "nav"
+          ? `grid h-7 min-w-7 shrink-0 place-items-center rounded-full border-2 px-1 text-xs font-black tabular-nums transition-colors ${
+              current
+                ? `border-zinc-900 dark:border-zinc-100 ${badge}`
+                : "border-zinc-900/10 bg-white/70 text-zinc-600 group-hover/row:border-zinc-900/25 group-hover/row:text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:group-hover/row:text-white"
+            }`
+          : `grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${
+              current
+                ? badge
+                : "bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
+            }`
+      }
+    >
+      {index + 1}
+    </span>
+  );
+  const label = (
+    <span className="min-w-0 flex-1 wrap-break-word leading-snug">{title}</span>
+  );
+
+  if (variant === "menu") {
+    return (
+      <li className="min-w-0" role="none">
+        <button
+          type="button"
+          role="option"
+          aria-selected={current}
+          aria-current={current ? "true" : undefined}
+          onClick={onSelect}
+          className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
+            current
+              ? "bg-zinc-100 text-zinc-950 dark:bg-slate-800 dark:text-white"
+              : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-white/10"
+          }`}
+        >
+          {number}
+          {label}
+        </button>
+      </li>
+    );
+  }
+
+  return (
+    <li data-section-index={index} className="min-w-0">
+      <button
+        type="button"
+        aria-current={current ? "true" : undefined}
+        onClick={onSelect}
+        className={`group/row flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left text-sm font-bold tracking-tight transition-[background-color,border-color,box-shadow,translate] ${FOCUS} ${
+          current
+            ? "border-zinc-900 bg-white text-zinc-950 shadow-[3px_3px_0_var(--color-zinc-900)] dark:border-zinc-100 dark:bg-slate-800 dark:text-white dark:shadow-[3px_3px_0_var(--color-zinc-100)]"
+            : "border-transparent text-zinc-700 hover:border-zinc-900/10 hover:bg-white/70 motion-safe:hover:translate-x-0.5 dark:text-zinc-200 dark:hover:border-white/10 dark:hover:bg-white/10"
+        }`}
+      >
+        {number}
+        {label}
+      </button>
+    </li>
+  );
+}
+
+function DayGroup({
+  menu,
+  title,
+  label,
+  range,
+  open,
+  onToggle,
+  children,
+}: {
+  menu?: boolean;
+  title: string;
+  label: string;
+  range: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const panelId = useId();
+
+  return (
+    <li className="min-w-0" role={menu ? "presentation" : undefined}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={label}
+        onClick={onToggle}
+        className={`flex w-full min-h-9 cursor-pointer items-center gap-2 rounded-xl px-1 py-1 text-left ${FOCUS}`}
+      >
+        <ChevronDown
+          aria-hidden
+          className={`size-4 shrink-0 text-zinc-500 transition-transform dark:text-zinc-300 ${
+            open ? "" : "-rotate-90"
+          }`}
+          strokeWidth={2.5}
+        />
+        <span className="shrink-0 text-[0.7rem] font-black tracking-wider text-zinc-600 uppercase dark:text-zinc-300">
+          {title}
+        </span>
+        <span
+          aria-hidden
+          className="h-px min-w-4 flex-1 border-t-2 border-dashed border-zinc-900/15 dark:border-white/15"
+        />
+        <span className="shrink-0 text-[0.7rem] font-black text-zinc-500 tabular-nums dark:text-zinc-400">
+          {range}
+        </span>
+      </button>
+      {open ? (
+        <ul
+          id={panelId}
+          role={menu ? "group" : undefined}
+          aria-label={title}
+          className="mt-1 mb-1 flex min-w-0 flex-col gap-1 ps-1"
+        >
+          {children}
+        </ul>
+      ) : null}
+    </li>
+  );
+}
+
 /** Highlight teaching word any / anyone / anywhere / anytime in dialog lines. */
 const ANY_WORD = /\bany(?:one|where|time)?\b/gi;
 
@@ -521,9 +665,29 @@ export default function SelfStudyCourse({
   const activeSection =
     activeIndex >= 0 ? lesson.sections[activeIndex] : lesson.sections[0];
   const activeNumber = activeIndex >= 0 ? activeIndex + 1 : 1;
+  const grouped = lesson.sections.length > SECTIONS_PER_DAY;
+  const dayCount = Math.ceil(lesson.sections.length / SECTIONS_PER_DAY);
+  const activeDay =
+    Math.floor((activeIndex >= 0 ? activeIndex : 0) / SECTIONS_PER_DAY) + 1;
+  const [openDays, setOpenDays] = useState<Set<number>>(
+    () => new Set([activeDay]),
+  );
+  const activeDayRef = useRef(activeDay);
+  activeDayRef.current = activeDay;
+  const skipDayCollapse = useRef(true);
 
   function selectSection(sectionId: string) {
     setActiveId(sectionId);
+    const index = lesson.sections.findIndex((section) => section.id === sectionId);
+    if (index >= 0) {
+      const day = Math.floor(index / SECTIONS_PER_DAY) + 1;
+      setOpenDays((prev) => {
+        if (prev.has(day)) return prev;
+        const next = new Set(prev);
+        next.add(day);
+        return next;
+      });
+    }
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
     if (sectionId === firstSectionId) {
@@ -549,6 +713,42 @@ export default function SelfStudyCourse({
   }, [lesson.sections, sectionQuery]);
 
   const sectionSearching = sectionQuery.trim().length > 0;
+
+  const dayGroups = useMemo(() => {
+    if (!grouped) return [];
+    const groups: { day: number; items: typeof filteredSections }[] = [];
+    for (const item of filteredSections) {
+      const day = Math.floor(item.index / SECTIONS_PER_DAY) + 1;
+      const last = groups[groups.length - 1];
+      if (last && last.day === day) last.items.push(item);
+      else groups.push({ day, items: [item] });
+    }
+    return groups;
+  }, [filteredSections, grouped]);
+
+  useEffect(() => {
+    if (!grouped || !sectionSearching) return;
+    setOpenDays((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const group of dayGroups) {
+        if (!next.has(group.day)) {
+          next.add(group.day);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [grouped, sectionSearching, dayGroups]);
+
+  useEffect(() => {
+    if (!grouped || sectionSearching) return;
+    if (skipDayCollapse.current) {
+      skipDayCollapse.current = false;
+      return;
+    }
+    setOpenDays(new Set([activeDayRef.current]));
+  }, [grouped, sectionSearching]);
 
   useEffect(() => {
     const nav = navRef.current;
@@ -652,6 +852,67 @@ export default function SelfStudyCourse({
     });
   }
 
+  function toggleDay(day: number) {
+    setOpenDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) next.delete(day);
+      else next.add(day);
+      return next;
+    });
+  }
+
+  function renderSections(variant: "nav" | "menu") {
+    const onSelect = (sectionId: string) => {
+      selectSection(sectionId);
+      if (variant === "menu") setSectionMenuOpen(false);
+    };
+
+    if (grouped) {
+      return dayGroups.map((group) => {
+        const from = (group.day - 1) * SECTIONS_PER_DAY + 1;
+        const to = Math.min(
+          group.day * SECTIONS_PER_DAY,
+          lesson.sections.length,
+        );
+        return (
+          <DayGroup
+            key={group.day}
+            menu={variant === "menu"}
+            title={copy.selfStudy.day(group.day)}
+            label={copy.selfStudy.dayToggle(group.day, from, to)}
+            range={`${from}–${to}`}
+            open={openDays.has(group.day)}
+            onToggle={() => toggleDay(group.day)}
+          >
+            {group.items.map(({ section, index }) => (
+              <SectionNavItem
+                key={section.id}
+                variant={variant}
+                index={index}
+                title={section.title}
+                current={section.id === activeId}
+                badge={accent.badge}
+                onSelect={() => onSelect(section.id)}
+              />
+            ))}
+          </DayGroup>
+        );
+      });
+    }
+
+    return filteredSections.map(({ section, index }) => (
+      <SectionNavItem
+        key={section.id}
+        variant={variant}
+        index={index}
+        title={section.title}
+        current={section.id === activeId}
+        badge={accent.badge}
+        onSelect={() => onSelect(section.id)}
+      />
+    ));
+  }
+
   return (
     <div className="mb-16 flex flex-col gap-5 sm:mb-24">
       <Link
@@ -662,6 +923,43 @@ export default function SelfStudyCourse({
         {copy.selfStudy.back}
       </Link>
 
+      {lesson.descriptionMy ? (
+        <section
+          className={`teacher-stage relative w-full min-w-0 overflow-hidden rounded-[2rem] border-2 border-(--card-border) px-5 py-6 shadow-[inset_0_2px_0_rgb(255_255_255/0.9),0_5px_0_var(--card-border),0_20px_36px_-18px_var(--card-edge)] sm:px-8 sm:py-7 dark:border-white/10 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.08),0_5px_0_rgb(255_255_255/0.08)] ${accent.tone}`}
+        >
+          <p
+            className={`stat-chip-3d inline-flex w-fit rounded-full px-2.5 py-0.5 text-[0.7rem] font-black tracking-wider uppercase ${accent.pill} ${accent.pillText}`}
+          >
+            {copy.selfStudy.free}
+          </p>
+          <h1 className="mt-3 max-w-4xl text-4xl leading-tight font-black tracking-tight wrap-break-word text-zinc-900 sm:text-5xl lg:text-6xl dark:text-white">
+            {lesson.title}
+            {lesson.titleMy ? (
+              <>
+                {" "}
+                <span
+                  lang="my"
+                  className="text-xl leading-snug font-bold text-zinc-600 sm:text-2xl lg:text-3xl dark:text-zinc-300"
+                >
+                  ({lesson.titleMy})
+                </span>
+              </>
+            ) : null}
+          </h1>
+          {grouped ? (
+            <p className="mt-3 inline-flex w-fit rounded-full border-2 border-zinc-900 bg-amber-200 px-2.5 py-1 text-xs font-black text-amber-950 shadow-[2px_2px_0_var(--color-zinc-900)] dark:border-zinc-100 dark:bg-amber-300">
+              {copy.selfStudy.dayPlan(dayCount)}
+            </p>
+          ) : null}
+          <p
+            lang="my"
+            className="mt-5 max-w-4xl min-w-0 text-lg leading-relaxed font-bold wrap-break-word text-zinc-900 sm:text-xl dark:text-white"
+          >
+            {lesson.descriptionMy}
+          </p>
+        </section>
+      ) : null}
+
       <div className="grid gap-5 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] lg:items-start">
         <aside
           aria-label={copy.selfStudy.sections}
@@ -671,23 +969,35 @@ export default function SelfStudyCourse({
             aria-hidden
             className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
           />
-          <p
-            className={`stat-chip-3d inline-flex w-fit rounded-full px-2.5 py-0.5 text-[0.7rem] font-black tracking-wider uppercase ${accent.pill} ${accent.pillText}`}
-          >
-            {copy.selfStudy.free}
-          </p>
-          <h2 className="mt-3 shrink-0 text-xl font-black tracking-tight sm:text-2xl">
-            {lesson.title}
-          </h2>
-          {lesson.titleMy ? (
-            <p
-              lang="my"
-              className="mt-1 shrink-0 text-sm font-bold text-zinc-600 dark:text-zinc-300"
-            >
-              {lesson.titleMy}
-            </p>
+          {!lesson.descriptionMy ? (
+            <>
+              <p
+                className={`stat-chip-3d inline-flex w-fit rounded-full px-2.5 py-0.5 text-[0.7rem] font-black tracking-wider uppercase ${accent.pill} ${accent.pillText}`}
+              >
+                {copy.selfStudy.free}
+              </p>
+              <p className="mt-3 shrink-0 text-xl font-black tracking-tight sm:text-2xl">
+                {lesson.title}
+              </p>
+              {lesson.titleMy ? (
+                <p
+                  lang="my"
+                  className="mt-1 shrink-0 text-sm font-bold text-zinc-600 dark:text-zinc-300"
+                >
+                  {lesson.titleMy}
+                </p>
+              ) : null}
+              {grouped ? (
+                <p className="mt-3 inline-flex w-fit shrink-0 rounded-full border-2 border-zinc-900 bg-amber-200 px-2.5 py-1 text-xs font-black text-amber-950 shadow-[2px_2px_0_var(--color-zinc-900)] dark:border-zinc-100 dark:bg-amber-300">
+                  {copy.selfStudy.dayPlan(dayCount)}
+                </p>
+              ) : null}
+            </>
           ) : null}
-          <div ref={sectionMenuRef} className="mt-4 shrink-0">
+          <div
+            ref={sectionMenuRef}
+            className={`shrink-0 ${lesson.descriptionMy ? "" : "mt-4"}`}
+          >
             <form
               role="search"
               onSubmit={(event) => {
@@ -779,42 +1089,7 @@ export default function SelfStudyCourse({
                   className="absolute inset-x-0 top-[calc(100%+0.4rem)] z-30 flex max-h-[min(20rem,55dvh)] min-w-0 flex-col gap-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border-2 border-zinc-900/10 bg-white p-1.5 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.55)] dark:border-white/10 dark:bg-slate-900"
                 >
                   {filteredSections.length > 0 ? (
-                    filteredSections.map(({ section, index }) => {
-                      const current = section.id === activeId;
-                      return (
-                        <li key={section.id} className="min-w-0" role="none">
-                          <button
-                            type="button"
-                            role="option"
-                            aria-selected={current}
-                            aria-current={current ? "true" : undefined}
-                            onClick={() => {
-                              selectSection(section.id);
-                              setSectionMenuOpen(false);
-                            }}
-                            className={`flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold tracking-tight transition-colors ${FOCUS} ${
-                              current
-                                ? "bg-zinc-100 text-zinc-950 dark:bg-slate-800 dark:text-white"
-                                : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-200 dark:hover:bg-white/10"
-                            }`}
-                          >
-                            <span
-                              aria-hidden
-                              className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1 text-xs font-black tabular-nums ${
-                                current
-                                  ? accent.badge
-                                  : "bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
-                              }`}
-                            >
-                              {index + 1}
-                            </span>
-                            <span className="min-w-0 flex-1 wrap-break-word leading-snug">
-                              {section.title}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })
+                    renderSections("menu")
                   ) : (
                     <li
                       role="option"
@@ -856,41 +1131,7 @@ export default function SelfStudyCourse({
                 id="section-nav-list"
                 className="flex min-w-0 flex-col gap-1.5"
               >
-                {filteredSections.map(({ section, index }) => {
-                  const current = section.id === activeId;
-                  return (
-                    <li
-                      key={section.id}
-                      data-section-index={index}
-                      className="min-w-0"
-                    >
-                      <button
-                        type="button"
-                        aria-current={current ? "true" : undefined}
-                        onClick={() => selectSection(section.id)}
-                        className={`group/row flex w-full min-h-11 min-w-0 cursor-pointer items-center gap-3 rounded-2xl border-2 px-3 py-2 text-left text-sm font-bold tracking-tight transition-[background-color,border-color,box-shadow,translate] ${FOCUS} ${
-                          current
-                            ? "border-zinc-900 bg-white text-zinc-950 shadow-[3px_3px_0_var(--color-zinc-900)] dark:border-zinc-100 dark:bg-slate-800 dark:text-white dark:shadow-[3px_3px_0_var(--color-zinc-100)]"
-                            : "border-transparent text-zinc-700 hover:border-zinc-900/10 hover:bg-white/70 motion-safe:hover:translate-x-0.5 dark:text-zinc-200 dark:hover:border-white/10 dark:hover:bg-white/10"
-                        }`}
-                      >
-                        <span
-                          aria-hidden
-                          className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full border-2 px-1 text-xs font-black tabular-nums transition-colors ${
-                            current
-                              ? `border-zinc-900 dark:border-zinc-100 ${accent.badge}`
-                              : "border-zinc-900/10 bg-white/70 text-zinc-600 group-hover/row:border-zinc-900/25 group-hover/row:text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:group-hover/row:text-white"
-                          }`}
-                        >
-                          {index + 1}
-                        </span>
-                        <span className="min-w-0 flex-1 wrap-break-word leading-snug">
-                          {section.title}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
+                {renderSections("nav")}
               </ul>
             ) : (
               <p
@@ -932,6 +1173,14 @@ export default function SelfStudyCourse({
                 <header className="min-w-0 border-b-2 border-dashed border-zinc-900/15 pb-6 sm:pb-8 dark:border-white/15">
                   <div className="flex min-w-0 items-center gap-3">
                     <p className="shrink-0 text-xs font-black tracking-wider text-zinc-600 tabular-nums dark:text-zinc-300">
+                      {grouped ? (
+                        <>
+                          <span className="text-zinc-950 dark:text-white">
+                            {copy.selfStudy.day(activeDay)}
+                          </span>
+                          <span aria-hidden> · </span>
+                        </>
+                      ) : null}
                       <span className="text-zinc-950 dark:text-white">
                         {activeNumber}
                       </span>{" "}

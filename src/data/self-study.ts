@@ -831,6 +831,8 @@ export type FreeLesson = {
   title: string;
   /** Myanmar gloss under the listing / course title (optional). */
   titleMy?: string;
+  /** Myanmar course pitch shown in the page banner (optional). */
+  descriptionMy?: string;
   image: string;
   duration: string;
   accent: TeacherAccent;
@@ -878,6 +880,8 @@ export const FREE_LESSONS: FreeLesson[] = [
     id: "free-16",
     title: "Essential Spoken English Patterns",
     titleMy: "မသိမဖြစ် အင်္ဂလိပ်စကားပြော ပုံစံများ",
+    descriptionMy:
+      "၉ ရက်တာ စိန်ခေါ်မှုကို လက်ခံဖို့ အဆင်သင့်ပဲလား? နေ့တိုင်း ၁၀ ခုစီပဲ မပျက်မကွက် လေ့လာသွားပါ။ တစ်ပတ်ကျော်ရုံလေးနဲ့ အစကနေ အဆုံးထိ ကျွမ်းကျင်သွားမယ့် ရလဒ်က သင့်ကို အံ့အားသင့်စေမှာပါ။",
     image: "/self-study/essential-spoken-english-patterns.webp",
     duration: "89",
     accent: "sky",

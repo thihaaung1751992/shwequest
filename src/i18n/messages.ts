@@ -182,6 +182,9 @@ export type Messages = {
     sectionEmptyLead: string;
     sectionEmptyTail: string;
     sectionMatches: (count: number) => string;
+    day: (n: number) => string;
+    dayPlan: (days: number) => string;
+    dayToggle: (day: number, from: number, to: number) => string;
   };
   path: {
     learning: string;
@@ -402,6 +405,10 @@ const en: Messages = {
     sectionEmptyTail: "”.",
     sectionMatches: (count) =>
       `${count} matching ${count === 1 ? "phrase" : "phrases"}`,
+    day: (n) => `Day ${n}`,
+    dayPlan: (days) =>
+      days === 1 ? "Finish in 1 day" : `Finish in ${days} days`,
+    dayToggle: (day, from, to) => `Day ${day}, phrases ${from} to ${to}`,
   },
   path: {
     learning: "Learning path",
@@ -611,6 +618,9 @@ const my: Messages = {
     sectionEmptyLead: "“",
     sectionEmptyTail: "” နဲ့ ကိုက်ညီတဲ့ စကားစုမရှိပါ။",
     sectionMatches: (count) => `ကိုက်ညီတဲ့ စကားစု ${count} ခု`,
+    day: (n) => `နေ့ ${n}`,
+    dayPlan: (days) => `${days} ရက်နဲ့ ပြီးမယ်`,
+    dayToggle: (day, from, to) => `နေ့ ${day}၊ စကားစု ${from} မှ ${to}`,
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",
