@@ -13,7 +13,13 @@ const OPTIONS: { view: SelfStudyView; Icon: typeof PanelsTopLeft }[] = [
   { view: "list", Icon: LayoutList },
 ];
 
-export default function SelfStudyViewToggle({ current }: { current: SelfStudyView }) {
+export default function SelfStudyViewToggle({
+  current,
+  hrefFor = (view) => selfStudyHref(view, 1),
+}: {
+  current: SelfStudyView;
+  hrefFor?: (view: SelfStudyView) => string;
+}) {
   const copy = useMessages();
   const label = {
     card: copy.selfStudy.card,
@@ -30,7 +36,7 @@ export default function SelfStudyViewToggle({ current }: { current: SelfStudyVie
         return (
           <Link
             key={view}
-            href={selfStudyHref(view, 1)}
+            href={hrefFor(view)}
             scroll={false}
             aria-current={active ? "page" : undefined}
             className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${

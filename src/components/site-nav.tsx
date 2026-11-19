@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import FrostGlass from "@/components/frost-glass";
 import { useMessages } from "@/i18n/locale-context";
 
@@ -22,7 +22,13 @@ const LINKS = [
   { href: "/self-study", label: "Self study" },
 ] as const;
 
+const FREE_ITEMS = [
+  { href: "/self-study", kind: "lessons" },
+  { href: "/self-study/videos", kind: "videos" },
+] as const;
+
 type LinkHref = (typeof LINKS)[number]["href"];
+type FreeHref = (typeof FREE_ITEMS)[number]["href"];
 
 function isCurrent(href: LinkHref, pathname: string): boolean {
   if (href === "/team") {
@@ -32,6 +38,13 @@ function isCurrent(href: LinkHref, pathname: string): boolean {
     return pathname === "/self-study" || pathname.startsWith("/self-study/");
   }
   return pathname === href;
+}
+
+function isFreeItemCurrent(href: FreeHref, pathname: string): boolean {
+  if (href === "/self-study") {
+    return pathname === "/self-study";
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 const FOCUS =
@@ -49,10 +62,17 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
     "/leaderboard": copy.nav.leaderboard,
     "/self-study": copy.nav.selfStudy,
   };
+  const freeItemLabel: Record<FreeHref, string> = {
+    "/self-study": copy.nav.selfStudyLessons,
+    "/self-study/videos": copy.nav.selfStudyVideos,
+  };
   const spread = layout === "bar";
   const panelId = useId();
+  const freeMenuId = useId();
+  const freeMobileId = useId();
   const listRef = useRef<HTMLUListElement>(null);
-  const linkRefs = useRef<Partial<Record<LinkHref, HTMLAnchorElement | null>>>({});
+  const linkRefs = useRef<Partial<Record<LinkHref, HTMLElement | null>>>({});
+  const freeRootRef = useRef<HTMLLIElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [hoverHref, setHoverHref] = useState<LinkHref | null>(null);
@@ -60,6 +80,8 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
   const [pillMotion, setPillMotion] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [freeOpen, setFreeOpen] = useState(false);
+  const [freeMobileOpen, setFreeMobileOpen] = useState(false);
   const pathSeen = useRef(pathname);
 
   // Route change: drop hover and snap. Transition stays off until after that paint
@@ -68,6 +90,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
     pathSeen.current = pathname;
     if (hoverHref !== null) setHoverHref(null);
     if (pillMotion) setPillMotion(false);
+    if (freeOpen) setFreeOpen(false);
   }
 
   const activeHref =
@@ -75,6 +98,7 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
   const targetHref = hoverHref ?? activeHref;
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const closeFree = useCallback(() => setFreeOpen(false), []);
 
   const placePill = useCallback(() => {
     const list = listRef.current;
@@ -109,7 +133,31 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
 
   useEffect(() => {
     closeMenu();
+    setFreeMobileOpen(false);
   }, [pathname, closeMenu]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    if (isCurrent("/self-study", pathname)) setFreeMobileOpen(true);
+  }, [menuOpen, pathname]);
+
+  useEffect(() => {
+    if (!freeOpen) return;
+    function onPointerDown(event: PointerEvent) {
+      const root = freeRootRef.current;
+      if (!root || !(event.target instanceof Node)) return;
+      if (!root.contains(event.target)) closeFree();
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") closeFree();
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [freeOpen, closeFree]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -172,6 +220,45 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
 
   const ctaClass = `group relative inline-flex min-h-11 items-center gap-2 overflow-hidden rounded-full px-3.5 text-sm font-bold whitespace-nowrap text-white transition-[translate,box-shadow,overflow] motion-safe:hover:overflow-visible sm:px-4 dark:text-zinc-950 cta-3d cta-3d-ink ${FOCUS}`;
 
+  const freeBadge = (
+    <span className="stat-chip-3d pill-3d-emerald rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide text-white uppercase">
+      {copy.selfStudy.free}
+    </span>
+  );
+
+  function renderFreeItems(onNavigate?: () => void, mobile?: boolean) {
+    return FREE_ITEMS.map((item) => {
+      const current = isFreeItemCurrent(item.href, pathname);
+      return (
+        <li key={item.href}>
+          <Link
+            href={item.href}
+            aria-current={current ? "page" : undefined}
+            onClick={() => {
+              closeFree();
+              onNavigate?.();
+            }}
+            className={
+              mobile
+                ? `flex min-h-11 items-center rounded-xl px-4 text-sm font-bold tracking-tight ${FOCUS} ${
+                    current
+                      ? "bg-amber-300 text-amber-950"
+                      : "bg-white/60 text-zinc-800 ring-1 ring-amber-100 hover:bg-amber-50 dark:bg-white/5 dark:text-zinc-100 dark:ring-white/10 dark:hover:bg-white/10"
+                  }`
+                : `flex min-h-10 items-center rounded-xl px-3 text-sm font-bold tracking-tight ${FOCUS} ${
+                    current
+                      ? "bg-amber-100 text-amber-950 dark:bg-amber-400/20 dark:text-amber-100"
+                      : "text-zinc-800 hover:bg-amber-50 dark:text-zinc-100 dark:hover:bg-white/10"
+                  }`
+            }
+          >
+            {freeItemLabel[item.href]}
+          </Link>
+        </li>
+      );
+    });
+  }
+
   return (
     <nav
       aria-label={copy.nav.main}
@@ -223,7 +310,64 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
           {LINKS.map((link) => {
             const current = isCurrent(link.href, pathname);
             const lit = targetHref === link.href;
-            const freeBadge = link.href === "/self-study";
+            if (link.href === "/self-study") {
+              return (
+                <li
+                  key={link.href}
+                  ref={freeRootRef}
+                  className="relative"
+                  onPointerLeave={() => setFreeOpen(false)}
+                >
+                  <button
+                    type="button"
+                    ref={(node) => {
+                      linkRefs.current[link.href] = node;
+                    }}
+                    aria-expanded={freeOpen}
+                    aria-controls={freeMenuId}
+                    aria-haspopup="menu"
+                    aria-current={current ? "page" : undefined}
+                    aria-label={copy.nav.selfStudyMenu}
+                    onPointerEnter={() => {
+                      setHoverHref(link.href);
+                      setFreeOpen(true);
+                    }}
+                    onFocus={() => {
+                      setHoverHref(link.href);
+                      setFreeOpen(true);
+                    }}
+                    onClick={() => setFreeOpen((open) => !open)}
+                    className={`relative z-10 inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-bold whitespace-nowrap transition-colors duration-150 ${FOCUS} ${
+                      lit
+                        ? "text-amber-950 [text-shadow:0_1px_0_rgb(255_255_255/0.5)]"
+                        : "text-zinc-800 dark:text-zinc-100"
+                    }`}
+                  >
+                    {linkLabel[link.href]}
+                    {freeBadge}
+                    <ChevronDown
+                      aria-hidden
+                      className={`size-3.5 transition-transform ${freeOpen ? "rotate-180" : ""}`}
+                      strokeWidth={2.75}
+                    />
+                  </button>
+                  {freeOpen ? (
+                    // pt bridge: visual gap under the trigger stays inside hit area
+                    // so pointerleave does not close before the menu is reached.
+                    <div className="absolute top-full left-0 z-30 pt-[0.4rem]">
+                      <ul
+                        id={freeMenuId}
+                        role="menu"
+                        aria-label={copy.nav.selfStudyMenu}
+                        className="flex min-w-[11rem] flex-col gap-1 rounded-2xl border-2 border-amber-200 bg-white p-2 shadow-[0_12px_28px_-16px_rgba(180,83,9,0.55)] dark:border-white/10 dark:bg-slate-900"
+                      >
+                        {renderFreeItems()}
+                      </ul>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            }
             return (
               <li key={link.href}>
                 <Link
@@ -242,11 +386,6 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                   }`}
                 >
                   {linkLabel[link.href]}
-                  {freeBadge ? (
-                    <span className="stat-chip-3d pill-3d-emerald rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide text-white uppercase">
-                      {copy.selfStudy.free}
-                    </span>
-                  ) : null}
                 </Link>
               </li>
             );
@@ -298,7 +437,41 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
             <ul className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
               {LINKS.map((link) => {
                 const current = isCurrent(link.href, pathname);
-                const freeBadge = link.href === "/self-study";
+                if (link.href === "/self-study") {
+                  return (
+                    <li key={link.href} className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        aria-expanded={freeMobileOpen}
+                        aria-controls={freeMobileId}
+                        onClick={() => setFreeMobileOpen((open) => !open)}
+                        className={`flex min-h-12 w-full cursor-pointer items-center gap-2 rounded-2xl px-4 text-left text-base font-bold tracking-tight ${FOCUS} ${
+                          current
+                            ? "bg-amber-400 text-amber-950 shadow-[0_8px_18px_-12px_rgba(180,83,9,0.7)]"
+                            : "bg-white/70 text-zinc-900 ring-1 ring-amber-100 hover:bg-amber-50 dark:bg-white/5 dark:text-zinc-50 dark:ring-white/10 dark:hover:bg-white/10"
+                        }`}
+                      >
+                        {linkLabel[link.href]}
+                        <span className="stat-chip-3d pill-3d-emerald ms-auto rounded-full px-2 py-0.5 text-[11px] font-black tracking-wide text-white uppercase">
+                          {copy.selfStudy.free}
+                        </span>
+                        <ChevronDown
+                          aria-hidden
+                          className={`size-4 shrink-0 transition-transform ${freeMobileOpen ? "rotate-180" : ""}`}
+                          strokeWidth={2.5}
+                        />
+                      </button>
+                      {freeMobileOpen ? (
+                        <ul
+                          id={freeMobileId}
+                          className="ms-2 flex flex-col gap-1 border-s-2 border-amber-200/80 ps-2 dark:border-white/10"
+                        >
+                          {renderFreeItems(closeMenu, true)}
+                        </ul>
+                      ) : null}
+                    </li>
+                  );
+                }
                 return (
                   <li key={link.href}>
                     <Link
@@ -312,11 +485,6 @@ export default function SiteNav({ layout = "bar" }: { layout?: "bar" | "cluster"
                       }`}
                     >
                       {linkLabel[link.href]}
-                      {freeBadge ? (
-                        <span className="stat-chip-3d pill-3d-emerald ms-auto rounded-full px-2 py-0.5 text-[11px] font-black tracking-wide text-white uppercase">
-                          {copy.selfStudy.free}
-                        </span>
-                      ) : null}
                     </Link>
                   </li>
                 );

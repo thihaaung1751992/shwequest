@@ -58,6 +58,33 @@
   --animate-trail-flow: trail-flow 1.1s linear infinite;
   /* Progress fill stripes. Offset must equal the stripe tile width (24px). */
   --animate-progress-stripes: progress-stripes 0.9s linear infinite;
+  /* /self-study/videos backdrop. Reel offset must equal one film frame (7rem). */
+  --animate-videos-drift: videos-drift 24s ease-in-out infinite alternate;
+  --animate-videos-reel: videos-reel 9s linear infinite;
+  --animate-videos-float: videos-float 7s ease-in-out infinite;
+
+  @keyframes videos-drift {
+    to {
+      translate: var(--drift-x, 4rem) var(--drift-y, 2rem);
+      scale: 1.15;
+    }
+  }
+
+  @keyframes videos-reel {
+    to {
+      translate: -7rem 0;
+    }
+  }
+
+  @keyframes videos-float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -0.75rem;
+    }
+  }
 
   @keyframes trail-flow {
     to {
@@ -500,6 +527,21 @@
   --pill-text-shadow: rgb(0 0 0 / 0.3);
 }
 
+/* YouTube-adjacent red for /self-study/videos chrome. */
+@utility pill-3d-red {
+  --pill-top: var(--color-red-400);
+  --pill-bottom: var(--color-red-600);
+  --pill-edge: var(--color-red-800);
+  --pill-text-shadow: rgb(0 0 0 / 0.25);
+}
+
+@utility pill-3d-red-deep {
+  --pill-top: var(--color-red-600);
+  --pill-bottom: var(--color-red-700);
+  --pill-edge: var(--color-red-900);
+  --pill-text-shadow: rgb(0 0 0 / 0.3);
+}
+
 /*
  * Read-only data chip (days left, XP). Same colour vars as pill-3d, so it takes
  * a pill-3d-* helper. No hover lift: these chips are not interactive.
@@ -681,6 +723,12 @@
   --cta-top: var(--color-orange-500);
   --cta-bottom: var(--color-orange-700);
   --cta-edge: var(--color-orange-800);
+}
+
+@utility cta-3d-red {
+  --cta-top: var(--color-red-500);
+  --cta-bottom: var(--color-red-700);
+  --cta-edge: var(--color-red-800);
 }
 
 @utility cta-3d-ink {
@@ -913,6 +961,96 @@
   --card-edge: var(--color-emerald-400);
   --card-stage-top: var(--color-emerald-50);
   --card-stage-bottom: var(--color-emerald-200);
+}
+
+@utility teacher-tone-red {
+  --card-glow: var(--color-red-300);
+  --card-border: var(--color-red-300);
+  --card-edge: var(--color-red-400);
+  --card-stage-top: var(--color-red-50);
+  --card-stage-bottom: var(--color-red-200);
+}
+
+@utility teacher-tone-zinc {
+  --card-glow: var(--color-zinc-300);
+  --card-border: var(--color-zinc-200);
+  --card-edge: var(--color-zinc-300);
+  --card-stage-top: var(--color-zinc-50);
+  --card-stage-bottom: var(--color-zinc-100);
+}
+
+/*
+ * /self-study/videos page wash: rose-tinted top with a faint red dot grid,
+ * fading back into the cream page before the footer.
+ */
+@utility videos-backdrop {
+  background-image:
+    radial-gradient(color-mix(in oklab, var(--color-red-400) 16%, transparent) 1.2px, transparent 1.6px),
+    radial-gradient(80% 42rem at 50% 0%, color-mix(in oklab, var(--color-red-200) 50%, transparent) 0%, transparent 72%),
+    linear-gradient(180deg, var(--color-rose-50) 0%, var(--color-cream) 56rem);
+  background-size:
+    22px 22px,
+    auto,
+    auto;
+  mask-image: linear-gradient(180deg, black 0%, black 78%, transparent 100%);
+
+  &:where(.dark, .dark *) {
+    background-image:
+      radial-gradient(rgb(255 255 255 / 0.06) 1.2px, transparent 1.6px),
+      radial-gradient(80% 42rem at 50% 0%, color-mix(in oklab, var(--color-red-500) 22%, transparent) 0%, transparent 72%),
+      linear-gradient(180deg, color-mix(in oklab, var(--color-red-950) 45%, var(--color-slate-950)) 0%, var(--color-slate-950) 56rem);
+  }
+}
+
+/* Soft colour glow blob. Set --glow (and --drift-x / --drift-y for motion). */
+@utility videos-glow {
+  border-radius: 9999px;
+  background-image: radial-gradient(circle, var(--glow) 0%, transparent 68%);
+}
+
+/* Film strip band: sprocket holes top and bottom, frame rules every 7rem. */
+@utility film-strip {
+  --film-band: color-mix(in oklab, var(--color-red-950) 9%, transparent);
+  --film-hole: rgb(255 255 255 / 0.8);
+  --film-rule: color-mix(in oklab, var(--color-red-950) 10%, transparent);
+  height: 4.5rem;
+  background-color: var(--film-band);
+  background-image:
+    linear-gradient(90deg, var(--film-hole) 0 50%, transparent 50%),
+    linear-gradient(90deg, var(--film-hole) 0 50%, transparent 50%),
+    linear-gradient(90deg, transparent calc(100% - 3px), var(--film-rule) calc(100% - 3px));
+  background-size:
+    28px 9px,
+    28px 9px,
+    7rem calc(100% - 2.25rem);
+  background-position:
+    0 7px,
+    0 calc(100% - 7px),
+    0 50%;
+  background-repeat: repeat-x;
+
+  &:where(.dark, .dark *) {
+    --film-band: rgb(255 255 255 / 0.05);
+    --film-hole: var(--color-slate-950);
+    --film-rule: rgb(255 255 255 / 0.06);
+  }
+}
+
+/* Spotlight rays behind the hero price card. */
+@utility videos-rays {
+  border-radius: 9999px;
+  background-image: repeating-conic-gradient(
+    color-mix(in oklab, var(--color-white) 70%, transparent) 0deg 7deg,
+    transparent 7deg 20deg
+  );
+  mask-image: radial-gradient(circle, black 10%, transparent 64%);
+
+  &:where(.dark, .dark *) {
+    background-image: repeating-conic-gradient(
+      color-mix(in oklab, var(--color-red-300) 16%, transparent) 0deg 7deg,
+      transparent 7deg 20deg
+    );
+  }
 }
 
 /*

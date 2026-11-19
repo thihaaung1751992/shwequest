@@ -12,11 +12,14 @@ export default function PageShell({
   title,
   children,
   bleed = false,
+  backdrop,
 }: {
   title: string;
   children: React.ReactNode;
   /** Full-width main (no max-w-page padding). Home is always bleed. */
   bleed?: boolean;
+  /** Decorative full-viewport-width layer. Strip + header go transparent so the wash reads under the nav. */
+  backdrop?: React.ReactNode;
 }) {
   const copy = useMessages();
   const isHome = title === "Shwequest";
@@ -31,11 +34,29 @@ export default function PageShell({
             ? copy.nav.selfStudy
             : title;
   const fullMain = isHome || bleed;
+  const headerClass = backdrop
+    ? "relative z-40 bg-transparent px-4 py-3"
+    : SITE_HEADER_CLASS;
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-cream font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50">
-      <LearnerStrip xp={earnedXpTotal()} tone="cream" />
-      <header className={SITE_HEADER_CLASS}>
+    <div
+      className={`relative flex min-h-dvh flex-col bg-cream font-sans text-zinc-900 dark:bg-slate-950 dark:text-zinc-50 ${
+        backdrop ? "isolate" : ""
+      }`}
+    >
+      {backdrop ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        >
+          {backdrop}
+        </div>
+      ) : null}
+      <LearnerStrip
+        xp={earnedXpTotal()}
+        tone={backdrop ? "clear" : "cream"}
+      />
+      <header className={headerClass}>
         <div className="mx-auto flex w-full max-w-page items-center gap-x-2 sm:gap-x-3">
           <div className="flex min-w-0 shrink-0 items-center gap-3">
             {isHome ? (

@@ -18,6 +18,9 @@ export type Messages = {
     team: string;
     leaderboard: string;
     selfStudy: string;
+    selfStudyLessons: string;
+    selfStudyVideos: string;
+    selfStudyMenu: string;
     main: string;
     menu: string;
     openMenu: string;
@@ -185,6 +188,28 @@ export type Messages = {
     day: (n: number) => string;
     dayPlan: (days: number) => string;
     dayToggle: (day: number, from: number, to: number) => string;
+    videosKicker: string;
+    videosTitle: string;
+    videosBody: string;
+    videosPlaylistCount: (count: number) => string;
+    videosChannelCount: (count: number) => string;
+    videosSearchLabel: string;
+    videosSearchPlaceholder: string;
+    videosChannelLabel: string;
+    videosChannelAll: string;
+    videosTopicLabel: string;
+    videosTopicAll: string;
+    videosTopicGrammar: string;
+    videosTopicSpeaking: string;
+    videosTopicVocabulary: string;
+    videosEmptyLead: string;
+    videosEmptyTail: string;
+    videosEmptyChannel: (channel: string) => string;
+    videosEmptyTopic: (topic: string) => string;
+    videosResetFilters: string;
+    videosMatches: (count: number) => string;
+    videosPlaylistAria: (title: string) => string;
+    videosOpenOnYouTube: string;
   };
   path: {
     learning: string;
@@ -233,6 +258,9 @@ const en: Messages = {
     team: "Team",
     leaderboard: "Leaderboard",
     selfStudy: "Self study",
+    selfStudyLessons: "Lessons",
+    selfStudyVideos: "Videos",
+    selfStudyMenu: "Self study Free menu",
     main: "Main",
     menu: "Menu",
     openMenu: "Open main menu",
@@ -409,6 +437,32 @@ const en: Messages = {
     dayPlan: (days) =>
       days === 1 ? "Finish in 1 day" : `Finish in ${days} days`,
     dayToggle: (day, from, to) => `Day ${day}, phrases ${from} to ${to}`,
+    videosKicker: "Open path",
+    videosTitle: "Free videos",
+    videosBody:
+      "Watch free speaking videos from BBC Learning English. No plan fee.",
+    videosPlaylistCount: (count) =>
+      `${count} ${count === 1 ? "playlist" : "playlists"}`,
+    videosChannelCount: (count) =>
+      `${count} ${count === 1 ? "channel" : "channels"}`,
+    videosSearchLabel: "Search videos",
+    videosSearchPlaceholder: "Search videos",
+    videosChannelLabel: "Channel",
+    videosChannelAll: "All channels",
+    videosTopicLabel: "Topic",
+    videosTopicAll: "All topics",
+    videosTopicGrammar: "Grammar",
+    videosTopicSpeaking: "Speaking",
+    videosTopicVocabulary: "Vocabulary",
+    videosEmptyLead: "No videos match “",
+    videosEmptyTail: "”.",
+    videosEmptyChannel: (channel) => `No videos from “${channel}”.`,
+    videosEmptyTopic: (topic) => `No “${topic}” videos.`,
+    videosResetFilters: "Reset filters",
+    videosMatches: (count) =>
+      `${count} matching ${count === 1 ? "video" : "videos"}`,
+    videosPlaylistAria: (title) => `YouTube playlist: ${title}`,
+    videosOpenOnYouTube: "Open on YouTube",
   },
   path: {
     learning: "Learning path",
@@ -449,6 +503,9 @@ const my: Messages = {
     team: "အဖွဲ့",
     leaderboard: "ဦးဆောင်ဇယား",
     selfStudy: "ကိုယ်တိုင်သင်",
+    selfStudyLessons: "သင်ခန်းစာများ",
+    selfStudyVideos: "ဗီဒီယိုများ",
+    selfStudyMenu: "ကိုယ်တိုင်သင် အခမဲ့ မီနူး",
     main: "ပင်မ",
     menu: "မီနူး",
     openMenu: "ပင်မမီနူးဖွင့်ရန်",
@@ -621,6 +678,30 @@ const my: Messages = {
     day: (n) => `နေ့ ${n}`,
     dayPlan: (days) => `${days} ရက်နဲ့ ပြီးမယ်`,
     dayToggle: (day, from, to) => `နေ့ ${day}၊ စကားစု ${from} မှ ${to}`,
+    videosKicker: "လမ်းကြောင်းဖွင့်",
+    videosTitle: "အခမဲ့ ဗီဒီယိုများ",
+    videosBody:
+      "BBC Learning English က speaking ဗီဒီယိုများကို အခမဲ့ ကြည့်ပါ။ အစီအစဉ်ကြေးမလိုပါ။",
+    videosPlaylistCount: (count) => `Playlist ${count} ခု`,
+    videosChannelCount: (count) => `ချန်နယ် ${count} ခု`,
+    videosSearchLabel: "ဗီဒီယိုရှာရန်",
+    videosSearchPlaceholder: "ဗီဒီယိုရှာရန်",
+    videosChannelLabel: "ချန်နယ်",
+    videosChannelAll: "ချန်နယ်အားလုံး",
+    videosTopicLabel: "အကြောင်းအရာ",
+    videosTopicAll: "အကြောင်းအရာအားလုံး",
+    videosTopicGrammar: "Grammar",
+    videosTopicSpeaking: "Speaking",
+    videosTopicVocabulary: "Vocabulary",
+    videosEmptyLead: "“",
+    videosEmptyTail: "” နဲ့ ကိုက်ညီတဲ့ ဗီဒီယိုမရှိပါ။",
+    videosEmptyChannel: (channel) =>
+      `“${channel}” က ဗီဒီယိုမရှိပါ။`,
+    videosEmptyTopic: (topic) => `“${topic}” ဗီဒီယိုမရှိပါ။`,
+    videosResetFilters: "Filter ပြန်စရန်",
+    videosMatches: (count) => `ကိုက်ညီတဲ့ ဗီဒီယို ${count} ခု`,
+    videosPlaylistAria: (title) => `YouTube playlist: ${title}`,
+    videosOpenOnYouTube: "YouTube မှာ ဖွင့်မယ်",
   },
   path: {
     learning: "သင်ယူလမ်းကြောင်း",

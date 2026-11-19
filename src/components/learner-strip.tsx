@@ -13,13 +13,16 @@ export default function LearnerStrip({
   tone = "paper",
 }: {
   xp?: number;
-  tone?: "cream" | "paper";
+  /** `clear` = no surface fill so a page backdrop shows through under the strip. */
+  tone?: "cream" | "paper" | "clear";
 }) {
   const copy = useMessages();
   const surface =
-    tone === "cream"
-      ? "bg-cream dark:bg-slate-950"
-      : "border-t-4 border-t-sky-700 bg-white dark:border-t-sky-400 dark:bg-slate-950";
+    tone === "clear"
+      ? "bg-transparent"
+      : tone === "cream"
+        ? "bg-cream dark:bg-slate-950"
+        : "border-t-4 border-t-sky-700 bg-white dark:border-t-sky-400 dark:bg-slate-950";
 
   return (
     <section

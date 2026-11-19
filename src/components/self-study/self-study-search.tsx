@@ -7,9 +7,18 @@ import { useMessages } from "@/i18n/locale-context";
 export default function SelfStudySearch({
   value,
   onChange,
+  label,
+  placeholder,
+  resultsId = "self-study-results",
+  ctaClass = "cta-3d-emerald",
 }: {
   value: string;
   onChange: (value: string) => void;
+  label?: string;
+  placeholder?: string;
+  resultsId?: string;
+  /** CTA tone helper, e.g. `cta-3d-emerald` (lessons) or `cta-3d-red` (videos). */
+  ctaClass?: string;
 }) {
   const copy = useMessages();
   const id = useId();
@@ -25,7 +34,7 @@ export default function SelfStudySearch({
       }}
     >
       <label htmlFor={id} className="sr-only">
-        {copy.selfStudy.searchLabel}
+        {label ?? copy.selfStudy.searchLabel}
       </label>
       <input
         ref={inputRef}
@@ -34,9 +43,9 @@ export default function SelfStudySearch({
         inputMode="search"
         value={value}
         maxLength={80}
-        placeholder={copy.selfStudy.searchPlaceholder}
+        placeholder={placeholder ?? copy.selfStudy.searchPlaceholder}
         autoComplete="off"
-        aria-controls="self-study-results"
+        aria-controls={resultsId}
         onChange={(event) => onChange(event.target.value)}
         className="min-w-0 flex-1 bg-transparent py-2 text-sm font-semibold text-zinc-900 outline-hidden placeholder:font-medium placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
       />
@@ -53,7 +62,7 @@ export default function SelfStudySearch({
       <button
         type="submit"
         aria-label={copy.selfStudy.search}
-        className="flex size-10 shrink-0 items-center justify-center rounded-full text-white transition-[box-shadow] cta-3d cta-3d-emerald focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white transition-[box-shadow] cta-3d ${ctaClass} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700`}
       >
         <Search aria-hidden className="size-4" strokeWidth={2.75} />
       </button>

@@ -22,3 +22,7 @@ export function selfStudyHref(view: SelfStudyView, page = 1): string {
   const query = params.toString();
   return query ? `/self-study?${query}` : "/self-study";
 }
+
+export function selfStudyVideosHref(view: SelfStudyView): string {
+  return view === "card" ? "/self-study/videos" : `/self-study/videos?view=${view}`;
+}

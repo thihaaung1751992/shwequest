@@ -59,8 +59,10 @@ export default function SelfStudyLessonCard({ lesson }: { lesson: FreeLesson }) 
           {lesson.duration}
         </p>
 
+        <div className="min-h-5 flex-1" aria-hidden />
+
         <span
-          className={`relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] cta-3d ${accent.cta}${available ? " motion-safe:group-hover:overflow-visible" : " opacity-40"}`}
+          className={`relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] cta-3d ${accent.cta}${available ? " motion-safe:group-hover:overflow-visible" : " opacity-40"}`}
         >
           <FrostGlass />
           <span className="relative z-10">{copy.selfStudy.openLesson}</span>
