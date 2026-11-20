@@ -16,7 +16,7 @@ export default function TeamCard({ person }: { person: TeamPerson }) {
   const copy = useMessages();
   const accent = ACCENT_STYLES[person.accent];
   const isBuilder = person.kind === "builder";
-  const available = !isBuilder || Boolean(person.profile);
+  const available = !person.comingSoon && (!isBuilder || Boolean(person.profile));
   const role = isBuilder ? copy.team.builderRole : copy.team.teacherRole;
   const RoleIcon = isBuilder ? Code2 : GraduationCap;
 

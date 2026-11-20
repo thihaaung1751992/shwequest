@@ -27,6 +27,7 @@ async function TeamMemberFromParams({ params }: { params: MemberParams }) {
   const person = teamPersonById(id);
   if (!person) notFound();
   if (person.kind === "builder" && !person.profile) notFound();
+  if (person.comingSoon) notFound();
   return <TeamProfile person={person} />;
 }
 

@@ -16,6 +16,8 @@ export type TeamPerson = {
   kind: TeamKind;
   accent: TeacherAccent;
   profile?: BuilderProfile;
+  /** Shown as a Coming Soon card with no detail page. */
+  comingSoon?: boolean;
 };
 
 /** Builder 2 stays a Coming Soon placeholder until a real profile exists. */
@@ -37,6 +39,9 @@ export const BUILDERS: readonly TeamPerson[] = [
   },
 ];
 
+/** Only these teachers are open on Team; the rest show Coming Soon. */
+const READY_TEACHER_IDS = new Set(["teacher-1"]);
+
 function teacherToPerson(teacher: Teacher): TeamPerson {
   return {
     id: teacher.id,
@@ -44,6 +49,7 @@ function teacherToPerson(teacher: Teacher): TeamPerson {
     image: teacher.image,
     kind: "teacher",
     accent: teacher.accent,
+    comingSoon: !READY_TEACHER_IDS.has(teacher.id),
   };
 }
 
@@ -56,5 +62,6 @@ export function teamPersonById(id: string): TeamPerson | undefined {
 
 export function teamStaticParams(): { id: string }[] {
   const readyBuilders = BUILDERS.filter((person) => person.profile);
-  return [...readyBuilders, ...TEAM_TEACHERS].map((person) => ({ id: person.id }));
+  const readyTeachers = TEAM_TEACHERS.filter((person) => !person.comingSoon);
+  return [...readyBuilders, ...readyTeachers].map((person) => ({ id: person.id }));
 }
