@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  GUIDE_TIPS_SIDE_BY_SIDE_QUERY,
   notifyGuideBoySpoken,
   resetGuideBoySpoken,
 } from "@/components/guide-tip-sync";
@@ -83,6 +84,10 @@ export default function GuideBoyTip() {
     notifyGuideBoySpoken();
   }
 
+  function markSpokenIfSideBySide() {
+    if (window.matchMedia(GUIDE_TIPS_SIDE_BY_SIDE_QUERY).matches) markSpoken();
+  }
+
   useEffect(() => {
     resetGuideBoySpoken();
     spokenSent.current = false;
@@ -97,8 +102,8 @@ export default function GuideBoyTip() {
   }, []);
 
   useEffect(() => {
-    if (phase !== "done") return;
-    markSpoken();
+    if (phase === "done") markSpokenIfSideBySide();
+    if (phase === "dismissed") markSpoken();
   }, [phase]);
 
   useEffect(() => {
@@ -160,7 +165,7 @@ export default function GuideBoyTip() {
 
   function dismiss() {
     if (leaving) return;
-    markSpoken();
+    markSpokenIfSideBySide();
     if (reducedMotion) {
       setPhase("dismissed");
       return;
@@ -177,34 +182,35 @@ export default function GuideBoyTip() {
 
   return (
     <aside
-      className="pointer-events-none fixed bottom-0 left-0 z-40 pl-4 sm:pl-7"
+      className="pointer-events-none fixed bottom-0 left-0 z-40 pl-3 sm:pl-5 lg:pl-7"
       lang="my"
       aria-label={copy.label}
       aria-hidden={leaving || undefined}
     >
       {/* Motion lives on the body stack so exit can slide under the fold (clipped). */}
       <div className={`flex items-end ${bodyMotion}`}>
-        <div className="relative -mb-3 sm:-mb-4">
+        <div className="relative -mb-2 sm:-mb-3 lg:-mb-4">
           <Image
             src="/self-study/boy-with-hand.webp"
             alt=""
             width={467}
             height={1024}
-            className="block h-[min(54vh,20.5rem)] w-auto select-none drop-shadow-[0_8px_18px_rgb(0_0_0/0.28)] sm:h-[min(58vh,23.5rem)]"
-            sizes="(max-width: 640px) 36vw, 190px"
+            className="block h-[min(30vh,10.5rem)] w-auto select-none drop-shadow-[0_8px_18px_rgb(0_0_0/0.28)] sm:h-[min(42vh,17rem)] lg:h-[min(58vh,23.5rem)]"
+            sizes="(max-width: 639px) 80px, (max-width: 1023px) 124px, 190px"
             priority={false}
           />
 
+          {/* Below lg the bubble is bottom-anchored so it grows upward and stays on screen. */}
           {bubbleVisible || bubbleLeaving ? (
             <div
-              className={`pointer-events-auto absolute top-[2%] left-[78%] w-[min(19.5rem,calc(100vw-6rem))] sm:top-[1%] sm:left-[84%] sm:w-[21rem] ${
+              className={`pointer-events-auto absolute bottom-[56%] left-[80%] w-[min(19.5rem,calc(100vw-6.5rem))] sm:bottom-[60%] sm:left-[84%] sm:w-[min(21rem,calc(100vw-10rem))] lg:top-[1%] lg:bottom-auto lg:w-[21rem] ${
                 bubbleLeaving
                   ? "motion-safe:animate-guide-bubble-out"
                   : "opacity-100 motion-safe:animate-guide-bubble-in"
               }`}
             >
               <div
-                className="speech-bubble speech-bubble-left relative px-3.5 py-3 text-sm leading-snug font-semibold text-zinc-900 sm:px-4 sm:py-3.5 sm:text-[0.9375rem] dark:text-zinc-50 [--bubble-bg:var(--color-amber-50)] [--bubble-tail-top:2.35rem] dark:[--bubble-bg:var(--color-slate-900)] sm:[--bubble-tail-top:2.6rem]"
+                className="speech-bubble speech-bubble-left relative px-3 py-2.5 text-sm leading-snug font-semibold text-zinc-900 sm:px-4 sm:py-3.5 sm:text-[0.9375rem] dark:text-zinc-50 [--bubble-bg:var(--color-amber-50)] [--bubble-tail-top:calc(100%-2.5rem)] dark:[--bubble-bg:var(--color-slate-900)] sm:[--bubble-tail-top:calc(100%-2.75rem)] lg:[--bubble-tail-top:2.6rem]"
                 aria-live="polite"
               >
                 <button

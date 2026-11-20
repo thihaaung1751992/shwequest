@@ -2,6 +2,9 @@
 
 type Listener = () => void;
 
+/** Below this width both bubbles collide, so the girl waits until the boy is dismissed. */
+export const GUIDE_TIPS_SIDE_BY_SIDE_QUERY = "(min-width: 80rem)";
+
 let spoken = false;
 const listeners = new Set<Listener>();
 

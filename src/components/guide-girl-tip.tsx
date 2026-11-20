@@ -189,33 +189,34 @@ export default function GuideGirlTip() {
 
   return (
     <aside
-      className="pointer-events-none fixed right-0 bottom-0 z-40 pr-4 sm:pr-7"
+      className="pointer-events-none fixed right-0 bottom-0 z-40 pr-3 sm:pr-5 lg:pr-7"
       lang="my"
       aria-label={copy.label}
       aria-hidden={leaving || undefined}
     >
       <div key={tipStep} className={`flex items-end justify-end ${bodyMotion}`}>
-        <div className="relative -mb-3 sm:-mb-4">
+        <div className="relative -mb-2 sm:-mb-3 lg:-mb-4">
           <Image
             src="/self-study/girl-see-front.webp"
             alt=""
             width={578}
             height={1024}
-            className="block h-[min(54vh,20.5rem)] w-auto select-none drop-shadow-[0_8px_18px_rgb(0_0_0/0.28)] sm:h-[min(58vh,23.5rem)]"
-            sizes="(max-width: 640px) 36vw, 190px"
+            className="block h-[min(30vh,10.5rem)] w-auto select-none drop-shadow-[0_8px_18px_rgb(0_0_0/0.28)] sm:h-[min(42vh,17rem)] lg:h-[min(58vh,23.5rem)]"
+            sizes="(max-width: 639px) 95px, (max-width: 1023px) 154px, 235px"
             priority={false}
           />
 
+          {/* Below lg the bubble is bottom-anchored so it grows upward and stays on screen. */}
           {bubbleVisible || bubbleLeaving ? (
             <div
-              className={`pointer-events-auto absolute top-[2%] right-[78%] w-[min(19.5rem,calc(100vw-6rem))] sm:top-[1%] sm:right-[84%] sm:w-[21rem] ${
+              className={`pointer-events-auto absolute right-[80%] bottom-[56%] w-[min(19.5rem,calc(100vw-7rem))] sm:right-[84%] sm:bottom-[60%] sm:w-[min(21rem,calc(100vw-11rem))] lg:top-[1%] lg:bottom-auto lg:w-[21rem] ${
                 bubbleLeaving
                   ? "motion-safe:animate-guide-bubble-out-rtl"
                   : "opacity-100 motion-safe:animate-guide-bubble-in-rtl"
               }`}
             >
               <div
-                className="speech-bubble speech-bubble-right relative px-3.5 py-3 text-sm leading-snug font-semibold text-zinc-900 sm:px-4 sm:py-3.5 sm:text-[0.9375rem] dark:text-zinc-50 [--bubble-bg:var(--color-sky-50)] [--bubble-tail-top:2.35rem] dark:[--bubble-bg:var(--color-slate-900)] sm:[--bubble-tail-top:2.6rem]"
+                className="speech-bubble speech-bubble-right relative px-3 py-2.5 text-sm leading-snug font-semibold text-zinc-900 sm:px-4 sm:py-3.5 sm:text-[0.9375rem] dark:text-zinc-50 [--bubble-bg:var(--color-sky-50)] [--bubble-tail-top:calc(100%-2.5rem)] dark:[--bubble-bg:var(--color-slate-900)] sm:[--bubble-tail-top:calc(100%-2.75rem)] lg:[--bubble-tail-top:2.6rem]"
                 aria-live="polite"
               >
                 <button
