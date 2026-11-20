@@ -10,7 +10,7 @@ export default function ProfileSkeleton() {
 
       {/* Hero — cover + avatar + name/bio */}
       <section aria-hidden className="bento-tile overflow-hidden">
-        <div className="profile-cover h-32 sm:h-44">
+        <div className="profile-cover h-40 sm:h-52">
           <span className="absolute -top-10 left-[12%] size-40 rounded-full bg-amber-300/40 blur-2xl dark:bg-amber-500/20" />
           <span className="absolute -right-6 -bottom-12 size-48 rounded-full bg-sky-300/35 blur-2xl dark:bg-sky-500/15" />
         </div>

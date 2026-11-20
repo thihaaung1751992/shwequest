@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import GuideBoyTip from "@/components/guide-boy-tip";
+import GuideGirlTip from "@/components/guide-girl-tip";
 import PageShell from "@/components/page-shell";
 import { SelfStudyVideosPageDeco } from "@/components/self-study/self-study-videos-deco";
 import SelfStudyVideosHero from "@/components/self-study/self-study-videos-hero";
@@ -65,6 +67,8 @@ export default function SelfStudyVideosPage({
           <SelfStudyVideosPlaylistFromUrl searchParams={searchParams} />
         </Suspense>
       </div>
+      <GuideBoyTip />
+      <GuideGirlTip />
     </PageShell>
   );
 }

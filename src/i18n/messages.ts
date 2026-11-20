@@ -291,6 +291,24 @@ export type Messages = {
     xpToPass: (xp: string, name: string) => string;
     topOfBoard: string;
   };
+  guideBoy: {
+    label: string;
+    line1: string;
+    line2: string;
+    teachersLinkLabel: string;
+    pricesLinkLabel: string;
+    dismiss: string;
+  };
+  guideGirl: {
+    label: string;
+    line1: string;
+    line2: string;
+    tip2Line1: string;
+    tip2Line2: string;
+    lessonsLinkLabel: string;
+    videosLinkLabel: string;
+    dismiss: string;
+  };
 };
 
 const en: Messages = {
@@ -606,6 +624,28 @@ const en: Messages = {
     xpToPass: (xp, name) => `${xp} XP to pass ${name}`,
     topOfBoard: "Top of the board",
   },
+  guideBoy: {
+    label: "Guide tip",
+    line1:
+      "Want to learn step by step with skilled teachers? 📚",
+    line2:
+      "Tap the links below for teachers and course fees.",
+    teachersLinkLabel: "See teachers",
+    pricesLinkLabel: "See prices",
+    dismiss: "Dismiss tip",
+  },
+  guideGirl: {
+    label: "Guide tip",
+    line1: "Forget boring study times! 🙅‍♀️",
+    line2:
+      "Experience learning automatically while playing exciting games. 🎮🔥",
+    tip2Line1:
+      "Oh, and… I've also lined up free tutorials you can check out. 🎉",
+    tip2Line2: "Don't forget to drop by. 🥺💖",
+    lessonsLinkLabel: "See lessons",
+    videosLinkLabel: "See videos",
+    dismiss: "Dismiss tip",
+  },
 };
 
 const my: Messages = {
@@ -907,6 +947,28 @@ const my: Messages = {
     statPlan: "အစီအစဉ်",
     xpToPass: (xp, name) => `${name} ကိုကျော်ဖို့ ${xp} XP လို`,
     topOfBoard: "ထိပ်ဆုံးရောက်နေပြီ",
+  },
+  guideBoy: {
+    label: "လမ်းညွှန် စကားပြော",
+    line1:
+      "ကျွမ်းကျင်ဆရာ၊ ဆရာမတွေနဲ့အတူ စနစ်တကျ လေ့လာသင်ယူချင်ပါသလား? 📚",
+    line2:
+      "အသေးစိတ်အချက်အလက်တွေနဲ့ သင်တန်းကြေးတွေကို သိရှိနိုင်ဖို့ အောက်က link တွေကို အခုပဲ နှိပ်လိုက်ပါ",
+    teachersLinkLabel: "ဆရာများကြည့်ရန်",
+    pricesLinkLabel: "စျေးနှုန်းကြည့်ရန်",
+    dismiss: "ပိတ်ရန်",
+  },
+  guideGirl: {
+    label: "လမ်းညွှန် စကားပြော",
+    line1: "ပျင်းစရာကောင်းတဲ့ စာသင်ချိန်တွေကို မေ့လိုက်တော့! 🙅‍♀️",
+    line2:
+      "စိတ်လှုပ်ရှားစရာ ဂိမ်းလေးတွေဆော့ရင်း အလိုလိုစာတတ်သွားမယ့် အတွေ့အကြုံကို ခံစားကြည့်လိုက်ပါ 🎮🔥",
+    tip2Line1:
+      "အော် ဒါနဲ့... Free ကြည့်လို့ရမယ့် Tutorial လေးတွေပါ ထပ်ပြီး စီစဉ်ပေးထားတယ်နော် 🎉",
+    tip2Line2: "ဝင်ကြည့်သွားဖို့ မမေ့နဲ့အုံးနော် 🥺💖",
+    lessonsLinkLabel: "သင်ခန်းစာများကြည့်ရန်",
+    videosLinkLabel: "ဗီဒီယိုများကြည့်ရန်",
+    dismiss: "ပိတ်ရန်",
   },
 };
 

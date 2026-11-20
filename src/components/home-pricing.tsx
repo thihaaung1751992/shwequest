@@ -1717,9 +1717,10 @@ export default function HomePricing({
 
   return (
     <section
+      id="plans"
       ref={sectionRef}
       aria-labelledby="home-pricing-title"
-      className="relative overflow-hidden bg-white dark:bg-slate-950"
+      className="relative scroll-mt-24 overflow-hidden bg-white dark:bg-slate-950"
     >
       {drops.length > 0 ? (
         <div aria-hidden className="pointer-events-none absolute inset-0 z-0">

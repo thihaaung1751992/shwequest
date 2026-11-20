@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import GuideBoyTip from "@/components/guide-boy-tip";
+import GuideGirlTip from "@/components/guide-girl-tip";
 import HomeAbout from "@/components/home-about";
 import HomeHero from "@/components/home-hero";
 import HomeLeaderboardCta from "@/components/home-leaderboard-cta";
@@ -31,6 +33,8 @@ export default function HomePage({ searchParams }: { searchParams: SearchParams 
         <HomePricingFromUrl searchParams={searchParams} />
       </Suspense>
       <HomeAbout />
+      <GuideBoyTip />
+      <GuideGirlTip />
     </PageShell>
   );
 }

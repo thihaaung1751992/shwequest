@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import GuideBoyTip from "@/components/guide-boy-tip";
+import GuideGirlTip from "@/components/guide-girl-tip";
 import PageShell from "@/components/page-shell";
 import SelfStudyBrowse from "@/components/self-study/self-study-browse";
 import SelfStudyHero from "@/components/self-study/self-study-hero";
@@ -38,6 +40,8 @@ export default function SelfStudyPage({ searchParams }: { searchParams: SearchPa
       >
         <SelfStudyBrowseFromUrl searchParams={searchParams} />
       </Suspense>
+      <GuideBoyTip />
+      <GuideGirlTip />
     </PageShell>
   );
 }
