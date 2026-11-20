@@ -237,6 +237,11 @@ const ISLAND_DEPTH = 18;
 const ISLAND_MARGIN_MAX = 120;
 const CHIP_ABOVE_ISLAND = 24;
 
+/** Live node lane cap at wide layout — skeleton node column matches. */
+export const PATH_LANE_MAX = LANE_MAX;
+/** Live island face at wide layout (lane + side margins) — skeleton shells match. */
+export const PATH_ISLAND_MAX_WIDTH = LANE_MAX + 2 * ISLAND_MARGIN_MAX;
+
 // Neighbouring slots stay ~0.3 lane apart so the "You are here" badge clears the label above.
 const X_SLOTS = [
   [0.28, 0.72, 0.3, 0.62],

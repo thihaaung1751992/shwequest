@@ -30,6 +30,7 @@ import {
   unitIsland,
   videoNumberAt,
 } from "@/components/roadmap/roadmap-data";
+import { RoadmapPathBones } from "@/components/roadmap/roadmap-skeleton";
 
 const TRAIL_GRADIENT_ID = "roadmap-trail-done";
 const ISLAND_DOTS_ID = "roadmap-island-dots";
@@ -82,7 +83,9 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   const columnRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLLIElement>(null);
   const scrolledRef = useRef(false);
-  const [width, setWidth] = useState(320);
+  // null until ResizeObserver measures — never paint the path at the old 320 SSR guess
+  // (SVG stretches to the wide column while nodes stay in 320px coords → broken 3G flash).
+  const [width, setWidth] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const lockTipId = useId();
   const [lockedTip, setLockedTip] = useState<LockTip | null>(null);
@@ -94,8 +97,9 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   const lesson = current ? copy.path.now(current.title) : copy.path.learning;
   const lessonLine = teacher ? `${teacher.label} · ${lesson}` : lesson;
   const progress = nodes.length === 0 ? 0 : Math.round((completed.length / nodes.length) * 100);
-  const height = roadmapHeight(nodes.length, width);
-  const points = nodes.map((_, index) => nodePoint(index, nodes.length, width));
+  const height = width === null ? 0 : roadmapHeight(nodes.length, width);
+  const points =
+    width === null ? [] : nodes.map((_, index) => nodePoint(index, nodes.length, width));
   const currentIndex = nodes.findIndex((node) => node.status === "current");
   const lastCompleted = nodes.reduce(
     (end, node, index) => (node.status === "completed" ? index : end),
@@ -106,10 +110,13 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   const donePath = trailEnd >= 0 ? smoothPath(points.slice(0, trailEnd + 1)) : "";
   const selectedIndex = nodes.findIndex((node) => node.id === selectedId);
   const selected = selectedIndex >= 0 ? nodes[selectedIndex] : null;
-  const islands = units
-    .map((_, unitIndex) => unitIsland(unitIndex, nodes.length, width))
-    .filter((box): box is IslandBox => box !== null);
-  const scenic = width >= SCENERY_MIN_WIDTH;
+  const islands =
+    width === null
+      ? []
+      : units
+          .map((_, unitIndex) => unitIsland(unitIndex, nodes.length, width))
+          .filter((box): box is IslandBox => box !== null);
+  const scenic = width !== null && width >= SCENERY_MIN_WIDTH;
 
   useLayoutEffect(() => {
     const column = columnRef.current;
@@ -122,7 +129,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
   }, []);
 
   useEffect(() => {
-    if (scrolledRef.current) return;
+    if (width === null || scrolledRef.current) return;
     const active = activeRef.current;
     if (!active) return;
     const frame = window.requestAnimationFrame(() => {
@@ -192,6 +199,9 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
       <main className="relative z-10 flex-1 bg-linear-to-b from-sky-100/80 via-sky-50/60 to-cream px-4 pt-6 pb-24 sm:pb-32 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950">
         {teacher ? (
         <div ref={columnRef} className="relative mx-auto w-full max-w-page">
+          {width === null ? (
+            <RoadmapPathBones />
+          ) : (
           <div className="relative" style={{ height }}>
             <svg
               className="pointer-events-none absolute inset-0 h-full w-full"
@@ -290,6 +300,7 @@ export default function RoadmapView({ teacher }: RoadmapViewProps) {
               ))}
             </ol>
           </div>
+          )}
         </div>
         ) : (
           <div className="mx-auto flex w-full max-w-page flex-col items-start gap-4 py-16">

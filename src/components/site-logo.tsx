@@ -14,7 +14,7 @@ export default function SiteLogo() {
         width={560}
         height={486}
         preload
-        className="h-16 w-auto rounded-xl shadow-md ring-2 ring-amber-200 transition-transform motion-safe:group-hover:scale-105 motion-safe:group-hover:-rotate-3 motion-safe:group-hover:ring-amber-400 sm:h-20"
+        className="h-16 w-auto rounded-xl bg-amber-100 shadow-md ring-2 ring-amber-200 transition-transform motion-safe:group-hover:scale-105 motion-safe:group-hover:-rotate-3 motion-safe:group-hover:ring-amber-400 sm:h-20 dark:bg-slate-800"
       />
     </Link>
   );
