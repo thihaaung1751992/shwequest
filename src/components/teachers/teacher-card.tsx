@@ -38,9 +38,9 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
         </span>
       </div>
 
-      <div className="relative -mt-16 flex flex-1 flex-col items-center px-5 pb-5 text-center">
+      <div className="relative -mt-14 flex flex-1 flex-col items-center px-5 pb-5 text-center">
         <span className="transition-transform duration-300 motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:scale-105">
-          <TeacherPortrait src={teacher.image} size="card" />
+          <TeacherPortrait src={teacher.image} size="feature" />
         </span>
         <h3 className="mt-3 max-w-full truncate text-2xl font-black tracking-tight">{teacher.label}</h3>
 

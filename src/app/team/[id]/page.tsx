@@ -26,6 +26,7 @@ async function TeamMemberFromParams({ params }: { params: MemberParams }) {
   const { id } = await params;
   const person = teamPersonById(id);
   if (!person) notFound();
+  if (person.kind === "builder" && !person.profile) notFound();
   return <TeamProfile person={person} />;
 }
 
@@ -34,7 +35,7 @@ export default function TeamMemberPage({ params }: { params: MemberParams }) {
     <PageShell title="Team">
       <Suspense
         fallback={
-          <div className="mx-auto h-96 w-full max-w-2xl rounded-[2rem] bg-amber-100/60 dark:bg-white/5" />
+          <div className="h-96 w-full rounded-[2rem] bg-amber-100/60 dark:bg-white/5" />
         }
       >
         <TeamMemberFromParams params={params} />

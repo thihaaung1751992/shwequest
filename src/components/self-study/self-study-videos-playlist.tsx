@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
+import SelfStudyPagination from "@/components/self-study/self-study-pagination";
 import SelfStudySearch from "@/components/self-study/self-study-search";
 import { YtMark } from "@/components/self-study/self-study-videos-deco";
 import SelfStudyViewToggle from "@/components/self-study/self-study-view-toggle";
 import {
+  SELF_STUDY_PAGE_SIZE,
   selfStudyVideosHref,
   type SelfStudyView,
 } from "@/components/self-study/self-study-view";
@@ -28,6 +31,64 @@ type FilterOption = { value: string; label: string };
 
 function riseDelay(index: number) {
   return { animationDelay: `${index * RISE_STAGGER_MS}ms` };
+}
+
+function PlaylistEmbed({
+  title,
+  src,
+  className,
+}: {
+  title: string;
+  src: string;
+  className?: string;
+}) {
+  // Track which src finished loading — avoids useEffect reset races, and
+  // stays false automatically when `src` changes until onLoad for the new URL.
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+  const ready = loadedSrc === src;
+
+  // Safety: YouTube embeds occasionally skip onLoad after filter remounts.
+  useEffect(() => {
+    if (ready) return;
+    const timer = window.setTimeout(() => setLoadedSrc(src), 10_000);
+    return () => window.clearTimeout(timer);
+  }, [ready, src]);
+
+  return (
+    <div
+      className={`teacher-stage relative overflow-hidden bg-zinc-950 ${className ?? ""}`}
+      aria-busy={!ready}
+    >
+      {!ready ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+          aria-hidden
+        >
+          <div className="absolute inset-0 bg-linear-to-br from-zinc-800 via-zinc-950 to-red-950/50" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255_255_255/0.08),transparent_65%)]" />
+          <div className="absolute inset-x-[12%] top-[28%] h-[12%] rounded-full bg-white/8 motion-safe:animate-pulse" />
+          <div className="absolute inset-x-[22%] top-[48%] h-[8%] rounded-full bg-white/5 motion-safe:animate-pulse [animation-delay:180ms]" />
+          <div className="absolute inset-x-[30%] top-[64%] h-[6%] rounded-full bg-white/4 motion-safe:animate-pulse [animation-delay:320ms]" />
+          <span className="relative grid size-14 place-items-center sm:size-16">
+            <span className="absolute inset-0 rounded-full border-2 border-white/15 border-t-red-500 motion-safe:animate-spin" />
+            <span className="absolute inset-1.5 rounded-full border border-white/10" />
+            <YtMark className="relative h-5 w-7 text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.45)] sm:h-6 sm:w-8" />
+          </span>
+        </div>
+      ) : null}
+      <iframe
+        title={title}
+        src={src}
+        onLoad={() => setLoadedSrc(src)}
+        className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-500 ease-out ${
+          ready ? "opacity-100" : "opacity-0"
+        }`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+    </div>
+  );
 }
 
 function FilterMenu({
@@ -160,13 +221,38 @@ function FilterMenu({
 
 export default function SelfStudyVideosPlaylist({
   view,
+  page,
+  topic = ALL_TOPICS,
+  channel = ALL_CHANNELS,
 }: {
   view: SelfStudyView;
+  page: number;
+  topic?: string;
+  channel?: string;
 }) {
   const copy = useMessages();
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [channel, setChannel] = useState(ALL_CHANNELS);
-  const [topic, setTopic] = useState(ALL_TOPICS);
+
+  const filters = useMemo(
+    () => ({
+      ...(topic ? { topic } : {}),
+      ...(channel ? { channel } : {}),
+    }),
+    [topic, channel],
+  );
+
+  const hrefForPage = useMemo(
+    () => (nextView: SelfStudyView, nextPage: number) =>
+      selfStudyVideosHref(nextView, nextPage, filters),
+    [filters],
+  );
+
+  const hrefForView = useMemo(
+    () => (nextView: SelfStudyView) =>
+      selfStudyVideosHref(nextView, 1, filters),
+    [filters],
+  );
 
   const channels = useMemo(() => {
     const names = new Set<string>();
@@ -220,8 +306,66 @@ export default function SelfStudyVideosPlaylist({
     });
   }, [query, channel, topic]);
 
+  const pageCount = Math.max(
+    1,
+    Math.ceil(filtered.length / SELF_STUDY_PAGE_SIZE),
+  );
+  const current = Math.min(Math.max(1, page), pageCount);
+
+  useEffect(() => {
+    if (page === current) return;
+    router.replace(selfStudyVideosHref(view, current, filters), {
+      scroll: false,
+    });
+  }, [page, current, view, filters, router]);
+
+  function replaceFilters(next: {
+    topic?: string;
+    channel?: string;
+    page?: number;
+  }) {
+    router.replace(
+      selfStudyVideosHref(view, next.page ?? 1, {
+        topic: next.topic,
+        channel: next.channel,
+      }),
+      { scroll: false },
+    );
+  }
+
+  function goToPageOne() {
+    if (page !== 1) {
+      router.replace(selfStudyVideosHref(view, 1, filters), { scroll: false });
+    }
+  }
+
+  function onQueryChange(next: string) {
+    setQuery(next);
+    goToPageOne();
+  }
+
+  function onChannelChange(next: string) {
+    replaceFilters({
+      topic: topic || undefined,
+      channel: next || undefined,
+      page: 1,
+    });
+  }
+
+  function onTopicChange(next: string) {
+    replaceFilters({
+      topic: next || undefined,
+      channel: channel || undefined,
+      page: 1,
+    });
+  }
+
   if (SELF_STUDY_PLAYLISTS.length === 0) return null;
 
+  const slice = filtered.slice(
+    (current - 1) * SELF_STUDY_PAGE_SIZE,
+    current * SELF_STUDY_PAGE_SIZE,
+  );
   const q = query.trim();
   const searching = q.length > 0;
   const filtering =
@@ -232,8 +376,7 @@ export default function SelfStudyVideosPlaylist({
 
   function resetFilters() {
     setQuery("");
-    setChannel(ALL_CHANNELS);
-    setTopic(ALL_TOPICS);
+    replaceFilters({ page: 1 });
   }
 
   return (
@@ -242,7 +385,7 @@ export default function SelfStudyVideosPlaylist({
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
           <SelfStudySearch
             value={query}
-            onChange={setQuery}
+            onChange={onQueryChange}
             label={copy.selfStudy.videosSearchLabel}
             placeholder={copy.selfStudy.videosSearchPlaceholder}
             resultsId={RESULTS_ID}
@@ -252,35 +395,33 @@ export default function SelfStudyVideosPlaylist({
             label={copy.selfStudy.videosTopicLabel}
             value={topic}
             options={topicOptions}
-            onChange={setTopic}
+            onChange={onTopicChange}
             className="sm:max-w-[11rem]"
           />
           <FilterMenu
             label={copy.selfStudy.videosChannelLabel}
             value={channel}
             options={channelOptions}
-            onChange={setChannel}
+            onChange={onChannelChange}
             className="sm:max-w-xs"
           />
           {filtering ? (
-            <div className="nav-track-3d relative flex w-full shrink-0 items-center rounded-full py-1.5 pe-1.5 ps-1.5 sm:w-auto">
-              <button
-                type="button"
-                onClick={resetFilters}
-                className={`flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100 sm:w-auto ${FOCUS}`}
-              >
-                <RotateCcw
-                  aria-hidden
-                  className="size-4 shrink-0 text-amber-700 dark:text-amber-300"
-                  strokeWidth={2.75}
-                />
-                <span>{copy.selfStudy.videosResetFilters}</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className={`cta-3d cta-3d-sky flex min-h-14 w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold text-white sm:w-auto ${FOCUS}`}
+            >
+              <RotateCcw
+                aria-hidden
+                className="size-4 shrink-0"
+                strokeWidth={2.75}
+              />
+              <span>{copy.selfStudy.videosResetFilters}</span>
+            </button>
           ) : null}
         </div>
         <div className="flex shrink-0 justify-start">
-          <SelfStudyViewToggle current={view} hrefFor={selfStudyVideosHref} />
+          <SelfStudyViewToggle current={view} hrefFor={hrefForView} />
         </div>
       </div>
 
@@ -290,108 +431,49 @@ export default function SelfStudyVideosPlaylist({
 
       <div id={RESULTS_ID}>
         {filtered.length > 0 ? (
-          view === "list" ? (
-            <ul className="mt-6 grid gap-4">
-              {filtered.map((playlist, index) => {
-                const titleId = `self-study-playlist-title-${playlist.id}`;
-                return (
-                  <li
-                    key={playlist.id}
-                    className={RISE_CLASS}
-                    style={riseDelay(index)}
-                  >
-                    <article
-                      className="teacher-card-3d teacher-tone-zinc group relative flex min-h-24 items-center gap-3 overflow-hidden rounded-2xl px-3 py-3 dark:border-white/10 sm:gap-4 sm:px-4"
-                      aria-labelledby={titleId}
+          <>
+            {view === "list" ? (
+              <ul className="mt-6 grid gap-4">
+                {slice.map((playlist, index) => {
+                  const titleId = `self-study-playlist-title-${playlist.id}`;
+                  return (
+                    <li
+                      key={playlist.id}
+                      className={RISE_CLASS}
+                      style={riseDelay(index)}
                     >
-                      <div className="teacher-stage relative h-20 w-36 shrink-0 overflow-hidden rounded-[0.9rem] bg-zinc-950 sm:h-24 sm:w-44">
-                        <iframe
-                          title={copy.selfStudy.videosPlaylistAria(playlist.title)}
-                          src={playlist.embedSrc}
-                          className="absolute inset-0 h-full w-full border-0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="strict-origin-when-cross-origin"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h3
-                          id={titleId}
-                          className="truncate text-base font-black tracking-tight sm:text-lg"
-                        >
-                          {playlist.title}
-                        </h3>
-                        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm font-bold text-zinc-600 dark:text-zinc-300">
-                          <YtMark className="h-3.5 w-5 shrink-0 text-red-600 dark:text-red-500" />
-                          <span className="truncate">{playlist.channel}</span>
-                        </p>
-                      </div>
-
-                      <a
-                        href={playlist.watchUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="cta-3d cta-3d-ink relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-extrabold text-white dark:text-zinc-950"
+                      <article
+                        className="teacher-card-3d teacher-tone-zinc group relative flex min-h-24 items-center gap-3 overflow-hidden rounded-2xl px-3 py-3 dark:border-white/10 sm:gap-4 sm:px-4"
+                        aria-labelledby={titleId}
                       >
-                        <span className="relative z-10 hidden sm:inline">
-                          {copy.selfStudy.videosOpenOnYouTube}
-                        </span>
-                        <ExternalLink aria-hidden className="relative z-10 size-4" />
-                      </a>
-                    </article>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((playlist, index) => {
-                const titleId = `self-study-playlist-title-${playlist.id}`;
-                return (
-                  <li
-                    key={playlist.id}
-                    className={`h-full ${RISE_CLASS}`}
-                    style={riseDelay(index)}
-                  >
-                    <article
-                      className="teacher-card-3d teacher-tone-zinc group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] dark:border-white/10"
-                      aria-labelledby={titleId}
-                    >
-                      <div className="teacher-stage relative aspect-video w-full overflow-hidden bg-zinc-950">
-                        <iframe
-                          title={copy.selfStudy.videosPlaylistAria(playlist.title)}
+                        <PlaylistEmbed
+                          title={copy.selfStudy.videosPlaylistAria(
+                            playlist.title,
+                          )}
                           src={playlist.embedSrc}
-                          className="absolute inset-0 h-full w-full border-0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="strict-origin-when-cross-origin"
+                          className="h-20 w-36 shrink-0 rounded-[0.9rem] sm:h-24 sm:w-44"
                         />
-                      </div>
 
-                      <div className="flex flex-1 flex-col px-5 pt-4 pb-5">
-                        <h3
-                          id={titleId}
-                          className="line-clamp-2 text-xl font-black tracking-tight sm:text-2xl"
-                        >
-                          {playlist.title}
-                        </h3>
-                        <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-sm font-bold text-zinc-600 dark:text-zinc-300">
-                          <YtMark className="h-3.5 w-5 shrink-0 text-red-600 dark:text-red-500" />
-                          <span className="line-clamp-2">{playlist.channel}</span>
-                        </p>
-
-                        <div className="min-h-5 flex-1" aria-hidden />
+                        <div className="min-w-0 flex-1">
+                          <h3
+                            id={titleId}
+                            className="truncate text-base font-black tracking-tight sm:text-lg"
+                          >
+                            {playlist.title}
+                          </h3>
+                          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm font-bold text-zinc-600 dark:text-zinc-300">
+                            <YtMark className="h-3.5 w-5 shrink-0 text-red-600 dark:text-red-500" />
+                            <span className="truncate">{playlist.channel}</span>
+                          </p>
+                        </div>
 
                         <a
                           href={playlist.watchUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="cta-3d cta-3d-ink relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white dark:text-zinc-950"
+                          className="cta-3d cta-3d-ink relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-extrabold text-white dark:text-zinc-950"
                         >
-                          <span className="relative z-10">
+                          <span className="relative z-10 hidden sm:inline">
                             {copy.selfStudy.videosOpenOnYouTube}
                           </span>
                           <ExternalLink
@@ -399,13 +481,77 @@ export default function SelfStudyVideosPlaylist({
                             className="relative z-10 size-4"
                           />
                         </a>
-                      </div>
-                    </article>
-                  </li>
-                );
-              })}
-            </ul>
-          )
+                      </article>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {slice.map((playlist, index) => {
+                  const titleId = `self-study-playlist-title-${playlist.id}`;
+                  return (
+                    <li
+                      key={playlist.id}
+                      className={`h-full ${RISE_CLASS}`}
+                      style={riseDelay(index)}
+                    >
+                      <article
+                        className="teacher-card-3d teacher-tone-zinc group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] dark:border-white/10"
+                        aria-labelledby={titleId}
+                      >
+                        <PlaylistEmbed
+                          title={copy.selfStudy.videosPlaylistAria(
+                            playlist.title,
+                          )}
+                          src={playlist.embedSrc}
+                          className="aspect-video w-full"
+                        />
+
+                        <div className="flex flex-1 flex-col px-5 pt-4 pb-5">
+                          <h3
+                            id={titleId}
+                            className="line-clamp-2 text-xl font-black tracking-tight sm:text-2xl"
+                          >
+                            {playlist.title}
+                          </h3>
+                          <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-sm font-bold text-zinc-600 dark:text-zinc-300">
+                            <YtMark className="h-3.5 w-5 shrink-0 text-red-600 dark:text-red-500" />
+                            <span className="line-clamp-2">
+                              {playlist.channel}
+                            </span>
+                          </p>
+
+                          <div className="min-h-5 flex-1" aria-hidden />
+
+                          <a
+                            href={playlist.watchUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="cta-3d cta-3d-ink relative inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white dark:text-zinc-950"
+                          >
+                            <span className="relative z-10">
+                              {copy.selfStudy.videosOpenOnYouTube}
+                            </span>
+                            <ExternalLink
+                              aria-hidden
+                              className="relative z-10 size-4"
+                            />
+                          </a>
+                        </div>
+                      </article>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <SelfStudyPagination
+              view={view}
+              page={current}
+              pageCount={pageCount}
+              hrefFor={hrefForPage}
+            />
+          </>
         ) : null}
 
         {filtering && filtered.length === 0 ? (

@@ -134,11 +134,29 @@ export type Messages = {
     builderRole: string;
     teacherRole: string;
     open: string;
+    comingSoon: string;
     back: string;
     seeLessons: string;
     kicker: string;
     memberCount: (count: number) => string;
     builderTagline: string;
+    viewPhoto: (name: string) => string;
+    closePhoto: string;
+    resume: {
+      email: string;
+      github: string;
+      years: string;
+      roles: string;
+      projects: string;
+      about: string;
+      skills: string;
+      experience: string;
+      now: string;
+      education: string;
+      languages: string;
+      work: string;
+      opensNewTab: string;
+    };
   };
   selfStudy: {
     kicker: string;
@@ -373,18 +391,36 @@ const en: Messages = {
   team: {
     title: "Team",
     body: "The people who build the site, and the teachers who lead a path.",
-    builders: "IT",
+    builders: "Web Development Team",
     buildersBody: "People who build this site.",
     teachers: "Teachers",
     teachersBody: "Teachers who lead a learning path.",
     builderRole: "IT",
     teacherRole: "Teacher",
     open: "Open",
+    comingSoon: "Coming Soon",
     back: "Back to team",
     seeLessons: "See lessons",
     kicker: "Meet the crew",
     memberCount: (count) => `${count} ${count === 1 ? "person" : "people"}`,
     builderTagline: "Builds Shwequest",
+    viewPhoto: (name) => `View photo of ${name}`,
+    closePhoto: "Close photo",
+    resume: {
+      email: "Email",
+      github: "GitHub",
+      years: "Years building",
+      roles: "Roles",
+      projects: "Live projects",
+      about: "About",
+      skills: "Skills",
+      experience: "Experience",
+      now: "Now",
+      education: "Education",
+      languages: "Languages",
+      work: "Work",
+      opensNewTab: "opens in a new tab",
+    },
   },
   selfStudy: {
     kicker: "Open path",
@@ -617,18 +653,36 @@ const my: Messages = {
   team: {
     title: "အဖွဲ့",
     body: "ဆိုက်ကို တည်ဆောက်သူတွေနဲ့ လမ်းကြောင်းဦးဆောင်တဲ့ ဆရာတွေ။",
-    builders: "အိုင်တီ",
+    builders: "Web Development Team",
     buildersBody: "ဒီဆိုက်ကို တည်ဆောက်သူတွေ။",
     teachers: "ဆရာများ",
     teachersBody: "သင်ယူလမ်းကြောင်း ဦးဆောင်တဲ့ ဆရာတွေ။",
     builderRole: "အိုင်တီ",
     teacherRole: "ဆရာ",
     open: "ဖွင့်ရန်",
+    comingSoon: "မကြာမီ",
     back: "အဖွဲ့သို့",
     seeLessons: "သင်ခန်းစာများ",
     kicker: "အဖွဲ့ဝင်များ",
     memberCount: (count) => `${count} ယောက်`,
     builderTagline: "Shwequest ကို တည်ဆောက်သူ",
+    viewPhoto: (name) => `${name} ရဲ့ပုံကြည့်ရန်`,
+    closePhoto: "ပုံပိတ်ရန်",
+    resume: {
+      email: "အီးမေးလ်",
+      github: "GitHub",
+      years: "အတွေ့အကြုံ နှစ်",
+      roles: "ရာထူးများ",
+      projects: "Live ပရောဂျက်",
+      about: "အကြောင်း",
+      skills: "ကျွမ်းကျင်မှု",
+      experience: "လုပ်ငန်းအတွေ့အကြုံ",
+      now: "လက်ရှိ",
+      education: "ပညာရေး",
+      languages: "ဘာသာစကား",
+      work: "လက်ရာများ",
+      opensNewTab: "tab အသစ်မှာ ဖွင့်မယ်",
+    },
   },
   selfStudy: {
     kicker: "လမ်းကြောင်းဖွင့်",

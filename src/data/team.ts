@@ -4,6 +4,7 @@ import {
   type Teacher,
   type TeacherAccent,
 } from "@/data/teachers";
+import { THIHA_AUNG_PROFILE, type BuilderProfile } from "@/data/builder-profiles";
 
 export type TeamKind = "builder" | "teacher";
 
@@ -14,16 +15,18 @@ export type TeamPerson = {
   image: string;
   kind: TeamKind;
   accent: TeacherAccent;
+  profile?: BuilderProfile;
 };
 
-/** Placeholder IT names until real builder names exist. */
+/** Builder 2 stays a Coming Soon placeholder until a real profile exists. */
 export const BUILDERS: readonly TeamPerson[] = [
   {
     id: "builder-1",
-    label: "Builder 1",
-    image: TEACHER_PLACEHOLDER_IMAGE,
+    label: "Thiha Aung",
+    image: "/team/thiha-aung.webp",
     kind: "builder",
     accent: "sky",
+    profile: THIHA_AUNG_PROFILE,
   },
   {
     id: "builder-2",
@@ -31,13 +34,6 @@ export const BUILDERS: readonly TeamPerson[] = [
     image: TEACHER_PLACEHOLDER_IMAGE,
     kind: "builder",
     accent: "emerald",
-  },
-  {
-    id: "builder-3",
-    label: "Builder 3",
-    image: TEACHER_PLACEHOLDER_IMAGE,
-    kind: "builder",
-    accent: "amber",
   },
 ];
 
@@ -59,5 +55,6 @@ export function teamPersonById(id: string): TeamPerson | undefined {
 }
 
 export function teamStaticParams(): { id: string }[] {
-  return [...BUILDERS, ...TEAM_TEACHERS].map((person) => ({ id: person.id }));
+  const readyBuilders = BUILDERS.filter((person) => person.profile);
+  return [...readyBuilders, ...TEAM_TEACHERS].map((person) => ({ id: person.id }));
 }

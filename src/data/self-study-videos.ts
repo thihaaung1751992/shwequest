@@ -120,4 +120,37 @@ export const SELF_STUDY_PLAYLISTS: SelfStudyPlaylist[] = [
     watchUrl:
       "https://www.youtube.com/playlist?list=PLlpAWCqcstzp3Kc-uA5g_3D6cAO5YKJ3D",
   },
+  {
+    id: "tv-series-learn-english-with-movies",
+    listId: "PLlpAWCqcstzpmyRgyqRYd1oJwMkoM93ih",
+    title: "Learn English with Movies",
+    channel: "Learn English With TV Series",
+    topic: "speaking",
+    embedSrc:
+      "https://www.youtube.com/embed/videoseries?list=PLlpAWCqcstzpmyRgyqRYd1oJwMkoM93ih",
+    watchUrl:
+      "https://www.youtube.com/playlist?list=PLlpAWCqcstzpmyRgyqRYd1oJwMkoM93ih",
+  },
+  {
+    id: "tv-series-learn-english-with-music",
+    listId: "PLlpAWCqcstzqe7Qp5CUIAxGfCfBxuqJCl",
+    title: "Learn English with Music",
+    channel: "Learn English With TV Series",
+    topic: "speaking",
+    embedSrc:
+      "https://www.youtube.com/embed/videoseries?list=PLlpAWCqcstzqe7Qp5CUIAxGfCfBxuqJCl",
+    watchUrl:
+      "https://www.youtube.com/playlist?list=PLlpAWCqcstzqe7Qp5CUIAxGfCfBxuqJCl",
+  },
+  {
+    id: "tv-series-learn-christmas-english",
+    listId: "PLlpAWCqcstzpIGKPYhDlefozao4LzLfkQ",
+    title: "Learn Christmas English with TV Series and Movies",
+    channel: "Learn English With TV Series",
+    topic: "speaking",
+    embedSrc:
+      "https://www.youtube.com/embed/videoseries?list=PLlpAWCqcstzpIGKPYhDlefozao4LzLfkQ",
+    watchUrl:
+      "https://www.youtube.com/playlist?list=PLlpAWCqcstzpIGKPYhDlefozao4LzLfkQ",
+  },
 ];

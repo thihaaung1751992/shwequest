@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
-import { selfStudyHref, type SelfStudyView } from "@/components/self-study/self-study-view";
+import {
+  selfStudyHref,
+  type SelfStudyView,
+} from "@/components/self-study/self-study-view";
 
 const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
@@ -12,10 +15,12 @@ export default function SelfStudyPagination({
   view,
   page,
   pageCount,
+  hrefFor = selfStudyHref,
 }: {
   view: SelfStudyView;
   page: number;
   pageCount: number;
+  hrefFor?: (view: SelfStudyView, page: number) => string;
 }) {
   const copy = useMessages();
   if (pageCount <= 1) return null;
@@ -42,7 +47,7 @@ export default function SelfStudyPagination({
           </span>
         ) : (
           <Link
-            href={selfStudyHref(view, page - 1)}
+            href={hrefFor(view, page - 1)}
             scroll={false}
             aria-label={copy.selfStudy.prev}
             className={`inline-flex size-10 items-center justify-center rounded-full font-bold text-zinc-700 transition-colors hover:bg-emerald-100/80 hover:text-emerald-950 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white ${FOCUS}`}
@@ -57,7 +62,7 @@ export default function SelfStudyPagination({
           return (
             <Link
               key={n}
-              href={selfStudyHref(view, n)}
+              href={hrefFor(view, n)}
               scroll={false}
               aria-label={copy.selfStudy.page(n)}
               aria-current={active ? "page" : undefined}
@@ -82,7 +87,7 @@ export default function SelfStudyPagination({
           </span>
         ) : (
           <Link
-            href={selfStudyHref(view, page + 1)}
+            href={hrefFor(view, page + 1)}
             scroll={false}
             aria-label={copy.selfStudy.next}
             className={`inline-flex size-10 items-center justify-center rounded-full font-bold text-zinc-700 transition-colors hover:bg-emerald-100/80 hover:text-emerald-950 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white ${FOCUS}`}

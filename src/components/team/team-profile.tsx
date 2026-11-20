@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Code2, GraduationCap } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Code2,
+  FolderCode,
+  GraduationCap,
+  Mail,
+  MapPin,
+} from "lucide-react";
 import FrostGlass from "@/components/frost-glass";
+import BuilderResume, { ResumeStats } from "@/components/team/builder-resume";
+import PortraitLightbox from "@/components/team/portrait-lightbox";
 import TeamChips from "@/components/team/team-chips";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
@@ -21,9 +31,12 @@ export default function TeamProfile({ person }: { person: TeamPerson }) {
   const role = isBuilder ? copy.team.builderRole : copy.team.teacherRole;
   const RoleIcon = isBuilder ? Code2 : GraduationCap;
   const teacher = isBuilder ? undefined : teacherById(person.id);
+  const profile = person.profile;
 
   return (
-    <article className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <article
+      className="flex w-full flex-col gap-6"
+    >
       <Link
         href="/team"
         className={`pill-3d pill-3d-amber inline-flex min-h-11 w-fit items-center gap-2 rounded-full px-4 text-sm font-bold text-amber-950 ${FOCUS}`}
@@ -40,7 +53,7 @@ export default function TeamProfile({ person }: { person: TeamPerson }) {
           className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
         />
 
-        <div className="teacher-stage relative h-36 px-5 pt-4 sm:h-40">
+        <div className="teacher-stage relative h-40 px-5 pt-4 sm:h-44">
           <span
             className={`stat-chip-3d inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black tracking-wider uppercase ${accent.pill} ${accent.pillText}`}
           >
@@ -49,15 +62,57 @@ export default function TeamProfile({ person }: { person: TeamPerson }) {
           </span>
         </div>
 
-        <div className="relative -mt-20 flex flex-col items-center px-5 pb-7 text-center sm:px-8">
+        <div className="relative -mt-28 flex flex-col items-center px-5 pb-7 text-center sm:-mt-32 sm:px-8">
           <span className="block motion-safe:animate-hero-bob">
-            <TeacherPortrait src={person.image} size="card" />
+            <PortraitLightbox src={person.image} label={person.label}>
+              <TeacherPortrait src={person.image} size="hero" />
+            </PortraitLightbox>
           </span>
           <h2 className="mt-4 max-w-full text-3xl font-black tracking-tight wrap-break-word sm:text-4xl">
             {person.label}
           </h2>
 
+          {profile ? (
+            <>
+              <p className="mt-1 text-base font-bold text-slate-600 sm:text-lg dark:text-slate-300">
+                {profile.headline}
+              </p>
+              <p className="mt-1 inline-flex items-center gap-1 text-sm font-bold text-slate-500 dark:text-slate-400">
+                <MapPin aria-hidden className="size-4" />
+                {profile.location}
+              </p>
+            </>
+          ) : null}
+
           <TeamChips person={person} className="mt-4 justify-center" />
+
+          {profile ? (
+            <>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <a
+                  href={`mailto:${profile.email}`}
+                  className={`group relative inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-2xl px-5 font-extrabold text-white transition-[translate,box-shadow,overflow] motion-safe:hover:overflow-visible cta-3d ${accent.cta} ${FOCUS}`}
+                >
+                  <FrostGlass />
+                  <Mail aria-hidden className="relative z-10 size-4" />
+                  <span className="relative z-10">{copy.team.resume.email}</span>
+                </a>
+                <a
+                  href={profile.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`pill-3d pill-3d-amber inline-flex min-h-12 items-center gap-2 rounded-2xl px-5 font-extrabold text-amber-950 ${FOCUS}`}
+                >
+                  <FolderCode aria-hidden className="size-4" />
+                  {copy.team.resume.github}
+                  <span className="sr-only">({copy.team.resume.opensNewTab})</span>
+                </a>
+              </div>
+              <div className="mt-7 flex w-full justify-center">
+                <ResumeStats profile={profile} accent={person.accent} />
+              </div>
+            </>
+          ) : null}
 
           {teacher ? (
             <>
@@ -79,6 +134,8 @@ export default function TeamProfile({ person }: { person: TeamPerson }) {
           ) : null}
         </div>
       </div>
+
+      {profile ? <BuilderResume profile={profile} /> : null}
     </article>
   );
 }
