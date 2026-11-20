@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import { Crown, Flag, Star, TrendingUp, Trophy, Users } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
 import { CountUp, CountUpScope } from "@/components/count-up";
-import { LEARNER } from "@/data/learner";
+import { useLearner } from "@/data/learner-context";
 import {
   formatRank,
   type LeaderboardEntry,
@@ -211,6 +211,7 @@ function LaneTrail({ percent, delayMs, tone }: { percent: number; delayMs: numbe
 
 export default function LeaderboardBoard() {
   const copy = useMessages();
+  const { learner } = useLearner();
   const podium = PODIUM_ORDER.map((place) => {
     const entry = byRank(place);
     return entry ? { place, entry } : null;
@@ -369,7 +370,7 @@ export default function LeaderboardBoard() {
                 </span>
               ) : null}
               <Runner
-                src={LEARNER.image}
+                src={learner.image}
                 ring="ring-orange-500"
                 percent={myPercent}
                 delayMs={youDelayMs}
@@ -378,7 +379,7 @@ export default function LeaderboardBoard() {
             </span>
             <span className="flex w-32 shrink-0 flex-col justify-center py-3 pr-3 pl-3 sm:w-44 sm:pr-5 sm:pl-4 lg:w-56">
               <span className="flex min-w-0 items-center gap-1.5">
-                <span className="truncate text-sm font-black tracking-tight sm:text-lg">{LEARNER.displayName}</span>
+                <span className="truncate text-sm font-black tracking-tight sm:text-lg">{learner.displayName}</span>
                 <span className="shrink-0 rounded-full bg-amber-950 px-1.5 py-px text-[0.6rem] font-black tracking-wider text-amber-50 uppercase dark:bg-amber-300 dark:text-amber-950">
                   {copy.ranks.you}
                 </span>

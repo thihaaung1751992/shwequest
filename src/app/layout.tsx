@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { LearnerProvider } from "@/data/learner-context";
 import { LocaleProvider } from "@/i18n/locale-context";
 import { ThemeProvider } from "@/theme/theme-context";
 import { THEME_BOOT_SCRIPT } from "@/theme/theme";
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
         <ThemeProvider>
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider>
+            <LearnerProvider>{children}</LearnerProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -8,7 +8,8 @@ export type Messages = {
   account: string;
   language: string;
   currentLanguage: (name: string) => string;
-  toggleTheme: (next: "light" | "dark") => string;
+  theme: string;
+  toggleTheme: (next: "light" | "dark" | "system") => string;
   seeTeachers: string;
   daysShort: (days: number) => string;
   daysFull: (days: number) => string;
@@ -252,14 +253,57 @@ export type Messages = {
     locked: string;
     nodeName: (title: string, status: string, xp: number) => string;
   };
+  profile: {
+    title: string;
+    edit: string;
+    save: string;
+    cancel: string;
+    saved: string;
+    changePhoto: string;
+    photoTypeError: string;
+    photoSizeError: string;
+    name: string;
+    bio: string;
+    contact: string;
+    email: string;
+    phone: string;
+    address: string;
+    social: string;
+    telegram: string;
+    tiktok: string;
+    facebook: string;
+    linkedin: string;
+    twitter: string;
+    handleHint: string;
+    opensNewTab: string;
+    courses: string;
+    coursesBody: string;
+    courseCount: (count: number) => string;
+    coursesEmpty: string;
+    courseXp: (xp: string) => string;
+    moreTeachers: string;
+    planEnded: string;
+    openProfile: string;
+    statXp: string;
+    statRank: string;
+    statLessons: string;
+    statPlan: string;
+    xpToPass: (xp: string, name: string) => string;
+    topOfBoard: string;
+  };
 };
 
 const en: Messages = {
   account: "Account",
   language: "Language",
   currentLanguage: (name) => `Language, ${name}`,
+  theme: "Color theme",
   toggleTheme: (next) =>
-    next === "dark" ? "Switch to dark mode" : "Switch to light mode",
+    next === "dark"
+      ? "Dark mode"
+      : next === "system"
+        ? "System theme"
+        : "Light mode",
   seeTeachers: "See teachers",
   daysShort: (days) => {
     if (days === 0) return "Today";
@@ -524,14 +568,57 @@ const en: Messages = {
     locked: "Locked",
     nodeName: (title, status, xp) => `${title}. ${status}. ${xp} XP.`,
   },
+  profile: {
+    title: "Your profile",
+    edit: "Edit profile",
+    save: "Save",
+    cancel: "Cancel",
+    saved: "Saved",
+    changePhoto: "Photo",
+    photoTypeError: "Choose an image file.",
+    photoSizeError: "Keep the photo under 800 KB.",
+    name: "Name",
+    bio: "Bio",
+    contact: "Contact",
+    email: "Email",
+    phone: "Phone",
+    address: "Address",
+    social: "Social",
+    telegram: "Telegram",
+    tiktok: "TikTok",
+    facebook: "Facebook",
+    linkedin: "LinkedIn",
+    twitter: "X / Twitter",
+    handleHint: "@handle or full link",
+    opensNewTab: "opens in a new tab",
+    courses: "Your courses",
+    coursesBody: "Teacher paths you bought and are working through.",
+    courseCount: (count) => (count === 1 ? "1 course" : `${count} courses`),
+    coursesEmpty: "No teacher courses yet. Pick a teacher to start a path.",
+    courseXp: (xp) => `${xp} XP earned on this path`,
+    moreTeachers: "Want another path?",
+    planEnded: "Plan ended",
+    openProfile: "Open your profile",
+    statXp: "Total XP",
+    statRank: "Leaderboard",
+    statLessons: "Lessons done",
+    statPlan: "Plan",
+    xpToPass: (xp, name) => `${xp} XP to pass ${name}`,
+    topOfBoard: "Top of the board",
+  },
 };
 
 const my: Messages = {
   account: "အကောင့်",
   language: "ဘာသာစကား",
   currentLanguage: (name) => `ဘာသာစကား၊ ${name}`,
+  theme: "အရောင်မုဒ်",
   toggleTheme: (next) =>
-    next === "dark" ? "အမှောင်မုဒ်သို့ ပြောင်းရန်" : "အလင်းမုဒ်သို့ ပြောင်းရန်",
+    next === "dark"
+      ? "အမှောင်မုဒ်"
+      : next === "system"
+        ? "စနစ်အရောင်"
+        : "အလင်းမုဒ်",
   seeTeachers: "ဆရာများကြည့်ရန်",
   daysShort: (days) => (days === 0 ? "ယနေ့" : `${days} ရက်`),
   daysFull: (days) => (days === 0 ? "ယနေ့ပြီး" : `${days} ရက်ကျန်`),
@@ -782,6 +869,44 @@ const my: Messages = {
     current: "လက်ရှိသင်ခန်းစာ",
     locked: "သော့ခတ်ထားသည်",
     nodeName: (title, status, xp) => `${title}။ ${status}။ XP ${xp}။`,
+  },
+  profile: {
+    title: "သင့်ပရိုဖိုင်",
+    edit: "ပရိုဖိုင်ပြင်ရန်",
+    save: "သိမ်းရန်",
+    cancel: "ပယ်ဖျက်ရန်",
+    saved: "သိမ်းပြီးပါပြီ",
+    changePhoto: "ဓာတ်ပုံ",
+    photoTypeError: "ပုံဖိုင်တစ်ခုရွေးပါ။",
+    photoSizeError: "ဓာတ်ပုံကို 800 KB အောက်ထားပါ။",
+    name: "အမည်",
+    bio: "မိတ်ဆက်",
+    contact: "ဆက်သွယ်ရန်",
+    email: "အီးမေးလ်",
+    phone: "ဖုန်း",
+    address: "လိပ်စာ",
+    social: "လူမှုကွန်ရက်",
+    telegram: "Telegram",
+    tiktok: "TikTok",
+    facebook: "Facebook",
+    linkedin: "LinkedIn",
+    twitter: "X / Twitter",
+    handleHint: "@handle သို့မဟုတ် လင့်ခ်အပြည့်",
+    opensNewTab: "တက်ဘ်အသစ်တွင် ဖွင့်မည်",
+    courses: "သင့်သင်တန်းများ",
+    coursesBody: "၀ယ်ယူပြီး သင်နေတဲ့ ဆရာလမ်းကြောင်းများ။",
+    courseCount: (count) => `သင်တန်း ${count} ခု`,
+    coursesEmpty: "ဆရာသင်တန်း မရှိသေးပါ။ ဆရာရွေးပြီး လမ်းကြောင်းစပါ။",
+    courseXp: (xp) => `ဒီလမ်းကြောင်းပေါ် ${xp} XP ရပြီး`,
+    moreTeachers: "လမ်းကြောင်းထပ်လိုချင်လား။",
+    planEnded: "အစီအစဉ်ပြီးဆုံး",
+    openProfile: "သင့်ပရိုဖိုင်ဖွင့်ရန်",
+    statXp: "စုစုပေါင်း XP",
+    statRank: "အဆင့်စာရင်း",
+    statLessons: "ပြီးသွားသော သင်ခန်းစာ",
+    statPlan: "အစီအစဉ်",
+    xpToPass: (xp, name) => `${name} ကိုကျော်ဖို့ ${xp} XP လို`,
+    topOfBoard: "ထိပ်ဆုံးရောက်နေပြီ",
   },
 };
 

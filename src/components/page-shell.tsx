@@ -32,7 +32,9 @@ export default function PageShell({
           ? copy.nav.team
           : title === "Self study"
             ? copy.nav.selfStudy
-            : title;
+            : title === "Profile"
+              ? copy.profile.title
+              : title;
   const fullMain = isHome || bleed;
   const headerClass = backdrop
     ? "relative z-40 bg-transparent px-4 py-3"

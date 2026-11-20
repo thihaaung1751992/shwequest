@@ -4,64 +4,103 @@ import {
   createContext,
   useCallback,
   useContext,
+  useLayoutEffect,
   useMemo,
   useSyncExternalStore,
 } from "react";
-import { THEME_KEY, type Theme } from "@/theme/theme";
+import {
+  THEME_KEY,
+  isTheme,
+  nextTheme,
+  resolveTheme,
+  type ResolvedTheme,
+  type Theme,
+} from "@/theme/theme";
 
 type ThemeContextValue = {
   theme: Theme;
+  resolvedTheme: ResolvedTheme;
   setTheme: (next: Theme) => void;
   toggleTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const listeners = new Set<() => void>();
+const preferenceListeners = new Set<() => void>();
 
-function emit() {
-  listeners.forEach((listener) => listener());
+function emitPreference() {
+  preferenceListeners.forEach((listener) => listener());
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
+function subscribePreference(listener: () => void) {
+  preferenceListeners.add(listener);
   return () => {
-    listeners.delete(listener);
+    preferenceListeners.delete(listener);
   };
 }
 
-function readTheme(): Theme {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+function readPreference(): Theme {
+  if (typeof window === "undefined") return "system";
+  const stored = window.localStorage.getItem(THEME_KEY);
+  return isTheme(stored) ? stored : "system";
 }
 
-function getServerSnapshot(): Theme {
-  return "light";
+function getPreferenceServerSnapshot(): Theme {
+  return "system";
 }
 
-function applyTheme(theme: Theme) {
+function subscribeSystemDark(listener: () => void) {
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", listener);
+  return () => media.removeEventListener("change", listener);
+}
+
+function readSystemDark(): boolean {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function getSystemDarkServerSnapshot(): boolean {
+  return false;
+}
+
+function applyResolved(resolved: ResolvedTheme) {
   const root = document.documentElement;
-  root.classList.toggle("dark", theme === "dark");
-  root.style.colorScheme = theme;
+  root.classList.toggle("dark", resolved === "dark");
+  root.style.colorScheme = resolved;
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const theme = useSyncExternalStore(subscribe, readTheme, getServerSnapshot);
+  const theme = useSyncExternalStore(
+    subscribePreference,
+    readPreference,
+    getPreferenceServerSnapshot,
+  );
+  const systemDark = useSyncExternalStore(
+    subscribeSystemDark,
+    readSystemDark,
+    getSystemDarkServerSnapshot,
+  );
+
+  const resolvedTheme: ResolvedTheme =
+    theme === "system" ? (systemDark ? "dark" : "light") : theme;
+
+  useLayoutEffect(() => {
+    applyResolved(resolvedTheme);
+  }, [resolvedTheme]);
 
   const setTheme = useCallback((next: Theme) => {
     window.localStorage.setItem(THEME_KEY, next);
-    applyTheme(next);
-    emit();
+    applyResolved(resolveTheme(next));
+    emitPreference();
   }, []);
 
   const toggleTheme = useCallback(() => {
-    const current = readTheme();
-    setTheme(current === "dark" ? "light" : "dark");
+    setTheme(nextTheme(readPreference()));
   }, [setTheme]);
 
   const value = useMemo(
-    () => ({ theme, setTheme, toggleTheme }),
-    [theme, setTheme, toggleTheme],
+    () => ({ theme, resolvedTheme, setTheme, toggleTheme }),
+    [theme, resolvedTheme, setTheme, toggleTheme],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

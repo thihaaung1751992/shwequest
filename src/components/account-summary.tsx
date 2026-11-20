@@ -1,17 +1,27 @@
+"use client";
+
 import { Star } from "lucide-react";
-import Image from "next/image";
-import { LEARNER } from "@/data/learner";
+import Link from "next/link";
+import LearnerAvatar from "@/components/profile/learner-avatar";
+import { useLearner } from "@/data/learner-context";
+import { useMessages } from "@/i18n/locale-context";
+
+const FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700";
 
 export default function AccountSummary({ xp }: { xp?: number }) {
+  const copy = useMessages();
+  const { learner } = useLearner();
+
   return (
-    <div
-      className={`flex min-w-0 max-w-full items-center gap-2.5 rounded-full bg-transparent py-0.5 pl-1 sm:gap-3 ${xp !== undefined ? "pr-0.5" : "pr-2.5"}`}
+    <Link
+      href="/profile"
+      aria-label={copy.profile.openProfile}
+      className={`flex min-w-0 max-w-full items-center gap-2.5 rounded-full bg-transparent py-0.5 pl-1 transition-colors hover:bg-amber-50/80 sm:gap-3 dark:hover:bg-white/5 ${xp !== undefined ? "pr-0.5" : "pr-2.5"} ${FOCUS}`}
     >
-      <span className="relative block size-7 shrink-0 overflow-hidden rounded-full bg-amber-200 ring-2 ring-amber-400 ring-offset-2 ring-offset-white sm:size-8 dark:ring-amber-500 dark:ring-offset-slate-900">
-        <Image src={LEARNER.image} alt="" fill sizes="32px" className="object-cover" />
-      </span>
+      <LearnerAvatar src={learner.image} size="strip" />
       <p className="hidden min-w-0 truncate text-sm font-black tracking-tight text-amber-950 sm:block sm:max-w-28 md:max-w-36 dark:text-amber-50">
-        {LEARNER.displayName}
+        {learner.displayName}
       </p>
       {xp !== undefined ? (
         <>
@@ -29,6 +39,6 @@ export default function AccountSummary({ xp }: { xp?: number }) {
           </p>
         </>
       ) : null}
-    </div>
+    </Link>
   );
 }
