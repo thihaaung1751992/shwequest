@@ -44,7 +44,6 @@ export default async function AdminMemberDetailPage({
     <AdminMembersDetail
       member={detail.member}
       planLabel={detail.planLabel}
-      planDays={detail.planDays}
       teachers={detail.teachers}
       siteHref={detail.siteHref}
       listHref={detail.listHref}

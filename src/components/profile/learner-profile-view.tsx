@@ -32,7 +32,7 @@ export default function LearnerProfileView() {
       setPlanLabel(null);
       return;
     }
-    const days = planDaysRemaining(learner.planEndsOn);
+    const days = planDaysRemaining(learner.planEndsOn, new Date());
     setPlanLabel(days >= 0 ? copy.daysFull(days) : copy.profile.planEnded);
   }, [learner.planEndsOn, copy]);
 

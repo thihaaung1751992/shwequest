@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   BadgeCheck,
@@ -15,6 +15,7 @@ import {
 import {
   ADMIN_MEMBER_STATUS_LABEL,
   ADMIN_MEMBER_STATUSES,
+  formatPlanLabelRelative,
   type AdminMemberRow,
   type AdminMemberStats,
 } from "@/data/admin-members";
@@ -65,11 +66,19 @@ export default function AdminMembersCatalog({
   rows: readonly AdminMemberRow[];
 }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
 
   const visible = useMemo(() => {
     if (filter === "all") return rows;
     return rows.filter((row) => row.status === filter);
   }, [filter, rows]);
+
+  const planLabelFor = (row: AdminMemberRow) =>
+    now ? formatPlanLabelRelative(row.planEndsOn, now) : row.planLabel;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -271,7 +280,7 @@ export default function AdminMembersCatalog({
                       </td>
                       <td className="max-w-[12rem] px-4 py-3 text-zinc-600 dark:text-zinc-300 sm:px-5">
                         <p className="truncate font-mono text-xs font-bold">
-                          {row.planLabel}
+                          {planLabelFor(row)}
                         </p>
                       </td>
                       <td className="px-4 py-3 font-mono text-sm font-bold tabular-nums text-zinc-700 dark:text-zinc-200 sm:px-5">

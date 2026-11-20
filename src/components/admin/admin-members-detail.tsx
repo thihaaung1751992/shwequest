@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -10,7 +13,11 @@ import {
   ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
-import { ADMIN_MEMBER_STATUS_LABEL } from "@/data/admin-members";
+import {
+  ADMIN_MEMBER_STATUS_LABEL,
+  formatPlanLabelRelative,
+} from "@/data/admin-members";
+import { planDaysRemaining } from "@/data/learner";
 import type { Member, MemberStatus } from "@/data/members";
 
 const FOCUS =
@@ -42,21 +49,33 @@ const STATUS: Record<
 
 export default function AdminMembersDetail({
   member,
-  planLabel,
-  planDays,
+  planLabel: planLabelFallback,
   teachers,
   siteHref,
   listHref,
 }: {
   member: Member;
+  /** Prerender-safe fallback; upgraded to relative after hydrate. */
   planLabel: string;
-  planDays: number | null;
   teachers: readonly { id: string; label: string }[];
   siteHref: string;
   listHref: string;
 }) {
   const statusMeta = STATUS[member.status];
   const StatusIcon = statusMeta.Icon;
+  const [planLabel, setPlanLabel] = useState(planLabelFallback);
+  const [planDays, setPlanDays] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!member.planEndsOn) {
+      setPlanLabel("No plan");
+      setPlanDays(null);
+      return;
+    }
+    const now = new Date();
+    setPlanLabel(formatPlanLabelRelative(member.planEndsOn, now));
+    setPlanDays(planDaysRemaining(member.planEndsOn, now));
+  }, [member.planEndsOn]);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">

@@ -7,6 +7,24 @@ import {
 } from "@/data/members";
 import { teacherById } from "@/data/teachers";
 
+/** Prerender-safe plan label (no current-time). Relative days → `formatPlanLabelRelative`. */
+export function formatPlanLabel(planEndsOn: string | null): string {
+  if (!planEndsOn) return "No plan";
+  return planEndsOn;
+}
+
+/** Relative plan label — pass a client `now` (e.g. from useEffect). */
+export function formatPlanLabelRelative(
+  planEndsOn: string | null,
+  now: Date,
+): string {
+  if (!planEndsOn) return "No plan";
+  const days = planDaysRemaining(planEndsOn, now);
+  if (days < 0) return `Ended ${planEndsOn}`;
+  if (days === 0) return `Ends today · ${planEndsOn}`;
+  return `${days}d left · ${planEndsOn}`;
+}
+
 export type AdminMemberRow = {
   id: string;
   displayName: string;
@@ -48,14 +66,6 @@ export function adminMemberHref(id: string): string {
 /** Public learner profile (single page until per-member routes exist). */
 export function adminMemberSiteHref(): string {
   return "/profile";
-}
-
-export function formatPlanLabel(planEndsOn: string | null): string {
-  if (!planEndsOn) return "No plan";
-  const days = planDaysRemaining(planEndsOn);
-  if (days < 0) return `Ended ${planEndsOn}`;
-  if (days === 0) return `Ends today · ${planEndsOn}`;
-  return `${days}d left · ${planEndsOn}`;
 }
 
 export function getAdminMemberStats(
@@ -132,14 +142,10 @@ export function getAdminMemberDetail(id: string) {
   const member = memberById(id);
   if (!member) return undefined;
 
-  const planDays = member.planEndsOn
-    ? planDaysRemaining(member.planEndsOn)
-    : null;
-
   return {
     member,
+    /** Static until the detail client hydrates relative days. */
     planLabel: formatPlanLabel(member.planEndsOn),
-    planDays,
     teachers: enrolledTeacherLabels(member.enrolledTeacherIds),
     siteHref: adminMemberSiteHref(),
     listHref: "/admin/members",

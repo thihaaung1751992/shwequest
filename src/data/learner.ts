@@ -84,8 +84,13 @@ export function serializeLearnerEdits(profile: LearnerProfile): string {
 
 const MS_PER_DAY = 86_400_000;
 
-/** Whole local days from today until `endsOn`. Negative once that day has passed. */
-export function planDaysRemaining(endsOn: string, now = new Date()): number {
+/**
+ * Whole local days from `now` until `endsOn`. Negative once that day has passed.
+ * Callers must pass `now` — do not call with `new Date()` during Server Component
+ * prerender (Cache Components blocks current-time reads). Prefer a client
+ * `useEffect` (see `PlanDaysLeft`) when the value must reflect "today".
+ */
+export function planDaysRemaining(endsOn: string, now: Date): number {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endsOn);
   if (!match) return -1;
 

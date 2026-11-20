@@ -22,7 +22,7 @@ export default function PlanDaysLeft({ endsOn }: { endsOn: string | null }) {
       setLabels(null);
       return;
     }
-    const days = planDaysRemaining(endsOn);
+    const days = planDaysRemaining(endsOn, new Date());
     setLabels(days >= 0 ? daysLeftLabel(days, copy) : null);
   }, [endsOn, copy]);
 
