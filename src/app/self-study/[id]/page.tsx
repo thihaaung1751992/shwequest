@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import PageShell from "@/components/page-shell";
 import SelfStudyCourse from "@/components/self-study/self-study-course";
+import SelfStudyCourseSkeleton from "@/components/self-study/self-study-course-skeleton";
 import {
   freeLessonById,
   freeLessonStaticParams,
@@ -61,14 +62,7 @@ export default function SelfStudyCoursePage({
 }) {
   return (
     <PageShell title="Self study">
-      <Suspense
-        fallback={
-          <div className="grid gap-5 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)]">
-            <div className="h-80 rounded-[1.75rem] bg-amber-100/60 dark:bg-white/5" />
-            <div className="min-h-[18rem] rounded-[1.75rem] bg-amber-50/80 dark:bg-white/5 sm:min-h-[24rem]" />
-          </div>
-        }
-      >
+      <Suspense fallback={<SelfStudyCourseSkeleton />}>
         <SelfStudyCourseFromParams
           params={params}
           searchParams={searchParams}
