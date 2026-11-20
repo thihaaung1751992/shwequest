@@ -146,6 +146,7 @@ export const THIHA_AUNG_PROFILE: BuilderProfile = {
         { label: "Learning page", href: "https://thihaaung225278.github.io/Learning_page/" },
         { label: "India landing page", href: "https://thihaaung225278.github.io/india_d_page_with_html_javascript/" },
         { label: "Hamburger navigation", href: "https://hamburger-navigation.netlify.app/" },
+        { label: "Clickr Run", href: "https://clickr-run.netlify.app/" },
       ],
     },
     {
@@ -153,7 +154,6 @@ export const THIHA_AUNG_PROFILE: BuilderProfile = {
       tone: "orange",
       links: [
         { label: "Live chat", href: "https://live-chat-with-vue-capi.web.app/" },
-        { label: "Clickr Run", href: "https://clickr-run.netlify.app/" },
       ],
     },
   ],

@@ -34,9 +34,7 @@ export default function TeamProfile({ person }: { person: TeamPerson }) {
   const profile = person.profile;
 
   return (
-    <article
-      className="flex w-full flex-col gap-6"
-    >
+    <article className="flex w-full flex-col gap-6 pb-12 sm:pb-20">
       <Link
         href="/team"
         className={`pill-3d pill-3d-amber inline-flex min-h-11 w-fit items-center gap-2 rounded-full px-4 text-sm font-bold text-amber-950 ${FOCUS}`}
