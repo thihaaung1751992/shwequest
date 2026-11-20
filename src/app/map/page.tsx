@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import RoadmapSkeleton from "@/components/roadmap/roadmap-skeleton";
 import RoadmapView from "@/components/roadmap/RoadmapView";
 import { teacherById } from "@/data/teachers";
 
@@ -22,7 +23,7 @@ async function MapFromUrl({ searchParams }: { searchParams: SearchParams }) {
 
 export default function MapPage({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <Suspense fallback={<RoadmapView />}>
+    <Suspense fallback={<RoadmapSkeleton />}>
       <MapFromUrl searchParams={searchParams} />
     </Suspense>
   );
