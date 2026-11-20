@@ -4,23 +4,25 @@ import Link from "next/link";
 import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
 import FrostGlass from "@/components/frost-glass";
+import SelfStudyComingSoon, {
+  SelfStudyComingSoonPill,
+} from "@/components/self-study/self-study-coming-soon";
 import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
 import TeacherProgress from "@/components/teachers/teacher-progress";
-import type { Teacher } from "@/data/teachers";
+import { teacherComingSoon, type Teacher } from "@/data/teachers";
 
 export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
   const copy = useMessages();
   const accent = ACCENT_STYLES[teacher.accent];
   const { videos, games } = countLessons(teacher.nodes);
+  const available = !teacherComingSoon(teacher.id);
+  const shellClass = `teacher-card-3d group relative flex min-h-20 items-center gap-3 overflow-hidden rounded-2xl px-3 py-3 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 sm:gap-4 sm:px-4 ${accent.tone}${available ? "" : " cursor-not-allowed"}`;
 
-  return (
-    <Link
-      href={`/map?teacher=${teacher.id}`}
-      className={`teacher-card-3d group flex min-h-20 items-center gap-3 overflow-hidden rounded-2xl px-3 py-3 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 sm:gap-4 sm:px-4 ${accent.tone}`}
-    >
-      <span className="teacher-stage shrink-0 rounded-[0.9rem] p-1.5">
+  const body = (
+    <>
+      <span className={`teacher-stage shrink-0 rounded-[0.9rem] p-1.5${available ? "" : " opacity-80"}`}>
         <TeacherPortrait src={teacher.image} size="list" />
       </span>
       <span className="min-w-0 flex-1">
@@ -40,13 +42,38 @@ export default function TeacherListRow({ teacher }: { teacher: Teacher }) {
           <TeacherProgress teacher={teacher} variant="bar" />
         </span>
       </span>
-      <span
-        className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-extrabold text-white transition-[box-shadow,overflow] motion-safe:group-hover:overflow-visible cta-3d ${accent.cta}`}
-      >
-        <FrostGlass />
-        <span className="relative z-10 hidden sm:inline">{copy.teachers.openPath}</span>
-        <ArrowRight aria-hidden className="relative z-10 size-4" />
-      </span>
-    </Link>
+      {available ? (
+        <span
+          className={`relative inline-flex min-h-10 shrink-0 items-center gap-1.5 overflow-hidden rounded-xl px-3 text-sm font-extrabold text-white transition-[box-shadow,overflow] motion-safe:group-hover:overflow-visible cta-3d ${accent.cta}`}
+        >
+          <FrostGlass />
+          <span className="relative z-10 hidden sm:inline">{copy.teachers.openPath}</span>
+          <ArrowRight aria-hidden className="relative z-10 size-4" />
+        </span>
+      ) : (
+        <>
+          <SelfStudyComingSoon label={copy.teachers.comingSoon} variant="row" />
+          <SelfStudyComingSoonPill label={copy.teachers.comingSoon} />
+        </>
+      )}
+    </>
+  );
+
+  if (available) {
+    return (
+      <Link href={`/map?teacher=${teacher.id}`} className={shellClass}>
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={shellClass}
+      aria-disabled="true"
+      aria-label={`${teacher.label} — ${copy.teachers.comingSoon}`}
+    >
+      {body}
+    </div>
   );
 }

@@ -27,6 +27,13 @@ const teacherOne = demoUnitCatalog();
 const teacherTwo = placeholderCatalog(8, 2);
 const teacherThree = placeholderCatalog(3, 5);
 
+/** Open on /teachers and Team. Everyone else stays a Coming Soon card. */
+const READY_TEACHER_IDS = new Set(["teacher-1"]);
+
+export function teacherComingSoon(id: string): boolean {
+  return !READY_TEACHER_IDS.has(id);
+}
+
 /** Placeholder labels and catalogs until real teacher names and lessons exist. */
 export const TEACHERS: Teacher[] = [
   {

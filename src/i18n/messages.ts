@@ -115,6 +115,7 @@ export type Messages = {
     videos: (count: number) => string;
     games: (count: number) => string;
     openPath: string;
+    comingSoon: string;
     emptyLead: string;
     emptyTail: string;
     matches: (count: number) => string;
@@ -378,6 +379,7 @@ const en: Messages = {
     videos: (count) => `${count} videos`,
     games: (count) => `${count} games`,
     openPath: "Open path",
+    comingSoon: "Coming Soon",
     emptyLead: "No teachers match “",
     emptyTail: "”.",
     matches: (count) =>
@@ -641,6 +643,7 @@ const my: Messages = {
     videos: (count) => `ဗီဒီယို ${count}`,
     games: (count) => `ဂိမ်း ${count}`,
     openPath: "လမ်းကြောင်းဖွင့်ရန်",
+    comingSoon: "မကြာမီ",
     emptyLead: "“",
     emptyTail: "” နဲ့ ကိုက်ညီတဲ့ ဆရာမရှိပါ။",
     matches: (count) => `ကိုက်ညီတဲ့ ဆရာ ${count} ယောက်`,

@@ -5,25 +5,24 @@ import { ArrowRight, CirclePlay, Gamepad2 } from "lucide-react";
 import { useMessages } from "@/i18n/locale-context";
 import type { Teacher } from "@/data/teachers";
 import FrostGlass from "@/components/frost-glass";
+import SelfStudyComingSoon from "@/components/self-study/self-study-coming-soon";
 import { countLessons } from "@/components/roadmap/roadmap-data";
 import { ACCENT_STYLES } from "@/components/teachers/teacher-accent";
 import TeacherPortrait from "@/components/teachers/teacher-portrait";
 import TeacherProgress from "@/components/teachers/teacher-progress";
 import { resetTilt, tiltCard } from "@/components/teachers/teacher-tilt";
+import { teacherComingSoon } from "@/data/teachers";
 
 export default function TeacherCard({ teacher }: { teacher: Teacher }) {
   const copy = useMessages();
   const accent = ACCENT_STYLES[teacher.accent];
   const { videos, games } = countLessons(teacher.nodes);
+  const available = !teacherComingSoon(teacher.id);
   const chip = `stat-chip-3d inline-flex items-center gap-1.5 rounded-full px-3 py-1 ${accent.pill} ${accent.pillText}`;
+  const shellClass = `teacher-card-3d group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 ${accent.tone}${available ? "" : " cursor-not-allowed"}`;
 
-  return (
-    <Link
-      href={`/map?teacher=${teacher.id}`}
-      onPointerMove={tiltCard}
-      onPointerLeave={resetTilt}
-      className={`teacher-card-3d group flex h-full flex-col overflow-hidden rounded-[1.75rem] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-sky-700 ${accent.tone}`}
-    >
+  const body = (
+    <>
       <span
         aria-hidden
         className="price-card-face pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
@@ -39,7 +38,13 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
       </div>
 
       <div className="relative -mt-14 flex flex-1 flex-col items-center px-5 pb-5 text-center">
-        <span className="transition-transform duration-300 motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:scale-105">
+        <span
+          className={
+            available
+              ? "transition-transform duration-300 motion-safe:group-hover:-translate-y-1 motion-safe:group-hover:scale-105"
+              : "opacity-80"
+          }
+        >
           <TeacherPortrait src={teacher.image} size="feature" />
         </span>
         <h3 className="mt-3 max-w-full truncate text-2xl font-black tracking-tight">{teacher.label}</h3>
@@ -60,16 +65,41 @@ export default function TeacherCard({ teacher }: { teacher: Teacher }) {
         </span>
 
         <span
-          className={`relative mt-auto inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] motion-safe:group-hover:overflow-visible cta-3d ${accent.cta}`}
+          className={`relative mt-auto inline-flex min-h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 font-extrabold text-white transition-[box-shadow,overflow] cta-3d ${accent.cta}${available ? " motion-safe:group-hover:overflow-visible" : " opacity-40"}`}
         >
           <FrostGlass />
           <span className="relative z-10">{copy.teachers.openPath}</span>
           <ArrowRight
             aria-hidden
-            className="relative z-10 size-4 transition-transform motion-safe:group-hover:translate-x-1"
+            className={`relative z-10 size-4 transition-transform${available ? " motion-safe:group-hover:translate-x-1" : ""}`}
           />
         </span>
       </div>
-    </Link>
+
+      {available ? null : <SelfStudyComingSoon label={copy.teachers.comingSoon} />}
+    </>
+  );
+
+  if (available) {
+    return (
+      <Link
+        href={`/map?teacher=${teacher.id}`}
+        onPointerMove={tiltCard}
+        onPointerLeave={resetTilt}
+        className={shellClass}
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className={shellClass}
+      aria-disabled="true"
+      aria-label={`${teacher.label} — ${copy.teachers.comingSoon}`}
+    >
+      {body}
+    </div>
   );
 }

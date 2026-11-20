@@ -1,6 +1,7 @@
 import {
   TEACHER_PLACEHOLDER_IMAGE,
   TEACHERS,
+  teacherComingSoon,
   type Teacher,
   type TeacherAccent,
 } from "@/data/teachers";
@@ -39,9 +40,6 @@ export const BUILDERS: readonly TeamPerson[] = [
   },
 ];
 
-/** Only these teachers are open on Team; the rest show Coming Soon. */
-const READY_TEACHER_IDS = new Set(["teacher-1"]);
-
 function teacherToPerson(teacher: Teacher): TeamPerson {
   return {
     id: teacher.id,
@@ -49,7 +47,7 @@ function teacherToPerson(teacher: Teacher): TeamPerson {
     image: teacher.image,
     kind: "teacher",
     accent: teacher.accent,
-    comingSoon: !READY_TEACHER_IDS.has(teacher.id),
+    comingSoon: teacherComingSoon(teacher.id),
   };
 }
 
